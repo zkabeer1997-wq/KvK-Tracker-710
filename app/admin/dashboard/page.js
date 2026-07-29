@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabaseClient';
 import {
+  HERO_SELECTION_LIMIT,
   RALLY_STORAGE_KEY,
   assignMemberToRally,
   autoAssignRallyMembers,
@@ -12,6 +13,7 @@ import {
   removeMemberFromRallies,
   TROOP_TYPES,
   updateRallyFormation,
+  updateRallyLeadHeroes,
   updateRallyLead,
 } from './rallyState.mjs';
 
@@ -138,7 +140,17 @@ export default function AdminDashboardPage() {
     saveRallies(updateRallyFormation(rallies, rallyId, troopType, value));
   }
 
+  function handleLeadHeroChange(rallyId, heroName, selected) {
+    saveRallies(updateRallyLeadHeroes(rallies, rallyId, heroName, selected));
+  }
+
   function handleAutoAssign(rallyId) {
+    const rally = rallies.find((item) => item.id === rallyId);
+    if ((rally?.leadHeroNames || []).length !== HERO_SELECTION_LIMIT) {
+      setRallyStatus(`Select ${HERO_SELECTION_LIMIT} rally lead heroes before auto assigning.`);
+      return;
+    }
+
     saveRallies(autoAssignRallyMembers(rallies, rallyId, rows), 'Rally members auto-assigned.');
   }
 
@@ -202,6 +214,17 @@ export default function AdminDashboardPage() {
 
   const membersById = useMemo(() => {
     return new Map(rows.map((row) => [String(row.member_id), row]));
+  }, [rows]);
+
+  const availableHeroes = useMemo(() => {
+    const heroes = new Set();
+    rows.forEach((row) => {
+      (row.heroes || []).forEach((hero) => {
+        const heroName = String(hero || '').trim();
+        if (heroName) heroes.add(heroName);
+      });
+    });
+    return [...heroes].sort((a, b) => a.localeCompare(b));
   }, [rows]);
 
   const rallyByMemberId = useMemo(() => {
@@ -347,11 +370,39 @@ export default function AdminDashboardPage() {
           </label>
           ))}
         </div>
+        <div className="rally-hero-section">
+        <div className="rally-hero-header">
+        <h4>Lead Heroes</h4>
+        <span>{(rally.leadHeroNames || []).length}/{HERO_SELECTION_LIMIT}</span>
+        </div>
+        <div className="rally-hero-grid">
+        {availableHeroes.map((heroName) => {
+          const selected = (rally.leadHeroNames || []).includes(heroName);
+          const disabled = !selected && (rally.leadHeroNames || []).length >= HERO_SELECTION_LIMIT;
+          return (
+            <label key={heroName} className="rally-hero-option">
+            <input
+            type="checkbox"
+            checked={selected}
+            disabled={disabled}
+            onChange={(event) => handleLeadHeroChange(rally.id, heroName, event.target.checked)}
+            />
+            <span>{heroName}</span>
+            </label>
+            );
+        })}
+        </div>
+        </div>
         </div>
         <div className="rally-members-section">
         <div className="rally-members-header">
         <h4>Rally Members</h4>
-        <button type="button" onClick={() => handleAutoAssign(rally.id)} className="auto-assign-btn">
+        <button
+        type="button"
+        onClick={() => handleAutoAssign(rally.id)}
+        className="auto-assign-btn"
+        disabled={(rally.leadHeroNames || []).length !== HERO_SELECTION_LIMIT}
+        >
         Auto assign 8
         </button>
         </div>
@@ -369,6 +420,9 @@ export default function AdminDashboardPage() {
               <strong>{member.name}</strong>
               <span>{member.member_id}</span>
               <span>{troopSummary(member)}</span>
+              {rally.memberHeroAssignments?.[String(memberId)] && (
+                <span>Hero: {rally.memberHeroAssignments[String(memberId)]}</span>
+              )}
               </div>
               <button
               type="button"
