@@ -1,7 +1,7 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'TFF Troop Registry',
+  title: 'K710 KvK Planner,
   description: 'KvK Tracker 710 troop, hero and availability submission form',
 };
 
