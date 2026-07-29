@@ -1,0 +1,150 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 40px 16px;
+  background: #f3f4f6;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+.card {
+  width: 100%;
+  max-width: 680px;
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  height: fit-content;
+}
+
+.card-header {
+  background: #4338ca;
+  color: #ffffff;
+  padding: 24px;
+}
+
+.card-header h1 {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+
+.card-header p {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.card-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+input, select {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.row {
+  display: flex;
+  gap: 16px;
+}
+
+.row label {
+  flex: 1;
+}
+
+.troop-section {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.troop-section h3 {
+  margin: 0 0 12px;
+  font-size: 15px;
+  color: #111827;
+}
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.checkbox-item {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-weight: 400;
+  font-size: 14px;
+}
+
+.checkbox-item input {
+  width: auto;
+}
+
+.on-file {
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 13px;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.hint {
+  font-size: 12px;
+  color: #6b7280;
+  margin: -12px 0 0;
+}
+
+.status {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 14px;
+}
+
+.status.error {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+button[type="submit"] {
+  background: #4338ca;
+  color: #ffffff;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button[type="submit"]:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
