@@ -267,13 +267,13 @@ function memberPoolForRally(rallies, rallyId, rows) {
   return rows.filter((row) => !usedIds.has(String(row.member_id)));
 }
 
-function slotPlanForFormation(formation) {
+function slotPlanForFormation(formation, slotLimit = RALLY_MEMBER_LIMIT) {
   const normalized = normalizeFormation(formation);
   const total = TROOP_TYPES.reduce((sum, troopType) => sum + normalized[troopType], 0);
   if (total <= 0) return [];
 
   const rawSlots = TROOP_TYPES.map((troopType) => {
-    const exact = (normalized[troopType] / total) * RALLY_MEMBER_LIMIT;
+    const exact = (normalized[troopType] / total) * slotLimit;
     return {
       troopType,
       count: Math.floor(exact),
@@ -281,7 +281,7 @@ function slotPlanForFormation(formation) {
     };
   });
 
-  let remaining = RALLY_MEMBER_LIMIT - rawSlots.reduce((sum, item) => sum + item.count, 0);
+  let remaining = slotLimit - rawSlots.reduce((sum, item) => sum + item.count, 0);
   [...rawSlots]
     .sort((a, b) => b.remainder - a.remainder)
     .forEach((item) => {
@@ -381,6 +381,11 @@ function slotPlanForSets() {
   return RALLY_SETS.flatMap((set) => Array.from({ length: RALLY_SET_SIZE }, () => set.key));
 }
 
+function slotPlanForSetFormations(formation) {
+  const setFormationSlots = slotPlanForFormation(formation, RALLY_SET_SIZE);
+  return RALLY_SETS.flatMap(() => setFormationSlots);
+}
+
 function availabilityScore(member, setKey) {
   const availability = String(member.availability || '').toLowerCase();
   if (availability.includes('full')) return 1;
@@ -396,7 +401,7 @@ export function autoAssignRallyMembers(rallies, rallyId, rows) {
   const selected = [];
   const memberHeroAssignments = {};
   const memberSetAssignments = {};
-  const troopSlots = slotPlanForFormation(targetRally.formation);
+  const troopSlots = slotPlanForSetFormations(targetRally.formation);
   const heroSlots = slotPlanForHeroes(targetRally.leadHeroNames);
   const setSlots = slotPlanForSets();
 
