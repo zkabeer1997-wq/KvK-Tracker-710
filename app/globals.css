@@ -272,6 +272,13 @@ button[type="submit"]:disabled {
   margin-top: 3px;
 }
 
+.rally-sidebar-header .rally-sync-status {
+  color: #0e7490;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
 .create-rally-btn {
   width: 100%;
   background: #111827;
