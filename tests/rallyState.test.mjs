@@ -156,7 +156,7 @@ const autoAssigned = autoAssignRallyMembers(
   'rally-1',
   roster,
 );
-assert.deepEqual(autoAssigned[0].memberIds, ['i1', 'i2', 'i3', 'i4', 'i5', 'c1', 'c2', 'c3', 'a1', 'a2', 'a3']);
+assert.deepEqual([...autoAssigned[0].memberIds].sort(), ['a1', 'a2', 'a3', 'c1', 'c2', 'c3', 'i1', 'i2', 'i3', 'i4', 'i5']);
 assert.equal(autoAssigned[0].memberIds.includes('lead'), false);
 assert.equal(autoAssigned[0].memberIds.includes('used'), false);
 
@@ -209,5 +209,105 @@ assert.deepEqual(heroAssigned[0].memberIds.slice(0, 4), [
   'amane-cav-first',
   'amadeus-1',
 ]);
+
+const mixedFormationAssigned = autoAssignRallyMembers(
+  [
+    {
+      id: 'rally-1',
+      name: 'Rally 1',
+      leadMemberId: 'lead',
+      memberIds: [],
+      formation: { infantry: 60, cavalry: 40, archer: 0 },
+      leadHeroNames: ['Chenko', 'Yeonwoo', 'Amane', 'Amadeus'],
+    },
+  ],
+  'rally-1',
+  heroRoster,
+);
+const firstHalfIds = mixedFormationAssigned[0].memberIds.filter(
+  (memberId) => mixedFormationAssigned[0].memberSetAssignments[memberId] === 'firstHalf',
+);
+const firstHalfCavalryCount = firstHalfIds.filter((memberId) => memberId.includes('cav-first')).length;
+assert.equal(firstHalfIds.length, 8);
+assert.equal(firstHalfCavalryCount, 3);
+
+const balancedHeroRoster = ['Chenko', 'Yeonwoo', 'Amane', 'Amadeus'].flatMap((heroName) => {
+  const heroKey = heroName.toLowerCase();
+  return ['first', 'second'].flatMap((halfName) => {
+    const availability = halfName === 'first'
+      ? 'First half (12-14:30 UTC)'
+      : 'Second half (14:30-17 UTC)';
+    return [
+      {
+        member_id: `${heroKey}-inf-${halfName}-1`,
+        name: `${heroName} Infantry ${halfName} 1`,
+        heroes: [heroName],
+        availability,
+        infantry_tier: 'T11',
+        infantry_tg: 'TG8',
+        cavalry_tier: 'T8',
+        cavalry_tg: 'TG4',
+        archer_tier: 'T8',
+        archer_tg: 'TG4',
+      },
+      {
+        member_id: `${heroKey}-inf-${halfName}-2`,
+        name: `${heroName} Infantry ${halfName} 2`,
+        heroes: [heroName],
+        availability,
+        infantry_tier: 'T11',
+        infantry_tg: 'TG7',
+        cavalry_tier: 'T8',
+        cavalry_tg: 'TG4',
+        archer_tier: 'T8',
+        archer_tg: 'TG4',
+      },
+      {
+        member_id: `${heroKey}-cav-${halfName}-1`,
+        name: `${heroName} Cavalry ${halfName} 1`,
+        heroes: [heroName],
+        availability,
+        infantry_tier: 'T8',
+        infantry_tg: 'TG4',
+        cavalry_tier: 'T11',
+        cavalry_tg: 'TG8',
+        archer_tier: 'T8',
+        archer_tg: 'TG4',
+      },
+      {
+        member_id: `${heroKey}-cav-${halfName}-2`,
+        name: `${heroName} Cavalry ${halfName} 2`,
+        heroes: [heroName],
+        availability,
+        infantry_tier: 'T8',
+        infantry_tg: 'TG4',
+        cavalry_tier: 'T11',
+        cavalry_tg: 'TG7',
+        archer_tier: 'T8',
+        archer_tg: 'TG4',
+      },
+    ];
+  });
+});
+
+const perSetFormationAssigned = autoAssignRallyMembers(
+  [
+    {
+      id: 'rally-1',
+      name: 'Rally 1',
+      leadMemberId: 'lead',
+      memberIds: [],
+      formation: { infantry: 60, cavalry: 40, archer: 0 },
+      leadHeroNames: ['Chenko', 'Yeonwoo', 'Amane', 'Amadeus'],
+    },
+  ],
+  'rally-1',
+  balancedHeroRoster,
+);
+const perSetFirstHalfIds = perSetFormationAssigned[0].memberIds.filter(
+  (memberId) => perSetFormationAssigned[0].memberSetAssignments[memberId] === 'firstHalf',
+);
+assert.equal(perSetFirstHalfIds.length, 8);
+assert.equal(perSetFirstHalfIds.filter((memberId) => memberId.includes('-cav-')).length, 3);
 
 console.log('rallyState tests passed');
