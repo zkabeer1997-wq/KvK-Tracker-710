@@ -33,6 +33,7 @@ export default function AdminDashboardPage() {
   const [sortDir, setSortDir] = useState('asc');
   const [rallies, setRallies] = useState([]);
   const [ralliesHydrated, setRalliesHydrated] = useState(false);
+  const [rallyStatus, setRallyStatus] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -50,14 +51,35 @@ export default function AdminDashboardPage() {
   }, []);
 
   useEffect(() => {
-    setRallies(parseStoredRallies(window.localStorage.getItem(RALLY_STORAGE_KEY)));
-    setRalliesHydrated(true);
-  }, []);
+    async function loadRallies() {
+      const localRallies = parseStoredRallies(window.localStorage.getItem(RALLY_STORAGE_KEY));
 
-  useEffect(() => {
-    if (!ralliesHydrated) return;
-    window.localStorage.setItem(RALLY_STORAGE_KEY, JSON.stringify(rallies));
-  }, [rallies, ralliesHydrated]);
+      try {
+        const response = await fetch('/api/admin-rallies');
+        const payload = await response.json();
+
+        if (!response.ok) {
+          throw new Error(payload.error || 'Unable to load rallies.');
+        }
+
+        const remoteRallies = payload.rallies || [];
+        if (remoteRallies.length === 0 && localRallies.length > 0) {
+          setRallies(localRallies);
+          await saveRallies(localRallies, 'Migrated local rallies to shared storage.');
+        } else {
+          setRallies(remoteRallies);
+          window.localStorage.setItem(RALLY_STORAGE_KEY, JSON.stringify(remoteRallies));
+        }
+      } catch (err) {
+        setRallies(localRallies);
+        setRallyStatus(err.message);
+      } finally {
+        setRalliesHydrated(true);
+      }
+    }
+
+    loadRallies();
+  }, []);
 
   useEffect(() => {
     if (!rows.length) return;
@@ -84,7 +106,7 @@ export default function AdminDashboardPage() {
   }
 
   function handleCreateRally() {
-    setRallies((current) => createNextRally(current, `rally-${current.length + 1}-${Date.now()}`));
+    saveRallies(createNextRally(rallies, `rally-${rallies.length + 1}-${Date.now()}`));
   }
 
   function handleDragStart(event, memberId) {
@@ -97,11 +119,34 @@ export default function AdminDashboardPage() {
     const memberId = event.dataTransfer.getData('text/plain');
     if (!memberId) return;
 
-    setRallies((current) => assignMemberToRally(current, rallyId, memberId));
+    saveRallies(assignMemberToRally(rallies, rallyId, memberId));
   }
 
   function handleRemoveFromRally(memberId) {
-    setRallies((current) => removeMemberFromRallies(current, memberId));
+    saveRallies(removeMemberFromRallies(rallies, memberId));
+  }
+
+  async function saveRallies(nextRallies, successMessage = 'Rallies saved.') {
+    setRallies(nextRallies);
+    setRallyStatus('Saving rallies...');
+    window.localStorage.setItem(RALLY_STORAGE_KEY, JSON.stringify(nextRallies));
+
+    try {
+      const response = await fetch('/api/admin-rallies', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rallies: nextRallies }),
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || 'Unable to save rallies.');
+      }
+
+      setRallyStatus(successMessage);
+    } catch (err) {
+      setRallyStatus(err.message);
+    }
   }
 
   const filteredSorted = useMemo(() => {
@@ -210,8 +255,14 @@ export default function AdminDashboardPage() {
       <div>
       <h2>Rallies</h2>
       <p>Drag members here.</p>
+      {rallyStatus && <p className="rally-sync-status">{rallyStatus}</p>}
       </div>
-      <button type="button" onClick={handleCreateRally} className="create-rally-btn">
+      <button
+      type="button"
+      onClick={handleCreateRally}
+      className="create-rally-btn"
+      disabled={!ralliesHydrated}
+      >
       Create Rally {rallies.length + 1}
       </button>
       </div>
