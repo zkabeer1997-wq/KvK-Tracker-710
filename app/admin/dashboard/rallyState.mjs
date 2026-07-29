@@ -2,7 +2,12 @@ export const RALLY_STORAGE_KEY = 'kvk-admin-rallies-v1';
 export const DEFAULT_FORMATION = { infantry: 0, cavalry: 0, archer: 0 };
 export const TROOP_TYPES = ['infantry', 'cavalry', 'archer'];
 export const RALLY_MEMBER_LIMIT = 8;
+export const RALLY_SET_SIZE = 4;
 export const HERO_SELECTION_LIMIT = 4;
+export const RALLY_SETS = [
+  { key: 'firstHalf', label: 'Set 1', availabilityLabel: 'First half' },
+  { key: 'secondHalf', label: 'Set 2', availabilityLabel: 'Second half' },
+];
 
 function normalizeFormation(formation = {}) {
   return TROOP_TYPES.reduce((next, troopType) => {
@@ -19,6 +24,10 @@ function normalizeRally(rally) {
     rally.memberHeroAssignments && typeof rally.memberHeroAssignments === 'object'
       ? rally.memberHeroAssignments
       : {};
+  const rawSetAssignments =
+    rally.memberSetAssignments && typeof rally.memberSetAssignments === 'object'
+      ? rally.memberSetAssignments
+      : {};
 
   return {
     id: String(rally.id),
@@ -31,6 +40,11 @@ function normalizeRally(rally) {
       Object.entries(rawHeroAssignments)
         .map(([memberId, heroName]) => [String(memberId), String(heroName || '')])
         .filter(([memberId, heroName]) => memberIdSet.has(memberId) && heroName),
+    ),
+    memberSetAssignments: Object.fromEntries(
+      Object.entries(rawSetAssignments)
+        .map(([memberId, setKey]) => [String(memberId), String(setKey || '')])
+        .filter(([memberId, setKey]) => memberIdSet.has(memberId) && RALLY_SETS.some((set) => set.key === setKey)),
     ),
   };
 }
@@ -65,6 +79,7 @@ export function createNextRally(rallies, id = `rally-${Date.now()}`) {
       formation: { ...DEFAULT_FORMATION },
       leadHeroNames: [],
       memberHeroAssignments: {},
+      memberSetAssignments: {},
     },
   ];
 }
@@ -87,6 +102,10 @@ export function assignMemberToRally(rallies, rallyId, memberId) {
         ...rally.memberHeroAssignments,
         [normalizedMemberId]: '',
       },
+      memberSetAssignments: {
+        ...rally.memberSetAssignments,
+        [normalizedMemberId]: '',
+      },
     };
   });
 }
@@ -102,6 +121,9 @@ export function removeMemberFromRallies(rallies, memberId) {
     leadMemberId: rally.leadMemberId === normalizedMemberId ? '' : rally.leadMemberId,
     memberHeroAssignments: Object.fromEntries(
       Object.entries(rally.memberHeroAssignments).filter(([id]) => id !== normalizedMemberId),
+    ),
+    memberSetAssignments: Object.fromEntries(
+      Object.entries(rally.memberSetAssignments).filter(([id]) => id !== normalizedMemberId),
     ),
     };
   });
@@ -119,6 +141,9 @@ export function normalizeRalliesForRows(rallies, rows) {
       memberHeroAssignments: Object.fromEntries(
         Object.entries(rally.memberHeroAssignments).filter(([memberId]) => rowIds.has(memberId)),
       ),
+      memberSetAssignments: Object.fromEntries(
+        Object.entries(rally.memberSetAssignments).filter(([memberId]) => rowIds.has(memberId)),
+      ),
     };
   });
 }
@@ -134,6 +159,7 @@ export function formatRallyRows(rows) {
       formation: normalizeFormation(row.formation),
       leadHeroNames: normalizeHeroNames(row.lead_hero_names || row.formation?.leadHeroNames),
       memberHeroAssignments: row.member_hero_assignments || row.formation?.memberHeroAssignments || {},
+      memberSetAssignments: row.formation?.memberSetAssignments || {},
     }));
 }
 
@@ -150,6 +176,7 @@ export function serializeRalliesForSave(rallies) {
       ...rally.formation,
       leadHeroNames: rally.leadHeroNames,
       memberHeroAssignments: rally.memberHeroAssignments,
+      memberSetAssignments: rally.memberSetAssignments,
     },
     };
   });
@@ -166,6 +193,9 @@ export function updateRallyLead(rallies, rallyId, memberId) {
       memberIds: rally.memberIds.filter((id) => id !== normalizedMemberId),
       memberHeroAssignments: Object.fromEntries(
         Object.entries(rally.memberHeroAssignments).filter(([id]) => id !== normalizedMemberId),
+      ),
+      memberSetAssignments: Object.fromEntries(
+        Object.entries(rally.memberSetAssignments).filter(([id]) => id !== normalizedMemberId),
       ),
     };
   });
@@ -277,6 +307,20 @@ function bestAvailableForTroopAndHero(pool, selectedIds, troopType, heroName) {
     [0];
 }
 
+function bestAvailableForTroopHeroAndSet(pool, selectedIds, troopType, heroName, setKey) {
+  return pool
+    .filter((member) => (
+      !selectedIds.has(String(member.member_id)) &&
+      memberHasHero(member, heroName) &&
+      availabilityScore(member, setKey) > 0
+    ))
+    .sort((a, b) => (
+      availabilityScore(b, setKey) - availabilityScore(a, setKey) ||
+      troopScore(b, troopType) - troopScore(a, troopType)
+    ))
+    [0];
+}
+
 function bestAvailableOverall(pool, selectedIds, formation, heroName = '') {
   const priority = [...TROOP_TYPES].sort((a, b) => formation[b] - formation[a]);
 
@@ -286,6 +330,26 @@ function bestAvailableOverall(pool, selectedIds, formation, heroName = '') {
       return heroName ? memberHasHero(member, heroName) : true;
     })
     .sort((a, b) => {
+      const bestA = Math.max(...priority.map((troopType) => troopScore(a, troopType)));
+      const bestB = Math.max(...priority.map((troopType) => troopScore(b, troopType)));
+      return bestB - bestA;
+    })
+    [0];
+}
+
+function bestAvailableOverallForHeroAndSet(pool, selectedIds, formation, heroName, setKey) {
+  const priority = [...TROOP_TYPES].sort((a, b) => formation[b] - formation[a]);
+
+  return pool
+    .filter((member) => (
+      !selectedIds.has(String(member.member_id)) &&
+      memberHasHero(member, heroName) &&
+      availabilityScore(member, setKey) > 0
+    ))
+    .sort((a, b) => {
+      const availabilityDelta = availabilityScore(b, setKey) - availabilityScore(a, setKey);
+      if (availabilityDelta !== 0) return availabilityDelta;
+
       const bestA = Math.max(...priority.map((troopType) => troopScore(a, troopType)));
       const bestB = Math.max(...priority.map((troopType) => troopScore(b, troopType)));
       return bestB - bestA;
@@ -311,31 +375,47 @@ function slotPlanForHeroes(heroNames) {
   return slots;
 }
 
+function slotPlanForSets() {
+  return RALLY_SETS.flatMap((set) => Array.from({ length: RALLY_SET_SIZE }, () => set.key));
+}
+
+function availabilityScore(member, setKey) {
+  const availability = String(member.availability || '').toLowerCase();
+  if (availability.includes('full')) return 1;
+  if (setKey === 'firstHalf' && availability.includes('first')) return 2;
+  if (setKey === 'secondHalf' && availability.includes('second')) return 2;
+  return 0;
+}
+
 export function autoAssignRallyMembers(rallies, rallyId, rows) {
   const targetRally = normalizeRally(rallies.find((rally) => rally.id === rallyId) || {});
   const pool = memberPoolForRally(rallies, rallyId, rows);
   const selectedIds = new Set();
   const selected = [];
   const memberHeroAssignments = {};
+  const memberSetAssignments = {};
   const troopSlots = slotPlanForFormation(targetRally.formation);
   const heroSlots = slotPlanForHeroes(targetRally.leadHeroNames);
+  const setSlots = slotPlanForSets();
 
   if (heroSlots.length > 0) {
     heroSlots.forEach((heroName, index) => {
       const troopType = troopSlots[index] || TROOP_TYPES[0];
+      const setKey = setSlots[index] || RALLY_SETS[0].key;
       const member =
-        bestAvailableForTroopAndHero(pool, selectedIds, troopType, heroName) ||
-        bestAvailableOverall(pool, selectedIds, targetRally.formation, heroName);
+        bestAvailableForTroopHeroAndSet(pool, selectedIds, troopType, heroName, setKey) ||
+        bestAvailableOverallForHeroAndSet(pool, selectedIds, targetRally.formation, heroName, setKey);
       if (!member) return;
       const memberId = String(member.member_id);
       selectedIds.add(memberId);
       selected.push(memberId);
       memberHeroAssignments[memberId] = heroName;
+      memberSetAssignments[memberId] = setKey;
     });
 
     return rallies.map((rawRally) => {
       const rally = normalizeRally(rawRally);
-      return rally.id === rallyId ? { ...rally, memberIds: selected, memberHeroAssignments } : rally;
+      return rally.id === rallyId ? { ...rally, memberIds: selected, memberHeroAssignments, memberSetAssignments } : rally;
     });
   }
 
@@ -355,7 +435,7 @@ export function autoAssignRallyMembers(rallies, rallyId, rows) {
 
   return rallies.map((rawRally) => {
     const rally = normalizeRally(rawRally);
-    return rally.id === rallyId ? { ...rally, memberIds: selected, memberHeroAssignments: {} } : rally;
+    return rally.id === rallyId ? { ...rally, memberIds: selected, memberHeroAssignments: {}, memberSetAssignments: {} } : rally;
   });
 }
 
