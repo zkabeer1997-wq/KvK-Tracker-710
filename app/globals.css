@@ -295,6 +295,11 @@ button[type="submit"]:disabled {
   background: #1f2937;
 }
 
+.create-rally-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .rally-list {
   display: flex;
   flex-direction: column;
@@ -349,6 +354,67 @@ button[type="submit"]:disabled {
   color: #3730a3;
   font-size: 12px;
   font-weight: 700;
+}
+
+.rally-lead-section,
+.rally-members-section {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
+.rally-lead-section h4,
+.rally-members-section h4 {
+  color: #374151;
+  font-size: 12px;
+  letter-spacing: 0;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+}
+
+.rally-lead-select {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.rally-formation-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.rally-formation-grid label {
+  gap: 4px;
+  font-size: 12px;
+}
+
+.rally-formation-grid input {
+  min-width: 0;
+  padding: 8px;
+}
+
+.rally-members-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.auto-assign-btn {
+  background: #4338ca;
+  color: #ffffff;
+  border: none;
+  padding: 7px 9px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.auto-assign-btn:hover {
+  background: #3730a3;
 }
 
 .rally-drop-hint {
