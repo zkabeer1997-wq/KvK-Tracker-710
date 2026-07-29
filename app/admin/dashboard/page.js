@@ -5,6 +5,7 @@ import { supabase } from '../../../lib/supabaseClient';
 import {
   HERO_SELECTION_LIMIT,
   RALLY_STORAGE_KEY,
+  RALLY_SETS,
   assignMemberToRally,
   autoAssignRallyMembers,
   createNextRally,
@@ -160,6 +161,16 @@ export default function AdminDashboardPage() {
       `C ${member.cavalry_tier}/${member.cavalry_tg}`,
       `A ${member.archer_tier}/${member.archer_tg}`,
     ].join(' | ');
+  }
+
+  function rallyMembersForSet(rally, setKey) {
+    return rally.memberIds.filter((memberId, index) => {
+      const assignedSet = rally.memberSetAssignments?.[String(memberId)];
+      if (assignedSet) return assignedSet === setKey;
+
+      const fallbackSet = index < 4 ? RALLY_SETS[0].key : RALLY_SETS[1].key;
+      return fallbackSet === setKey;
+    });
   }
 
   async function saveRallies(nextRallies, successMessage = 'Rallies saved.') {
@@ -409,8 +420,20 @@ export default function AdminDashboardPage() {
         {rally.memberIds.length === 0 ? (
           <p className="rally-drop-hint">Drop members here</p>
           ) : (
-          <div className="rally-member-list">
-          {rally.memberIds.map((memberId) => {
+          <div className="rally-set-list">
+          {RALLY_SETS.map((set) => {
+            const setMemberIds = rallyMembersForSet(rally, set.key);
+            return (
+              <div key={set.key} className="rally-set">
+              <div className="rally-set-header">
+              <h5>{set.label}</h5>
+              <span>{set.availabilityLabel}</span>
+              </div>
+              {setMemberIds.length === 0 ? (
+                <p className="rally-set-empty">No members assigned.</p>
+              ) : (
+                <div className="rally-member-list">
+                {setMemberIds.map((memberId) => {
             const member = membersById.get(String(memberId));
             if (!member) return null;
 
@@ -420,6 +443,7 @@ export default function AdminDashboardPage() {
               <strong>{member.name}</strong>
               <span>{member.member_id}</span>
               <span>{troopSummary(member)}</span>
+              <span>{member.availability}</span>
               {rally.memberHeroAssignments?.[String(memberId)] && (
                 <span>Hero: {rally.memberHeroAssignments[String(memberId)]}</span>
               )}
@@ -433,6 +457,11 @@ export default function AdminDashboardPage() {
               </button>
               </div>
               );
+          })}
+                </div>
+              )}
+              </div>
+            );
           })}
           </div>
           )}
