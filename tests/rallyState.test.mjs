@@ -50,7 +50,13 @@ const formatted = formatRallyRows([
     position: 2,
     member_ids: ['202'],
     lead_member_id: '303',
-    formation: { infantry: 60, cavalry: 40, archer: 0 },
+    formation: {
+      infantry: 60,
+      cavalry: 40,
+      archer: 0,
+      leadHeroNames: ['Chenko', 'Yeonwoo'],
+      memberHeroAssignments: { 202: 'Chenko' },
+    },
   },
   { id: 'rally-1', name: 'Rally 1', position: 1, member_ids: ['101'] },
 ]);
@@ -70,8 +76,8 @@ assert.deepEqual(formatted, [
     memberIds: ['202'],
     leadMemberId: '303',
     formation: { infantry: 60, cavalry: 40, archer: 0 },
-    leadHeroNames: [],
-    memberHeroAssignments: {},
+    leadHeroNames: ['Chenko', 'Yeonwoo'],
+    memberHeroAssignments: { 202: 'Chenko' },
   },
 ]);
 
@@ -83,9 +89,13 @@ assert.deepEqual(serialized, [
     position: 1,
     member_ids: ['101'],
     lead_member_id: null,
-    formation: { infantry: 0, cavalry: 0, archer: 0 },
-    lead_hero_names: [],
-    member_hero_assignments: {},
+    formation: {
+      infantry: 0,
+      cavalry: 0,
+      archer: 0,
+      leadHeroNames: [],
+      memberHeroAssignments: {},
+    },
   },
   {
     id: 'rally-2',
@@ -93,9 +103,13 @@ assert.deepEqual(serialized, [
     position: 2,
     member_ids: ['202'],
     lead_member_id: '303',
-    formation: { infantry: 60, cavalry: 40, archer: 0 },
-    lead_hero_names: [],
-    member_hero_assignments: {},
+    formation: {
+      infantry: 60,
+      cavalry: 40,
+      archer: 0,
+      leadHeroNames: ['Chenko', 'Yeonwoo'],
+      memberHeroAssignments: { 202: 'Chenko' },
+    },
   },
 ]);
 
