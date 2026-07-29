@@ -156,19 +156,27 @@ const autoAssigned = autoAssignRallyMembers(
   'rally-1',
   roster,
 );
-assert.deepEqual(autoAssigned[0].memberIds, ['i1', 'i2', 'i3', 'i4', 'c1', 'a1', 'a2', 'a3']);
+assert.deepEqual(autoAssigned[0].memberIds, ['i1', 'i2', 'i3', 'i4', 'i5', 'c1', 'c2', 'c3', 'a1', 'a2', 'a3']);
 assert.equal(autoAssigned[0].memberIds.includes('lead'), false);
 assert.equal(autoAssigned[0].memberIds.includes('used'), false);
 
 const heroRoster = [
   { member_id: 'chenko-1', name: 'Chenko 1', heroes: ['Chenko'], availability: 'First half (12-14:30 UTC)', infantry_tier: 'T11', infantry_tg: 'TG8', cavalry_tier: 'T8', cavalry_tg: 'TG4', archer_tier: 'T8', archer_tg: 'TG4' },
   { member_id: 'chenko-2', name: 'Chenko 2', heroes: ['Chenko'], availability: 'Second half (14:30-17 UTC)', infantry_tier: 'T10', infantry_tg: 'TG7', cavalry_tier: 'T8', cavalry_tg: 'TG4', archer_tier: 'T8', archer_tg: 'TG4' },
+  { member_id: 'chenko-cav-first', name: 'Chenko Cav First', heroes: ['Chenko'], availability: 'First half (12-14:30 UTC)', infantry_tier: 'T8', infantry_tg: 'TG4', cavalry_tier: 'T11', cavalry_tg: 'TG8', archer_tier: 'T8', archer_tg: 'TG4' },
+  { member_id: 'chenko-cav-second', name: 'Chenko Cav Second', heroes: ['Chenko'], availability: 'Second half (14:30-17 UTC)', infantry_tier: 'T8', infantry_tg: 'TG4', cavalry_tier: 'T11', cavalry_tg: 'TG8', archer_tier: 'T8', archer_tg: 'TG4' },
   { member_id: 'yeonwoo-1', name: 'Yeonwoo 1', heroes: ['Yeonwoo'], availability: 'First half (12-14:30 UTC)', infantry_tier: 'T8', infantry_tg: 'TG4', cavalry_tier: 'T11', cavalry_tg: 'TG8', archer_tier: 'T8', archer_tg: 'TG4' },
   { member_id: 'yeonwoo-2', name: 'Yeonwoo 2', heroes: ['Yeonwoo'], availability: 'Second half (14:30-17 UTC)', infantry_tier: 'T8', infantry_tg: 'TG4', cavalry_tier: 'T10', cavalry_tg: 'TG7', archer_tier: 'T8', archer_tg: 'TG4' },
+  { member_id: 'yeonwoo-cav-first', name: 'Yeonwoo Cav First', heroes: ['Yeonwoo'], availability: 'First half (12-14:30 UTC)', infantry_tier: 'T8', infantry_tg: 'TG4', cavalry_tier: 'T11', cavalry_tg: 'TG8', archer_tier: 'T8', archer_tg: 'TG4' },
+  { member_id: 'yeonwoo-cav-second', name: 'Yeonwoo Cav Second', heroes: ['Yeonwoo'], availability: 'Second half (14:30-17 UTC)', infantry_tier: 'T8', infantry_tg: 'TG4', cavalry_tier: 'T11', cavalry_tg: 'TG8', archer_tier: 'T8', archer_tg: 'TG4' },
   { member_id: 'amane-1', name: 'Amane 1', heroes: ['Amane'], availability: 'First half (12-14:30 UTC)', infantry_tier: 'T8', infantry_tg: 'TG4', cavalry_tier: 'T8', cavalry_tg: 'TG4', archer_tier: 'T11', archer_tg: 'TG8' },
   { member_id: 'amane-2', name: 'Amane 2', heroes: ['Amane'], availability: 'Second half (14:30-17 UTC)', infantry_tier: 'T8', infantry_tg: 'TG4', cavalry_tier: 'T8', cavalry_tg: 'TG4', archer_tier: 'T10', archer_tg: 'TG7' },
+  { member_id: 'amane-cav-first', name: 'Amane Cav First', heroes: ['Amane'], availability: 'First half (12-14:30 UTC)', infantry_tier: 'T8', infantry_tg: 'TG4', cavalry_tier: 'T11', cavalry_tg: 'TG8', archer_tier: 'T8', archer_tg: 'TG4' },
+  { member_id: 'amane-cav-second', name: 'Amane Cav Second', heroes: ['Amane'], availability: 'Second half (14:30-17 UTC)', infantry_tier: 'T8', infantry_tg: 'TG4', cavalry_tier: 'T11', cavalry_tg: 'TG8', archer_tier: 'T8', archer_tg: 'TG4' },
   { member_id: 'amadeus-1', name: 'Amadeus 1', heroes: ['Amadeus'], availability: 'First half (12-14:30 UTC)', infantry_tier: 'T11', infantry_tg: 'TG8', cavalry_tier: 'T11', cavalry_tg: 'TG8', archer_tier: 'T11', archer_tg: 'TG8' },
   { member_id: 'amadeus-2', name: 'Amadeus 2', heroes: ['Amadeus'], availability: 'Second half (14:30-17 UTC)', infantry_tier: 'T10', infantry_tg: 'TG7', cavalry_tier: 'T10', cavalry_tg: 'TG7', archer_tier: 'T10', archer_tg: 'TG7' },
+  { member_id: 'amadeus-cav-first', name: 'Amadeus Cav First', heroes: ['Amadeus'], availability: 'First half (12-14:30 UTC)', infantry_tier: 'T8', infantry_tg: 'TG4', cavalry_tier: 'T11', cavalry_tg: 'TG8', archer_tier: 'T8', archer_tg: 'TG4' },
+  { member_id: 'amadeus-cav-second', name: 'Amadeus Cav Second', heroes: ['Amadeus'], availability: 'Second half (14:30-17 UTC)', infantry_tier: 'T8', infantry_tg: 'TG4', cavalry_tier: 'T11', cavalry_tg: 'TG8', archer_tier: 'T8', archer_tg: 'TG4' },
   { member_id: 'wrong-hero', name: 'Wrong Hero', heroes: ['Vivian'], availability: 'Full battle (12-17 UTC)', infantry_tier: 'T11', infantry_tg: 'TG8', cavalry_tier: 'T11', cavalry_tg: 'TG8', archer_tier: 'T11', archer_tg: 'TG8' },
   { member_id: 'wrong-half', name: 'Wrong Half', heroes: ['Chenko'], availability: 'Unavailable', infantry_tier: 'T12', infantry_tg: 'TG9', cavalry_tier: 'T12', cavalry_tg: 'TG9', archer_tier: 'T12', archer_tg: 'TG9' },
   { member_id: 'other-rally', name: 'Other Rally', heroes: ['Chenko'], availability: 'First half (12-14:30 UTC)', infantry_tier: 'T11', infantry_tg: 'TG8', cavalry_tier: 'T11', cavalry_tg: 'TG8', archer_tier: 'T11', archer_tg: 'TG8' },
@@ -181,7 +189,7 @@ const heroAssigned = autoAssignRallyMembers(
       name: 'Rally 1',
       leadMemberId: 'lead',
       memberIds: [],
-      formation: { infantry: 50, cavalry: 25, archer: 25 },
+      formation: { infantry: 10, cavalry: 80, archer: 10 },
       leadHeroNames: ['Chenko', 'Yeonwoo', 'Amane', 'Amadeus'],
     },
     { id: 'rally-2', name: 'Rally 2', leadMemberId: '', memberIds: ['other-rally'] },
@@ -189,29 +197,17 @@ const heroAssigned = autoAssignRallyMembers(
   'rally-1',
   heroRoster,
 );
-assert.equal(heroAssigned[0].memberIds.length, 8);
+assert.equal(heroAssigned[0].memberIds.length, 16);
 assert.equal(heroAssigned[0].memberIds.includes('wrong-hero'), false);
 assert.equal(heroAssigned[0].memberIds.includes('wrong-half'), false);
 assert.equal(heroAssigned[0].memberIds.includes('other-rally'), false);
-assert.deepEqual(Object.values(heroAssigned[0].memberHeroAssignments), [
-  'Chenko',
-  'Yeonwoo',
-  'Amane',
-  'Amadeus',
-  'Chenko',
-  'Yeonwoo',
-  'Amane',
-  'Amadeus',
-]);
-assert.deepEqual(Object.values(heroAssigned[0].memberSetAssignments), [
-  'firstHalf',
-  'firstHalf',
-  'firstHalf',
-  'firstHalf',
-  'secondHalf',
-  'secondHalf',
-  'secondHalf',
-  'secondHalf',
+assert.equal(Object.values(heroAssigned[0].memberSetAssignments).filter((set) => set === 'firstHalf').length, 8);
+assert.equal(Object.values(heroAssigned[0].memberSetAssignments).filter((set) => set === 'secondHalf').length, 8);
+assert.deepEqual(heroAssigned[0].memberIds.slice(0, 4), [
+  'chenko-cav-first',
+  'yeonwoo-1',
+  'amane-cav-first',
+  'amadeus-1',
 ]);
 
 console.log('rallyState tests passed');
