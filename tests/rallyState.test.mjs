@@ -2,8 +2,10 @@ import assert from 'node:assert/strict';
 import {
   assignMemberToRally,
   createNextRally,
+  formatRallyRows,
   normalizeRalliesForRows,
   removeMemberFromRallies,
+  serializeRalliesForSave,
 } from '../app/admin/dashboard/rallyState.mjs';
 
 const rallies = [
@@ -27,5 +29,20 @@ const normalized = normalizeRalliesForRows(
   [{ member_id: 101 }, { member_id: '202' }],
 );
 assert.deepEqual(normalized[0].memberIds, ['101']);
+
+const formatted = formatRallyRows([
+  { id: 'rally-2', name: 'Rally 2', position: 2, member_ids: ['202'] },
+  { id: 'rally-1', name: 'Rally 1', position: 1, member_ids: ['101'] },
+]);
+assert.deepEqual(formatted, [
+  { id: 'rally-1', name: 'Rally 1', memberIds: ['101'] },
+  { id: 'rally-2', name: 'Rally 2', memberIds: ['202'] },
+]);
+
+const serialized = serializeRalliesForSave(formatted);
+assert.deepEqual(serialized, [
+  { id: 'rally-1', name: 'Rally 1', position: 1, member_ids: ['101'] },
+  { id: 'rally-2', name: 'Rally 2', position: 2, member_ids: ['202'] },
+]);
 
 console.log('rallyState tests passed');
