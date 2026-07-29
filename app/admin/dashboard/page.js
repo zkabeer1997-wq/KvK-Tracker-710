@@ -5,10 +5,14 @@ import { supabase } from '../../../lib/supabaseClient';
 import {
   RALLY_STORAGE_KEY,
   assignMemberToRally,
+  autoAssignRallyMembers,
   createNextRally,
   normalizeRalliesForRows,
   parseStoredRallies,
   removeMemberFromRallies,
+  TROOP_TYPES,
+  updateRallyFormation,
+  updateRallyLead,
 } from './rallyState.mjs';
 
 const COLUMNS = [
@@ -126,6 +130,26 @@ export default function AdminDashboardPage() {
     saveRallies(removeMemberFromRallies(rallies, memberId));
   }
 
+  function handleLeadChange(rallyId, memberId) {
+    saveRallies(updateRallyLead(rallies, rallyId, memberId));
+  }
+
+  function handleFormationChange(rallyId, troopType, value) {
+    saveRallies(updateRallyFormation(rallies, rallyId, troopType, value));
+  }
+
+  function handleAutoAssign(rallyId) {
+    saveRallies(autoAssignRallyMembers(rallies, rallyId, rows), 'Rally members auto-assigned.');
+  }
+
+  function troopSummary(member) {
+    return [
+      `I ${member.infantry_tier}/${member.infantry_tg}`,
+      `C ${member.cavalry_tier}/${member.cavalry_tg}`,
+      `A ${member.archer_tier}/${member.archer_tg}`,
+    ].join(' | ');
+  }
+
   async function saveRallies(nextRallies, successMessage = 'Rallies saved.') {
     setRallies(nextRallies);
     setRallyStatus('Saving rallies...');
@@ -183,9 +207,19 @@ export default function AdminDashboardPage() {
   const rallyByMemberId = useMemo(() => {
     const assignments = new Map();
     rallies.forEach((rally) => {
+      if (rally.leadMemberId) assignments.set(String(rally.leadMemberId), `${rally.name} Lead`);
       rally.memberIds.forEach((memberId) => assignments.set(String(memberId), rally.name));
     });
     return assignments;
+  }, [rallies]);
+
+  const assignedMemberIds = useMemo(() => {
+    const assigned = new Set();
+    rallies.forEach((rally) => {
+      if (rally.leadMemberId) assigned.add(String(rally.leadMemberId));
+      rally.memberIds.forEach((memberId) => assigned.add(String(memberId)));
+    });
+    return assigned;
   }, [rallies]);
 
   return (
@@ -270,7 +304,7 @@ export default function AdminDashboardPage() {
       {rallies.length === 0 && (
         <div className="rally-empty-state">Create Rally 1 to start assigning members.</div>
         )}
-      {rallies.map((rally) => (
+        {rallies.map((rally) => (
         <section
         key={rally.id}
         className="rally-dropzone"
@@ -280,6 +314,46 @@ export default function AdminDashboardPage() {
         <div className="rally-dropzone-header">
         <h3>{rally.name}</h3>
         <span>{rally.memberIds.length}</span>
+        </div>
+        <div className="rally-lead-section">
+        <h4>Rally Lead</h4>
+        <select
+        value={rally.leadMemberId || ''}
+        onChange={(event) => handleLeadChange(rally.id, event.target.value)}
+        className="rally-lead-select"
+        >
+        <option value="">Select lead</option>
+        {rows.map((member) => {
+          const memberId = String(member.member_id);
+          const usedElsewhere = assignedMemberIds.has(memberId) && rally.leadMemberId !== memberId;
+          return (
+            <option key={memberId} value={memberId} disabled={usedElsewhere}>
+            {member.name} ({member.member_id})
+            </option>
+            );
+        })}
+        </select>
+        <div className="rally-formation-grid">
+        {TROOP_TYPES.map((troopType) => (
+          <label key={troopType}>
+          <span>{troopType[0].toUpperCase() + troopType.slice(1)} %</span>
+          <input
+          type="number"
+          min="0"
+          max="100"
+          value={rally.formation?.[troopType] ?? 0}
+          onChange={(event) => handleFormationChange(rally.id, troopType, event.target.value)}
+          />
+          </label>
+          ))}
+        </div>
+        </div>
+        <div className="rally-members-section">
+        <div className="rally-members-header">
+        <h4>Rally Members</h4>
+        <button type="button" onClick={() => handleAutoAssign(rally.id)} className="auto-assign-btn">
+        Auto assign 8
+        </button>
         </div>
         {rally.memberIds.length === 0 ? (
           <p className="rally-drop-hint">Drop members here</p>
@@ -294,6 +368,7 @@ export default function AdminDashboardPage() {
               <div>
               <strong>{member.name}</strong>
               <span>{member.member_id}</span>
+              <span>{troopSummary(member)}</span>
               </div>
               <button
               type="button"
@@ -307,6 +382,7 @@ export default function AdminDashboardPage() {
           })}
           </div>
           )}
+        </div>
         </section>
         ))}
       </div>
