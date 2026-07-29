@@ -393,6 +393,65 @@ button[type="submit"]:disabled {
   padding: 8px;
 }
 
+.rally-hero-section {
+  margin-top: 10px;
+}
+
+.rally-hero-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.rally-hero-header h4 {
+  margin: 0;
+}
+
+.rally-hero-header span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.rally-hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  max-height: 132px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.rally-hero-option {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 6px 7px;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.rally-hero-option input {
+  flex: 0 0 auto;
+  width: auto;
+  padding: 0;
+}
+
+.rally-hero-option span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .rally-members-header {
   display: flex;
   align-items: center;
@@ -415,6 +474,11 @@ button[type="submit"]:disabled {
 
 .auto-assign-btn:hover {
   background: #3730a3;
+}
+
+.auto-assign-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .rally-drop-hint {
