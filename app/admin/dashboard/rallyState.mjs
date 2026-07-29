@@ -132,8 +132,8 @@ export function formatRallyRows(rows) {
       memberIds: Array.isArray(row.member_ids) ? row.member_ids.map(String) : [],
       leadMemberId: row.lead_member_id ? String(row.lead_member_id) : '',
       formation: normalizeFormation(row.formation),
-      leadHeroNames: normalizeHeroNames(row.lead_hero_names),
-      memberHeroAssignments: row.member_hero_assignments || {},
+      leadHeroNames: normalizeHeroNames(row.lead_hero_names || row.formation?.leadHeroNames),
+      memberHeroAssignments: row.member_hero_assignments || row.formation?.memberHeroAssignments || {},
     }));
 }
 
@@ -146,9 +146,11 @@ export function serializeRalliesForSave(rallies) {
     position: index + 1,
     member_ids: rally.memberIds.map(String),
     lead_member_id: rally.leadMemberId || null,
-    formation: rally.formation,
-    lead_hero_names: rally.leadHeroNames,
-    member_hero_assignments: rally.memberHeroAssignments,
+    formation: {
+      ...rally.formation,
+      leadHeroNames: rally.leadHeroNames,
+      memberHeroAssignments: rally.memberHeroAssignments,
+    },
     };
   });
 }
