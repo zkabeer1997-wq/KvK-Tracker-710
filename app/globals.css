@@ -494,6 +494,43 @@ button[type="submit"]:disabled {
   gap: 8px;
 }
 
+.rally-set-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rally-set {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 8px;
+}
+
+.rally-set-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.rally-set-header h5 {
+  margin: 0;
+  color: #111827;
+  font-size: 12px;
+}
+
+.rally-set-header span,
+.rally-set-empty {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.rally-set-empty {
+  margin: 0;
+}
+
 .rally-member {
   display: flex;
   align-items: center;
