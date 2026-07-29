@@ -46,6 +46,25 @@ export function normalizeRalliesForRows(rallies, rows) {
   }));
 }
 
+export function formatRallyRows(rows) {
+  return [...(rows || [])]
+    .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+    .map((row) => ({
+      id: String(row.id),
+      name: row.name,
+      memberIds: Array.isArray(row.member_ids) ? row.member_ids.map(String) : [],
+    }));
+}
+
+export function serializeRalliesForSave(rallies) {
+  return rallies.map((rally, index) => ({
+    id: String(rally.id),
+    name: rally.name,
+    position: index + 1,
+    member_ids: rally.memberIds.map(String),
+  }));
+}
+
 export function parseStoredRallies(value) {
   if (!value) return [];
 
