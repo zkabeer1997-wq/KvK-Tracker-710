@@ -5,6 +5,7 @@ import { supabase } from '../../../lib/supabaseClient';
 import {
   HERO_SELECTION_LIMIT,
   RALLY_STORAGE_KEY,
+  RALLY_SET_SIZE,
   RALLY_SETS,
   assignMemberToRally,
   autoAssignRallyMembers,
@@ -168,7 +169,7 @@ export default function AdminDashboardPage() {
       const assignedSet = rally.memberSetAssignments?.[String(memberId)];
       if (assignedSet) return assignedSet === setKey;
 
-      const fallbackSet = index < 4 ? RALLY_SETS[0].key : RALLY_SETS[1].key;
+      const fallbackSet = index < RALLY_SET_SIZE ? RALLY_SETS[0].key : RALLY_SETS[1].key;
       return fallbackSet === setKey;
     });
   }
@@ -414,7 +415,7 @@ export default function AdminDashboardPage() {
         className="auto-assign-btn"
         disabled={(rally.leadHeroNames || []).length !== HERO_SELECTION_LIMIT}
         >
-        Auto assign 8
+        Auto assign 16
         </button>
         </div>
         {rally.memberIds.length === 0 ? (
