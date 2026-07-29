@@ -32,7 +32,7 @@ export async function GET(request) {
 
   const { data, error } = await supabase
     .from('admin_rallies')
-    .select('id, name, position, member_ids, lead_member_id, formation')
+    .select('id, name, position, member_ids, lead_member_id, formation, lead_hero_names, member_hero_assignments')
     .order('position', { ascending: true });
 
   if (error) {
