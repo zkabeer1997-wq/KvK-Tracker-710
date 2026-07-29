@@ -113,7 +113,7 @@ return (
 <main className="page">
 <div className="card">
 <div className="card-header">
-<h1>TFF Troop Registry</h1>
+<h1>K710 KvK Planner</h1>
 <p>
 Enter your name and Member ID, set your Tier/TG per unit type, pick your
 Heroes and Availability, then submit. Updating overwrites your previous
