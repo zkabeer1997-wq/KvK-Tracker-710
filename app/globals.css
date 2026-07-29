@@ -148,3 +148,62 @@ button[type="submit"]:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+
+.admin-login-card {
+  max-width: 420px;
+}
+
+.admin-dashboard-card {
+  max-width: 1100px;
+}
+
+.admin-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logout-btn {
+  background: #ffffff;
+  color: #4338ca;
+  border: 1px solid #ffffff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-search {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.admin-table th,
+.admin-table td {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 8px 10px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.admin-table th {
+  cursor: pointer;
+  background: #f3f4f6;
+  user-select: none;
+}
+
+.admin-table tbody tr:hover {
+  background: #f9fafb;
+}
