@@ -1,8 +1,8 @@
 export const RALLY_STORAGE_KEY = 'kvk-admin-rallies-v1';
 export const DEFAULT_FORMATION = { infantry: 0, cavalry: 0, archer: 0 };
 export const TROOP_TYPES = ['infantry', 'cavalry', 'archer'];
-export const RALLY_MEMBER_LIMIT = 8;
-export const RALLY_SET_SIZE = 4;
+export const RALLY_MEMBER_LIMIT = 16;
+export const RALLY_SET_SIZE = 8;
 export const HERO_SELECTION_LIMIT = 4;
 export const RALLY_SETS = [
   { key: 'firstHalf', label: 'Set 1', availabilityLabel: 'First half' },
@@ -290,7 +290,9 @@ function slotPlanForFormation(formation) {
       remaining -= 1;
     });
 
-  return rawSlots.flatMap((item) => Array.from({ length: item.count }, () => item.troopType));
+  return rawSlots
+    .sort((a, b) => normalized[b.troopType] - normalized[a.troopType] || b.count - a.count)
+    .flatMap((item) => Array.from({ length: item.count }, () => item.troopType));
 }
 
 function bestAvailableForTroop(pool, selectedIds, troopType) {
