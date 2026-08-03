@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { ADMIN_COOKIE_NAME, computeAdminToken } from './lib/adminAuth';
 
 export const config = {
-matcher: ['/admin/dashboard'],
+matcher: ['/admin/dashboard', '/admin/dashboard/:path*'],
 };
 
 export async function middleware(request) {
