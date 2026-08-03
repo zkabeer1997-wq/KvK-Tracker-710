@@ -1,480 +1,561 @@
 'use client';
+
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '../../../lib/supabaseClient';
+import Link from 'next/link';
 import {
-  HERO_SELECTION_LIMIT,
-  RALLY_STORAGE_KEY,
-  RALLY_SET_SIZE,
-  RALLY_SETS,
-  assignMemberToRally,
-  autoAssignRallyMembers,
-  createNextRally,
-  normalizeRalliesForRows,
-  parseStoredRallies,
-  removeMemberFromRallies,
-  TROOP_TYPES,
-  updateRallyFormation,
-  updateRallyLeadHeroes,
-  updateRallyLead,
+RALLY_STORAGE_KEY,
+assignMemberToRally,
+autoAssignRallyMembers,
+createNextRally,
+getMatchingLeadHeroes,
+getTroopLevelSummary,
+normalizeRalliesForRows,
+parseStoredRallies,
+removeRowsAndAssignments,
+removeRallyById,
+removeMemberFromRallies,
+setRallyLead,
+setRallyTroopWeight,
+toggleRallyLeadHero,
 } from './rallyState.mjs';
 
+const HEROES = [
+'Chenko', 'Yeonwoo', 'Amane', 'Amadeus', 'Vivian', 'Margot', 'Thrud', 'Saul', 'Hilde', 'Gordon',
+'Eric', 'Fahd', 'Alcar', 'Long Fei', 'Triton', 'Sophia', 'Zoe', 'Jaeger', 'Petra', 'Rosa'
+];
+
 const COLUMNS = [
-  { key: 'name', label: 'Name' },
-  { key: 'member_id', label: 'Member ID' },
-  { key: 'infantry_tier', label: 'Infantry Tier' },
-  { key: 'infantry_tg', label: 'Infantry TG' },
-  { key: 'cavalry_tier', label: 'Cavalry Tier' },
-  { key: 'cavalry_tg', label: 'Cavalry TG' },
-  { key: 'archer_tier', label: 'Archer Tier' },
-  { key: 'archer_tg', label: 'Archer TG' },
-  { key: 'heroes', label: 'Heroes' },
-  { key: 'availability', label: 'Availability' },
-  { key: 'updated_at', label: 'Updated' },
-  ];
+{ key: 'name', label: 'Name' },
+{ key: 'member_id', label: 'Member ID' },
+{ key: 'infantry_tg', label: 'Infantry' },
+{ key: 'cavalry_tg', label: 'Cavalry' },
+{ key: 'archer_tg', label: 'Archer' },
+{ key: 'heroes', label: 'Heroes' },
+{ key: 'power_profile', label: 'Power' },
+{ key: 'availability', label: 'Availability' },
+{ key: 'updated_at', label: 'Updated' },
+];
+
+function formatUnitLevel(tier, tg) {
+return [tier, tg].filter(Boolean).join(' / ') || '-';
+}
+
+function availabilityTone(availability) {
+const text = String(availability || '').toLowerCase();
+if (text.includes('not available')) return 'unavailable';
+if (text.includes('full')) return 'full';
+if (text.includes('second')) return 'late';
+if (text.includes('first')) return 'early';
+return 'partial';
+}
+
+function powerValue(profile, key) {
+return profile && profile[key] ? profile[key] : '-';
+}
+
 export default function AdminDashboardPage() {
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [search, setSearch] = useState('');
-  const [sortKey, setSortKey] = useState('name');
-  const [sortDir, setSortDir] = useState('asc');
-  const [rallies, setRallies] = useState([]);
-  const [ralliesHydrated, setRalliesHydrated] = useState(false);
-  const [rallyStatus, setRallyStatus] = useState('');
-  const router = useRouter();
+const [rows, setRows] = useState([]);
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState('');
+const [actionStatus, setActionStatus] = useState('');
+const [actionError, setActionError] = useState('');
+const [deletingIds, setDeletingIds] = useState([]);
+const [search, setSearch] = useState('');
+const [sortKey, setSortKey] = useState('name');
+const [sortDir, setSortDir] = useState('asc');
+const [rallies, setRallies] = useState([]);
+const [ralliesHydrated, setRalliesHydrated] = useState(false);
+const router = useRouter();
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true);
-      const { data, error } = await supabase.from('public_submissions').select('*');
-      if (error) {
-        setError(error.message);
-      } else {
-        setRows(data || []);
-      }
-      setLoading(false);
-    }
-    load();
-  }, []);
+useEffect(() => {
+async function load() {
+setLoading(true);
+const response = await fetch('/api/admin-submissions');
+const result = await response.json();
+if (!response.ok) {
+setError(result.error || 'Unable to load entries.');
+} else {
+setRows(result.rows || []);
+}
+setLoading(false);
+}
+load();
+}, []);
 
-  useEffect(() => {
-    async function loadRallies() {
-      const localRallies = parseStoredRallies(window.localStorage.getItem(RALLY_STORAGE_KEY));
+useEffect(() => {
+setRallies(parseStoredRallies(window.localStorage.getItem(RALLY_STORAGE_KEY)));
+setRalliesHydrated(true);
+}, []);
 
-      try {
-        const response = await fetch('/api/admin-rallies');
-        const payload = await response.json();
+useEffect(() => {
+if (!ralliesHydrated) return;
+window.localStorage.setItem(RALLY_STORAGE_KEY, JSON.stringify(rallies));
+}, [rallies, ralliesHydrated]);
 
-        if (!response.ok) {
-          throw new Error(payload.error || 'Unable to load rallies.');
-        }
+useEffect(() => {
+if (!rows.length) return;
+setRallies((current) => {
+const normalized = normalizeRalliesForRows(current, rows);
+return JSON.stringify(normalized) === JSON.stringify(current) ? current : normalized;
+});
+}, [rows]);
 
-        const remoteRallies = payload.rallies || [];
-        if (remoteRallies.length === 0 && localRallies.length > 0) {
-          setRallies(localRallies);
-          await saveRallies(localRallies, 'Migrated local rallies to shared storage.');
-        } else {
-          setRallies(remoteRallies);
-          window.localStorage.setItem(RALLY_STORAGE_KEY, JSON.stringify(remoteRallies));
-        }
-      } catch (err) {
-        setRallies(localRallies);
-        setRallyStatus(err.message);
-      } finally {
-        setRalliesHydrated(true);
-      }
-    }
+async function handleLogout() {
+await fetch('/api/admin-logout', { method: 'POST' });
+router.push('/admin/login');
+router.refresh();
+}
 
-    loadRallies();
-  }, []);
+function handleSort(key) {
+if (sortKey === key) {
+setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+} else {
+setSortKey(key);
+setSortDir('asc');
+}
+}
 
-  useEffect(() => {
-    if (!rows.length) return;
+function applyDeletedMemberIds(memberIds) {
+setRows((currentRows) => {
+const { rows: nextRows, rallies: nextRallies } = removeRowsAndAssignments(
+currentRows,
+rallies,
+memberIds,
+);
+setRallies(nextRallies);
+return nextRows;
+});
+}
 
-    setRallies((current) => {
-      const normalized = normalizeRalliesForRows(current, rows);
-      return JSON.stringify(normalized) === JSON.stringify(current) ? current : normalized;
-    });
-  }, [rows]);
+async function deleteMember(row) {
+const label = `${row.name || 'this entry'} (${row.member_id})`;
+if (!window.confirm(`Remove ${label}? This cannot be undone.`)) return;
+setActionStatus('');
+setActionError('');
+setDeletingIds((current) => [...current, String(row.member_id)]);
+const response = await fetch(`/api/admin-submissions/${encodeURIComponent(row.member_id)}`, {
+method: 'DELETE',
+});
+const result = await response.json();
+setDeletingIds((current) => current.filter((id) => id !== String(row.member_id)));
+if (!response.ok) {
+setActionError(result.error || `Could not remove ${label}.`);
+return;
+}
+applyDeletedMemberIds(result.deletedMemberIds || [row.member_id]);
+setActionStatus(`Removed ${label}.`);
+}
 
-  async function handleLogout() {
-    await fetch('/api/admin-logout', { method: 'POST' });
-    router.push('/admin/login');
-    router.refresh();
-  }
+async function clearTestData() {
+if (!window.confirm('Remove all Test Seed / TEST710 entries? This cannot be undone.')) return;
+setActionStatus('');
+setActionError('');
+setDeletingIds(['__test_data__']);
+const response = await fetch('/api/admin-submissions?scope=test', { method: 'DELETE' });
+const result = await response.json();
+setDeletingIds([]);
+if (!response.ok) {
+setActionError(result.error || 'Could not clear test data.');
+return;
+}
+const deletedMemberIds = result.deletedMemberIds || [];
+applyDeletedMemberIds(deletedMemberIds);
+setActionStatus(`Cleared ${deletedMemberIds.length} test entries.`);
+}
 
-  function handleSort(key) {
-    if (sortKey === key) {
-      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortKey(key);
-      setSortDir('asc');
-    }
-  }
+function handleCreateRally() {
+setRallies((current) => createNextRally(current, `rally-${current.length + 1}-${Date.now()}`));
+}
 
-  function handleCreateRally() {
-    saveRallies(createNextRally(rallies, `rally-${rallies.length + 1}-${Date.now()}`));
-  }
+function handleDragStart(event, memberId) {
+event.dataTransfer.effectAllowed = 'move';
+event.dataTransfer.setData('text/plain', String(memberId));
+}
 
-  function handleDragStart(event, memberId) {
-    event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.setData('text/plain', String(memberId));
-  }
+function handleDropOnRally(event, rallyId) {
+event.preventDefault();
+const memberId = event.dataTransfer.getData('text/plain');
+if (!memberId) return;
+setRallies((current) => assignMemberToRally(current, rallyId, memberId));
+}
 
-  function handleDropOnRally(event, rallyId) {
-    event.preventDefault();
-    const memberId = event.dataTransfer.getData('text/plain');
-    if (!memberId) return;
+function handleRemoveFromRally(memberId) {
+setRallies((current) => removeMemberFromRallies(current, memberId));
+}
 
-    saveRallies(assignMemberToRally(rallies, rallyId, memberId));
-  }
+function handleDeleteRally(rally) {
+if (!window.confirm(`Delete ${rally.name}? Members will stay in the table.`)) return;
+setRallies((current) => removeRallyById(current, rally.id));
+}
 
-  function handleRemoveFromRally(memberId) {
-    saveRallies(removeMemberFromRallies(rallies, memberId));
-  }
+function handleRallyLeadChange(rallyId, memberId) {
+setRallies((current) => setRallyLead(current, rallyId, memberId));
+}
 
-  function handleLeadChange(rallyId, memberId) {
-    saveRallies(updateRallyLead(rallies, rallyId, memberId));
-  }
+function handleTroopWeightChange(rallyId, troopType, value) {
+setRallies((current) => setRallyTroopWeight(current, rallyId, troopType, value));
+}
 
-  function handleFormationChange(rallyId, troopType, value) {
-    saveRallies(updateRallyFormation(rallies, rallyId, troopType, value));
-  }
+function handleToggleLeadHero(rallyId, hero) {
+setRallies((current) => toggleRallyLeadHero(current, rallyId, hero));
+}
 
-  function handleLeadHeroChange(rallyId, heroName, selected) {
-    saveRallies(updateRallyLeadHeroes(rallies, rallyId, heroName, selected));
-  }
+function handleAutoAssign(rallyId) {
+setRallies((current) => autoAssignRallyMembers(current, rallyId, rows));
+}
 
-  function handleAutoAssign(rallyId) {
-    const rally = rallies.find((item) => item.id === rallyId);
-    if ((rally?.leadHeroNames || []).length !== HERO_SELECTION_LIMIT) {
-      setRallyStatus(`Select ${HERO_SELECTION_LIMIT} rally lead heroes before auto assigning.`);
-      return;
-    }
+const filteredSorted = useMemo(() => {
+const term = search.trim().toLowerCase();
+let result = rows;
+if (term) {
+result = rows.filter((r) => {
+return (
+(r.name || '').toLowerCase().includes(term) ||
+(r.member_id || '').toLowerCase().includes(term) ||
+(r.heroes || []).some((h) => h.toLowerCase().includes(term)) ||
+Object.values(r.power_profile || {}).some((value) => String(value || '').toLowerCase().includes(term)) ||
+(r.availability || '').toLowerCase().includes(term)
+);
+});
+}
+const sorted = [...result].sort((a, b) => {
+let av = a[sortKey];
+let bv = b[sortKey];
+if (Array.isArray(av)) av = av.join(', ');
+if (Array.isArray(bv)) bv = bv.join(', ');
+av = (av ?? '').toString().toLowerCase();
+bv = (bv ?? '').toString().toLowerCase();
+if (av < bv) return sortDir === 'asc' ? -1 : 1;
+if (av > bv) return sortDir === 'asc' ? 1 : -1;
+return 0;
+});
+return sorted;
+}, [rows, search, sortKey, sortDir]);
 
-    saveRallies(autoAssignRallyMembers(rallies, rallyId, rows), 'Rally members auto-assigned.');
-  }
+const membersById = useMemo(() => {
+return new Map(rows.map((row) => [String(row.member_id), row]));
+}, [rows]);
 
-  function troopSummary(member) {
-    return [
-      `I ${member.infantry_tier}/${member.infantry_tg}`,
-      `C ${member.cavalry_tier}/${member.cavalry_tg}`,
-      `A ${member.archer_tier}/${member.archer_tg}`,
-    ].join(' | ');
-  }
+const rallyByMemberId = useMemo(() => {
+const assignments = new Map();
+rallies.forEach((rally) => {
+rally.memberIds.forEach((memberId) => assignments.set(String(memberId), rally.name));
+});
+return assignments;
+}, [rallies]);
 
-  function rallyMembersForSet(rally, setKey) {
-    return rally.memberIds.filter((memberId, index) => {
-      const assignedSet = rally.memberSetAssignments?.[String(memberId)];
-      if (assignedSet) return assignedSet === setKey;
+const assignedCount = rallyByMemberId.size;
+const availableCount = rows.filter((row) => (
+!String(row.availability || '').toLowerCase().includes('not available')
+)).length;
+const powerProfileCount = rows.filter((row) => row.power_profile).length;
+const rallyCount = rallies.length;
+const lastUpdated = rows.reduce((latest, row) => {
+const timestamp = row.updated_at ? Date.parse(row.updated_at) : 0;
+return timestamp > latest ? timestamp : latest;
+}, 0);
 
-      const fallbackSet = index < RALLY_SET_SIZE ? RALLY_SETS[0].key : RALLY_SETS[1].key;
-      return fallbackSet === setKey;
-    });
-  }
-
-  async function saveRallies(nextRallies, successMessage = 'Rallies saved.') {
-    setRallies(nextRallies);
-    setRallyStatus('Saving rallies...');
-    window.localStorage.setItem(RALLY_STORAGE_KEY, JSON.stringify(nextRallies));
-
-    try {
-      const response = await fetch('/api/admin-rallies', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rallies: nextRallies }),
-      });
-      const payload = await response.json();
-
-      if (!response.ok) {
-        throw new Error(payload.error || 'Unable to save rallies.');
-      }
-
-      setRallyStatus(successMessage);
-    } catch (err) {
-      setRallyStatus(err.message);
-    }
-  }
-
-  const filteredSorted = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    let result = rows;
-    if (term) {
-      result = rows.filter((r) => {
-        return (
-          (r.name || '').toLowerCase().includes(term) ||
-          (r.member_id || '').toLowerCase().includes(term) ||
-          (r.heroes || []).some((h) => h.toLowerCase().includes(term)) ||
-          (r.availability || '').toLowerCase().includes(term)
-          );
-      });
-    }
-    const sorted = [...result].sort((a, b) => {
-      let av = a[sortKey];
-      let bv = b[sortKey];
-      if (Array.isArray(av)) av = av.join(', ');
-      if (Array.isArray(bv)) bv = bv.join(', ');
-      av = (av ?? '').toString().toLowerCase();
-      bv = (bv ?? '').toString().toLowerCase();
-      if (av < bv) return sortDir === 'asc' ? -1 : 1;
-      if (av > bv) return sortDir === 'asc' ? 1 : -1;
-      return 0;
-    });
-    return sorted;
-  }, [rows, search, sortKey, sortDir]);
-
-  const membersById = useMemo(() => {
-    return new Map(rows.map((row) => [String(row.member_id), row]));
-  }, [rows]);
-
-  const availableHeroes = useMemo(() => {
-    const heroes = new Set();
-    rows.forEach((row) => {
-      (row.heroes || []).forEach((hero) => {
-        const heroName = String(hero || '').trim();
-        if (heroName) heroes.add(heroName);
-      });
-    });
-    return [...heroes].sort((a, b) => a.localeCompare(b));
-  }, [rows]);
-
-  const rallyByMemberId = useMemo(() => {
-    const assignments = new Map();
-    rallies.forEach((rally) => {
-      if (rally.leadMemberId) assignments.set(String(rally.leadMemberId), `${rally.name} Lead`);
-      rally.memberIds.forEach((memberId) => assignments.set(String(memberId), rally.name));
-    });
-    return assignments;
-  }, [rallies]);
-
-  const assignedMemberIds = useMemo(() => {
-    const assigned = new Set();
-    rallies.forEach((rally) => {
-      if (rally.leadMemberId) assigned.add(String(rally.leadMemberId));
-      rally.memberIds.forEach((memberId) => assigned.add(String(memberId)));
-    });
-    return assigned;
-  }, [rallies]);
-
-  return (
-    <div className="page">
-    <div className="card admin-dashboard-card">
-    <div className="card-header admin-header-row">
-    <h1>Admin Dashboard</h1>
-    <button type="button" onClick={handleLogout} className="logout-btn">Log Out</button>
-    </div>
-    <div className="card-body">
-    <input
-    type="text"
-    placeholder="Search by name, member ID, hero, availability..."
-    value={search}
-    onChange={(e) => setSearch(e.target.value)}
-    className="admin-search"
-    />
-    {loading && <p>Loading...</p>}
-    {error && <div className="status error">{error}</div>}
-    {!loading && !error && (
-      <div className="admin-workspace">
-      <div className="admin-table-wrap">
-      <table className="admin-table">
-      <thead>
-      <tr>
-      {COLUMNS.map((col) => (
-        <th key={col.key} onClick={() => handleSort(col.key)}>
-        {col.label}
-        {sortKey === col.key ? (sortDir === 'asc' ? ' \u25B2' : ' \u25BC') : ''}
-        </th>
-        ))}
-      </tr>
-      </thead>
-      <tbody>
-      {filteredSorted.map((row) => (
-        <tr
-        key={row.member_id}
-        draggable
-        onDragStart={(event) => handleDragStart(event, row.member_id)}
-        >
-        <td>
-        <div className="member-name-cell">
-        <span>{row.name}</span>
-        {rallyByMemberId.has(String(row.member_id)) && (
-          <span className="rally-badge">{rallyByMemberId.get(String(row.member_id))}</span>
-          )}
-        </div>
-        </td>
-        <td>{row.member_id}</td>
-        <td>{row.infantry_tier}</td>
-        <td>{row.infantry_tg}</td>
-        <td>{row.cavalry_tier}</td>
-        <td>{row.cavalry_tg}</td>
-        <td>{row.archer_tier}</td>
-        <td>{row.archer_tg}</td>
-        <td>{(row.heroes || []).join(', ')}</td>
-        <td>{row.availability}</td>
-        <td>{row.updated_at ? new Date(row.updated_at).toLocaleString() : ''}</td>
-        </tr>
-        ))}
-      </tbody>
-      </table>
-      {filteredSorted.length === 0 && <p>No results found.</p>}
-      </div>
-      <aside className="rally-sidebar" aria-label="Rally planner">
-      <div className="rally-sidebar-header">
-      <div>
-      <h2>Rallies</h2>
-      <p>Drag members here.</p>
-      {rallyStatus && <p className="rally-sync-status">{rallyStatus}</p>}
-      </div>
-      <button
-      type="button"
-      onClick={handleCreateRally}
-      className="create-rally-btn"
-      disabled={!ralliesHydrated}
-      >
-      Create Rally {rallies.length + 1}
-      </button>
-      </div>
-      <div className="rally-list">
-      {rallies.length === 0 && (
-        <div className="rally-empty-state">Create Rally 1 to start assigning members.</div>
-        )}
-        {rallies.map((rally) => (
-        <section
-        key={rally.id}
-        className="rally-dropzone"
-        onDragOver={(event) => event.preventDefault()}
-        onDrop={(event) => handleDropOnRally(event, rally.id)}
-        >
-        <div className="rally-dropzone-header">
-        <h3>{rally.name}</h3>
-        <span>{rally.memberIds.length}</span>
-        </div>
-        <div className="rally-lead-section">
-        <h4>Rally Lead</h4>
-        <select
-        value={rally.leadMemberId || ''}
-        onChange={(event) => handleLeadChange(rally.id, event.target.value)}
-        className="rally-lead-select"
-        >
-        <option value="">Select lead</option>
-        {rows.map((member) => {
-          const memberId = String(member.member_id);
-          const usedElsewhere = assignedMemberIds.has(memberId) && rally.leadMemberId !== memberId;
-          return (
-            <option key={memberId} value={memberId} disabled={usedElsewhere}>
-            {member.name} ({member.member_id})
-            </option>
-            );
-        })}
-        </select>
-        <div className="rally-formation-grid">
-        {TROOP_TYPES.map((troopType) => (
-          <label key={troopType}>
-          <span>{troopType[0].toUpperCase() + troopType.slice(1)} %</span>
-          <input
-          type="number"
-          min="0"
-          max="100"
-          value={rally.formation?.[troopType] ?? 0}
-          onChange={(event) => handleFormationChange(rally.id, troopType, event.target.value)}
-          />
-          </label>
-          ))}
-        </div>
-        <div className="rally-hero-section">
-        <div className="rally-hero-header">
-        <h4>Lead Heroes</h4>
-        <span>{(rally.leadHeroNames || []).length}/{HERO_SELECTION_LIMIT}</span>
-        </div>
-        <div className="rally-hero-grid">
-        {availableHeroes.map((heroName) => {
-          const selected = (rally.leadHeroNames || []).includes(heroName);
-          const disabled = !selected && (rally.leadHeroNames || []).length >= HERO_SELECTION_LIMIT;
-          return (
-            <label key={heroName} className="rally-hero-option">
-            <input
-            type="checkbox"
-            checked={selected}
-            disabled={disabled}
-            onChange={(event) => handleLeadHeroChange(rally.id, heroName, event.target.checked)}
-            />
-            <span>{heroName}</span>
-            </label>
-            );
-        })}
-        </div>
-        </div>
-        </div>
-        <div className="rally-members-section">
-        <div className="rally-members-header">
-        <h4>Rally Members</h4>
-        <button
-        type="button"
-        onClick={() => handleAutoAssign(rally.id)}
-        className="auto-assign-btn"
-        disabled={(rally.leadHeroNames || []).length !== HERO_SELECTION_LIMIT}
-        >
-        Auto assign 16
-        </button>
-        </div>
-        {rally.memberIds.length === 0 ? (
-          <p className="rally-drop-hint">Drop members here</p>
-          ) : (
-          <div className="rally-set-list">
-          {RALLY_SETS.map((set) => {
-            const setMemberIds = rallyMembersForSet(rally, set.key);
-            return (
-              <div key={set.key} className="rally-set">
-              <div className="rally-set-header">
-              <h5>{set.label}</h5>
-              <span>{set.availabilityLabel}</span>
-              </div>
-              {setMemberIds.length === 0 ? (
-                <p className="rally-set-empty">No members assigned.</p>
-              ) : (
-                <div className="rally-member-list">
-                {setMemberIds.map((memberId) => {
-            const member = membersById.get(String(memberId));
-            if (!member) return null;
-
-            return (
-              <div key={memberId} className="rally-member">
-              <div>
-              <strong>{member.name}</strong>
-              <span>{member.member_id}</span>
-              <span>{troopSummary(member)}</span>
-              <span>{member.availability}</span>
-              {rally.memberHeroAssignments?.[String(memberId)] && (
-                <span>Hero: {rally.memberHeroAssignments[String(memberId)]}</span>
-              )}
-              </div>
-              <button
-              type="button"
-              onClick={() => handleRemoveFromRally(memberId)}
-              aria-label={`Remove ${member.name} from ${rally.name}`}
-              >
-              x
-              </button>
-              </div>
-              );
-          })}
-                </div>
-              )}
-              </div>
-            );
-          })}
-          </div>
-          )}
-        </div>
-        </section>
-        ))}
-      </div>
-      </aside>
-      </div>
-      )}
-    </div>
-    </div>
-    </div>
-    );
+return (
+<div className="page admin-page">
+<div className="card admin-dashboard-card">
+<div className="admin-tabs">
+<Link href="/admin/dashboard" className="admin-tab active">Player Records</Link>
+<Link href="/admin/dashboard/interest" className="admin-tab">Interest Submissions</Link>
+</div>
+<div className="admin-hero">
+<div>
+<span className="admin-kicker">K710 command board</span>
+<h1>Admin Dashboard</h1>
+<p>Roster intake, rally composition, and hero guidance in one live planning view.</p>
+</div>
+<div className="admin-hero-actions">
+<button
+type="button"
+onClick={clearTestData}
+className="clear-test-data-btn"
+disabled={deletingIds.includes('__test_data__')}
+>
+{deletingIds.includes('__test_data__') ? 'Clearing...' : 'Clear test data'}
+</button>
+<button type="button" onClick={handleLogout} className="logout-btn">Log Out</button>
+</div>
+</div>
+<div className="card-body">
+<div className="dashboard-stats" aria-label="Dashboard summary">
+<div>
+<span>Total members</span>
+<strong>{rows.length}</strong>
+</div>
+<div>
+<span>Available</span>
+<strong>{availableCount}</strong>
+</div>
+<div>
+<span>Assigned</span>
+<strong>{assignedCount}</strong>
+</div>
+<div>
+<span>Power profiles</span>
+<strong>{powerProfileCount}</strong>
+</div>
+<div>
+<span>Rallies</span>
+<strong>{rallyCount}</strong>
+</div>
+<div>
+<span>Latest update</span>
+<strong>{lastUpdated ? new Date(lastUpdated).toLocaleDateString() : '-'}</strong>
+</div>
+</div>
+<div className="admin-actions">
+<div className="search-shell">
+<span>Search</span>
+<input
+type="text"
+placeholder="Search by name, member ID, hero, availability..."
+value={search}
+onChange={(e) => setSearch(e.target.value)}
+className="admin-search"
+/>
+</div>
+</div>
+{actionStatus && <div className="status">{actionStatus}</div>}
+{actionError && <div className="status error">{actionError}</div>}
+{loading && <p>Loading...</p>}
+{error && <div className="status error">{error}</div>}
+{!loading && !error && (
+<div className="admin-workspace">
+<section className="roster-panel" aria-label="Member roster">
+<div className="panel-heading">
+<div>
+<span>Roster</span>
+<h2>Members</h2>
+</div>
+<p>{filteredSorted.length} shown</p>
+</div>
+<div className="admin-table-wrap">
+<table className="admin-table">
+<thead>
+<tr>
+{COLUMNS.map((col) => (
+<th key={col.key} onClick={() => handleSort(col.key)}>
+{col.label}
+{sortKey === col.key ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''}
+</th>
+))}
+<th>Actions</th>
+</tr>
+</thead>
+<tbody>
+{filteredSorted.map((row) => (
+<tr
+key={row.member_id}
+draggable
+onDragStart={(event) => handleDragStart(event, row.member_id)}
+>
+<td>
+<div className="member-name-cell">
+<span>{row.name}</span>
+{rallyByMemberId.has(String(row.member_id)) && (
+<span className="rally-badge">{rallyByMemberId.get(String(row.member_id))}</span>
+)}
+</div>
+</td>
+<td className="member-id-cell">{row.member_id}</td>
+<td><span className="unit-pill">{formatUnitLevel(row.infantry_tier, row.infantry_tg)}</span></td>
+<td><span className="unit-pill cavalry">{formatUnitLevel(row.cavalry_tier, row.cavalry_tg)}</span></td>
+<td><span className="unit-pill archer">{formatUnitLevel(row.archer_tier, row.archer_tg)}</span></td>
+<td>
+<div className="heroes-cell">
+<strong>{(row.heroes || []).length}</strong>
+<span>{(row.heroes || []).slice(0, 3).join(', ') || '-'}</span>
+</div>
+</td>
+<td>
+{row.power_profile ? (
+<div className="power-cell">
+<span>Gov {powerValue(row.power_profile, 'governor_gear')}</span>
+<span>Charms {powerValue(row.power_profile, 'charms')}</span>
+<span>Hero {powerValue(row.power_profile, 'hero_gear')}</span>
+<span>Pet {powerValue(row.power_profile, 'pet_power')}</span>
+<span>Masters {powerValue(row.power_profile, 'masters_power')}</span>
+</div>
+) : (
+<span className="missing-power-pill">No power profile</span>
+)}
+</td>
+<td>
+<span className={`availability-pill ${availabilityTone(row.availability)}`}>
+{row.availability || '-'}
+</span>
+</td>
+<td className="updated-cell">{row.updated_at ? new Date(row.updated_at).toLocaleString() : ''}</td>
+<td>
+<button
+type="button"
+className="delete-entry-btn"
+onClick={() => deleteMember(row)}
+disabled={deletingIds.includes(String(row.member_id))}
+>
+{deletingIds.includes(String(row.member_id)) ? 'Removing...' : 'Remove'}
+</button>
+</td>
+</tr>
+))}
+</tbody>
+</table>
+{filteredSorted.length === 0 && <p>No results found.</p>}
+</div>
+</section>
+<aside className="rally-sidebar" aria-label="Rally planner">
+<div className="rally-sidebar-header">
+<div>
+<span>Planner</span>
+<h2>Rallies</h2>
+<p>{assignedCount} members assigned</p>
+</div>
+<button type="button" onClick={handleCreateRally} className="create-rally-btn">
+Create Rally {rallies.length + 1}
+</button>
+</div>
+<div className="rally-list">
+{rallies.length === 0 && (
+<div className="rally-empty-state">Create Rally 1 to start assigning members.</div>
+)}
+{rallies.map((rally) => (
+<section
+key={rally.id}
+className="rally-dropzone"
+onDragOver={(event) => event.preventDefault()}
+onDrop={(event) => handleDropOnRally(event, rally.id)}
+>
+<div className="rally-dropzone-header">
+<div className="rally-title-row">
+<h3>{rally.name}</h3>
+<span>{rally.memberIds.length}</span>
+</div>
+<button
+type="button"
+className="delete-rally-btn"
+onClick={() => handleDeleteRally(rally)}
+aria-label={`Delete ${rally.name}`}
+>
+Delete
+</button>
+</div>
+<div className="rally-controls">
+<label className="rally-control-label">
+<span>Rally Lead</span>
+<select
+value={rally.leadMemberId || ''}
+onChange={(event) => handleRallyLeadChange(rally.id, event.target.value)}
+>
+<option value="">Select lead</option>
+{rows.map((row) => (
+<option key={row.member_id} value={row.member_id}>
+{row.name} ({row.member_id})
+</option>
+))}
+</select>
+</label>
+<div className="troop-weight-grid" aria-label={`${rally.name} troop criteria`}>
+{[
+['infantry', 'Infantry %'],
+['cavalry', 'Cavalry %'],
+['archer', 'Archer %'],
+].map(([key, label]) => (
+<label key={key} className="rally-control-label">
+<span>{label}</span>
+<input
+type="number"
+min="0"
+max="100"
+value={(rally.troopWeights && rally.troopWeights[key]) || 0}
+onChange={(event) => handleTroopWeightChange(rally.id, key, event.target.value)}
+/>
+</label>
+))}
+</div>
+<div className="lead-heroes-block">
+<div className="lead-heroes-header">
+<span>Lead Heroes</span>
+<span>{(rally.leadHeroes || []).length}/4</span>
+</div>
+<div className="lead-heroes-grid">
+{HEROES.map((hero) => {
+const selected = (rally.leadHeroes || []).includes(hero);
+const disabled = !selected && (rally.leadHeroes || []).length >= 4;
+return (
+<button
+key={hero}
+type="button"
+className={selected ? 'lead-hero-btn selected' : 'lead-hero-btn'}
+onClick={() => handleToggleLeadHero(rally.id, hero)}
+disabled={disabled}
+>
+{hero}
+</button>
+);
+})}
+</div>
+</div>
+<button
+type="button"
+className="auto-assign-btn"
+onClick={() => handleAutoAssign(rally.id)}
+>
+Auto assign 16
+</button>
+</div>
+{rally.memberIds.length === 0 ? (
+<p className="rally-drop-hint">Drop members here</p>
+) : (
+<div className="rally-member-list">
+{rally.memberIds.map((memberId) => {
+const member = membersById.get(String(memberId));
+if (!member) return null;
+const matchingLeadHeroes = getMatchingLeadHeroes(member, rally);
+const troopLevels = getTroopLevelSummary(member);
+return (
+<div key={memberId} className="rally-member">
+<div className="rally-member-details">
+<strong>{member.name}</strong>
+<span className="rally-member-id">{member.member_id}</span>
+{troopLevels.length > 0 && (
+<div className="rally-member-troops">
+{troopLevels.map((troopLevel) => (
+<span key={troopLevel}>{troopLevel}</span>
+))}
+</div>
+)}
+<div className="rally-member-heroes">
+<span>Use:</span>
+<strong>
+{matchingLeadHeroes.length > 0 ? matchingLeadHeroes.join(', ') : 'No selected lead hero match'}
+</strong>
+</div>
+</div>
+<button
+type="button"
+onClick={() => handleRemoveFromRally(memberId)}
+aria-label={`Remove ${member.name} from ${rally.name}`}
+>
+x
+</button>
+</div>
+);
+})}
+</div>
+)}
+</section>
+))}
+</div>
+</aside>
+</div>
+)}
+</div>
+</div>
+</div>
+);
 }
