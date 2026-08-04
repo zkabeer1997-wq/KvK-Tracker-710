@@ -1,10 +1,34 @@
 import Link from 'next/link';
+import HomeEditableText from '../components/HomeEditableText';
+import { getHomeContent, checkIsAdmin } from '../lib/homeContent';
 
 export const metadata = {
   title: 'K710 Dashboard',
 };
 
-export default function HomePage() {
+// Homepage content is stored in the content_blocks table (page = 'home') and
+// is editable inline by a logged-in admin only. Missing fields self-seed on
+// first render, so no manual setup is needed.
+export const dynamic = 'force-dynamic';
+
+export default async function HomePage() {
+  const content = await getHomeContent();
+  const isAdmin = await checkIsAdmin();
+
+  // Helper to render an editable text field by its key.
+  const field = (key, props = {}) => {
+    const c = content[key] || { id: null, text: '' };
+    return (
+      <HomeEditableText
+        id={c.id}
+        fieldKey={key}
+        initialText={c.text}
+        isAdmin={isAdmin}
+        {...props}
+      />
+    );
+  };
+
   return (
     <main className="k710-page">
       {/* HERO */}
@@ -44,25 +68,25 @@ export default function HomePage() {
       <div className="section section-alt">
         <div className="wrap">
           <div className="section-head">
-            <div className="eyebrow">WHY GOVERN WITH US</div>
-            <h2>Built for players who take KvK seriously</h2>
-            <p>Not another spreadsheet-and-hope operation. Here&rsquo;s what&rsquo;s actually different about how 710 runs.</p>
+            {field('why-head-kicker', { as: 'div', className: 'eyebrow' })}
+            {field('why-head-title', { as: 'h2' })}
+            {field('why-head-sub', { as: 'p', multiline: true })}
           </div>
           <div className="grid-3">
             <div className="card">
               <svg className="card-icon" viewBox="0 0 34 34" fill="none"><circle cx="17" cy="17" r="14" stroke="#d9a94e" strokeWidth="1.6" /><path d="M17 9V17L22 20" stroke="#d9a94e" strokeWidth="1.6" strokeLinecap="round" /></svg>
-              <h3>Coverage in every timezone</h3>
-              <p>Three warbands, seven Bear Hunt windows spread across the clock. Whenever you log in, somebody in 710 is already rallying.</p>
+              {field('why-1-title', { as: 'h3' })}
+              {field('why-1-body', { as: 'p', multiline: true })}
             </div>
             <div className="card">
               <svg className="card-icon" viewBox="0 0 34 34" fill="none"><path d="M17 4 L28 9 V17 C28 24 23 28.5 17 31 C11 28.5 6 24 6 17 V9 Z" stroke="#d9a94e" strokeWidth="1.6" /></svg>
-              <h3>Vetted for commitment, not just power</h3>
-              <p>Our transfer review looks at T11 troop levels, Mystic Trial stages, and KvK-prep habits &mdash; because a kingdom of quiet whales loses to a kingdom that shows up.</p>
+              {field('why-2-title', { as: 'h3' })}
+              {field('why-2-body', { as: 'p', multiline: true })}
             </div>
             <div className="card">
               <svg className="card-icon" viewBox="0 0 34 34" fill="none"><rect x="5" y="5" width="10" height="10" stroke="#d9a94e" strokeWidth="1.6" /><rect x="19" y="5" width="10" height="10" stroke="#d9a94e" strokeWidth="1.6" /><rect x="5" y="19" width="10" height="10" stroke="#d9a94e" strokeWidth="1.6" /><rect x="19" y="19" width="10" height="10" stroke="#d9a94e" strokeWidth="1.6" /></svg>
-              <h3>Real war-room tooling</h3>
-              <p>Rally roster tracking, King Skill scheduling, and live power profiles &mdash; purpose-built for this kingdom, not a shared Google Sheet from three seasons ago.</p>
+              {field('why-3-title', { as: 'h3' })}
+              {field('why-3-body', { as: 'p', multiline: true })}
             </div>
           </div>
         </div>
@@ -72,23 +96,23 @@ export default function HomePage() {
       <div className="section">
         <div className="wrap">
           <div className="section-head">
-            <div className="eyebrow">THE THREE WARBANDS</div>
-            <h2>Pick your alliance, know your hunt times</h2>
-            <p>Every warband runs its own Bear Hunt schedule. Migration preference is part of the application &mdash; here&rsquo;s what each one covers.</p>
+            {field('wb-head-kicker', { as: 'div', className: 'eyebrow' })}
+            {field('wb-head-title', { as: 'h2' })}
+            {field('wb-head-sub', { as: 'p', multiline: true })}
           </div>
           <div className="grid-3">
             <div className="warband-card" style={{ '--band-color': '#d9a94e' }}>
               <span className="wb-tag">Home Warband</span>
-              <div className="wb-name"><span className="wb-dot"></span>710</div>
-              <p className="wb-desc">Two hunts a day, anchoring the early and midday windows.</p>
+              <div className="wb-name"><span className="wb-dot"></span>{field('wb-1-name')}</div>
+              {field('wb-1-desc', { as: 'p', className: 'wb-desc', multiline: true })}
               <div className="wb-times">
                 <span className="wb-time">0200 UTC</span>
                 <span className="wb-time">1300 UTC</span>
               </div>
             </div>
             <div className="warband-card" style={{ '--band-color': '#d9622d' }}>
-              <div className="wb-name"><span className="wb-dot"></span>RED</div>
-              <p className="wb-desc">Three hunts, running from EU evening through NA late night.</p>
+              <div className="wb-name"><span className="wb-dot"></span>{field('wb-2-name')}</div>
+              {field('wb-2-desc', { as: 'p', className: 'wb-desc', multiline: true })}
               <div className="wb-times">
                 <span className="wb-time">1105 UTC</span>
                 <span className="wb-time">1900 UTC</span>
@@ -96,8 +120,8 @@ export default function HomePage() {
               </div>
             </div>
             <div className="warband-card" style={{ '--band-color': '#86a873' }}>
-              <div className="wb-name"><span className="wb-dot"></span>SKY</div>
-              <p className="wb-desc">Two hunts anchoring the SEA / AU daytime window.</p>
+              <div className="wb-name"><span className="wb-dot"></span>{field('wb-3-name')}</div>
+              {field('wb-3-desc', { as: 'p', className: 'wb-desc', multiline: true })}
               <div className="wb-times">
                 <span className="wb-time">1200 UTC</span>
                 <span className="wb-time">2000 UTC</span>
@@ -111,30 +135,30 @@ export default function HomePage() {
       <div className="section section-alt">
         <div className="wrap">
           <div className="section-head">
-            <div className="eyebrow">HOW TRANSFERS WORK</div>
-            <h2>Your path to the throne room</h2>
-            <p>Four steps, start to finish. No guesswork about where your application stands.</p>
+            {field('steps-head-kicker', { as: 'div', className: 'eyebrow' })}
+            {field('steps-head-title', { as: 'h2' })}
+            {field('steps-head-sub', { as: 'p', multiline: true })}
           </div>
           <div className="steps">
             <div className="step">
               <span className="step-num">01</span>
-              <h4>Submit the interest form</h4>
-              <p>In-game name, player ID, Discord, and your current server and alliance.</p>
+              {field('step-1-title', { as: 'h4' })}
+              {field('step-1-body', { as: 'p', multiline: true })}
             </div>
             <div className="step">
               <span className="step-num">02</span>
-              <h4>Get reviewed</h4>
-              <p>Troop tier, T11 status, Mystic Trial stages, power, and honest commitment questions.</p>
+              {field('step-2-title', { as: 'h4' })}
+              {field('step-2-body', { as: 'p', multiline: true })}
             </div>
             <div className="step">
               <span className="step-num">03</span>
-              <h4>Pick your intake window</h4>
-              <p>New intake opens monthly &mdash; apply now, transfer when your window lands.</p>
+              {field('step-3-title', { as: 'h4' })}
+              {field('step-3-body', { as: 'p', multiline: true })}
             </div>
             <div className="step">
               <span className="step-num">04</span>
-              <h4>March in, report to your warband</h4>
-              <p>Land in 710, RED, or SKY and get looped into your warband&rsquo;s rally schedule.</p>
+              {field('step-4-title', { as: 'h4' })}
+              {field('step-4-body', { as: 'p', multiline: true })}
             </div>
           </div>
           <div style={{ marginTop: '44px' }}>
@@ -147,21 +171,21 @@ export default function HomePage() {
       <div className="section">
         <div className="wrap">
           <div className="section-head">
-            <div className="eyebrow">ALREADY IN 710?</div>
-            <h2>Command deck</h2>
-            <p>Quick access to the tools your warband uses every KvK cycle.</p>
+            {field('deck-head-kicker', { as: 'div', className: 'eyebrow' })}
+            {field('deck-head-title', { as: 'h2' })}
+            {field('deck-head-sub', { as: 'p', multiline: true })}
           </div>
           <div className="deck">
             <Link className="deck-tile" href="/player-record">
-              <span><span className="dt-label">Rally Roster</span><span className="dt-sub">submit availability &amp; troops</span></span>
+              <span>{field('deck-1-label', { className: 'dt-label' })}{field('deck-1-sub', { className: 'dt-sub' })}</span>
               <span className="dt-arrow">&rarr;</span>
             </Link>
             <Link className="deck-tile" href="/power-profile">
-              <span><span className="dt-label">Power Profile</span><span className="dt-sub">track your growth</span></span>
+              <span>{field('deck-2-label', { className: 'dt-label' })}{field('deck-2-sub', { className: 'dt-sub' })}</span>
               <span className="dt-arrow">&rarr;</span>
             </Link>
             <Link className="deck-tile" href="/admin">
-              <span><span className="dt-label">Admin</span><span className="dt-sub">kingdom leadership only</span></span>
+              <span>{field('deck-3-label', { className: 'dt-label' })}{field('deck-3-sub', { className: 'dt-sub' })}</span>
               <span className="dt-arrow">&rarr;</span>
             </Link>
           </div>
@@ -173,8 +197,8 @@ export default function HomePage() {
         <div className="wrap">
           <div className="events-card">
             <div>
-              <h3>Full kingdom event calendar</h3>
-              <p>Bear Hunt windows above are live. The complete alliance event schedule &mdash; Sanctuaries, Castle, and KvK prep &mdash; is coming soon.</p>
+              {field('events-title', { as: 'h3' })}
+              {field('events-body', { as: 'p', multiline: true })}
             </div>
             <span className="events-badge">Coming Soon</span>
           </div>
