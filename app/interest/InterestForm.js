@@ -11,6 +11,16 @@ const MIGRATE_OPTIONS = [
 const TROOP_LEVEL_OPTIONS = ['TG8', 'TG7', 'TG6', 'TG5', 'Below TG5'];
 const T11_OPTIONS = ['Infantry', 'Cavalry', 'Archer', 'No T11'];
 const YES_NO = ['Yes', 'No'];
+const INTAKE_PERIOD_OPTIONS = (() => {
+const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const out = [];
+const now = new Date();
+for (let i = 0; i < 12; i += 1) {
+const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+out.push(`${months[d.getMonth()]} ${d.getFullYear()}`);
+}
+return out;
+})();
 const SPENDING_OPTIONS = [
 'P2W Whale (spending like a KS shareholder)',
 'P2W Dolphin (between $1000-$2000 monthly)',
@@ -24,6 +34,7 @@ inGameName: '',
 playerId: '',
 discordUsername: '',
 currentServer: '',
+intakePeriod: '',
 currentAlliance: '',
 migrateAlliance: '',
 migrateAllianceOther: '',
@@ -73,6 +84,7 @@ const required = [
 ['currentServer', 'Your current server'],
 ['currentAlliance', 'Your current alliance'],
 ['migrateAlliance', 'Which alliance are you looking to migrate to'],
+['intakePeriod', 'Intake period'],
 ['highestTroopLevel', 'Current highest troop level'],
 ['currentTg', 'Current amount of TG'],
 ['mysticTrialStages', 'Current Mystic Trial total stages'],
@@ -108,6 +120,7 @@ body.append('player_id', form.playerId);
 body.append('discord_username', form.discordUsername);
 body.append('current_server', form.currentServer);
 body.append('current_alliance', form.currentAlliance);
+body.append('intake_period', form.intakePeriod);
 body.append(
 'migrate_alliance',
 form.migrateAlliance === 'Other' ? `Other: ${form.migrateAllianceOther}` : form.migrateAlliance
@@ -158,6 +171,18 @@ return (
 <label>Discord username<input value={form.discordUsername} onChange={(e) => updateField('discordUsername', e.target.value)} /></label>
 <label>Your current server (prior to transfer)<input value={form.currentServer} onChange={(e) => updateField('currentServer', e.target.value)} /></label>
 <label>Your current alliance (prior to transfer)<input value={form.currentAlliance} onChange={(e) => updateField('currentAlliance', e.target.value)} /></label>
+</section>
+
+<section className="troop-section public-section">
+<div className="section-title-row"><span>Intake</span><h3>Which intake period are you applying for?</h3></div>
+<div className="radio-group">
+{INTAKE_PERIOD_OPTIONS.map((option) => (
+<label key={option} className="radio-option">
+<input type="radio" name="intakePeriod" checked={form.intakePeriod === option} onChange={() => updateField('intakePeriod', option)} />
+<span>{option}</span>
+</label>
+))}
+</div>
 </section>
 
 <section className="troop-section public-section">
