@@ -24,6 +24,7 @@ screenshotUrls.push(publicUrlData.publicUrl);
 }
 
 const payload = {
+intake_period: String(formData.get('intake_period') || ''),
 in_game_name: String(formData.get('in_game_name') || ''),
 player_id: String(formData.get('player_id') || ''),
 discord_username: String(formData.get('discord_username') || ''),
