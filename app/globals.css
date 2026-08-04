@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap');
 
 :root {
 --bg: #111622;
@@ -495,3 +495,72 @@ button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; }
 .page-banner h1 { margin: 8px 0 10px; font-size: clamp(30px, 5vw, 44px); line-height: 1; color: var(--ember); }
 
 .page-banner p { margin: 0; color: var(--text-muted); font-family: 'Inter', sans-serif; text-transform: none; letter-spacing: 0; line-height: 1.6; }
+/* ============================================================
+   K710 REDESIGN - visual system overrides (navy / gold / ember)
+   Restyle only. No markup or logic changes.
+   ============================================================ */
+
+
+:root {
+  --bg: #10142a;
+  --bg-alt: #1a2140;
+  --ink: #10142a;
+  --ink-soft: #1a2140;
+  --ink-soft-2: #212a4d;
+
+  --glass: rgba(26, 33, 64, 0.55);
+  --glass-strong: rgba(16, 20, 42, 0.78);
+  --line: rgba(217, 169, 78, 0.22);
+  --line-bright: rgba(217, 169, 78, 0.45);
+  --border-frost: rgba(217, 169, 78, 0.22);
+  --border-soft: rgba(217, 169, 78, 0.12);
+  --frost: #d9a94e;
+  --frost-bright: #f0c669;
+  --gold: #d9a94e;
+  --gold-bright: #f0c669;
+  --ember: #d9622d;
+  --ember-bright: #ef8348;
+  --parchment: #f3e9d2;
+  --text: #f3e9d2;
+  --text-muted: #aab4d0;
+  --text-dim: #7c85a8;
+  --moss: #86a873;
+  --success: #86a873;
+  --glow: 0 8px 32px rgba(0,0,0,0.5), 0 0 26px rgba(217,169,78,0.08);
+  --font-display: 'Cinzel', Georgia, serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+}
+
+body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+h1, h2, h3, h4 { font-family: var(--font-display); }
+::selection { background: var(--gold); color: var(--ink); }
+
+*:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 3px; border-radius: 2px; }
+
+.public-kicker, .form-section-header span, .section-title-row span, .admin-kicker, .panel-heading span, .rally-sidebar-header span, .hub-choice-card > span { font-family: var(--font-mono); letter-spacing: 0.18em; color: var(--gold); }
+
+button[type=submit] { background: var(--gold); color: var(--ink); }
+button[type=submit]:hover { background: var(--gold-bright); }
+.create-rally-btn, .lead-hero-btn.selected { background: var(--gold); color: var(--ink); border-color: var(--gold); }
+.create-rally-btn:hover { background: var(--gold-bright); }
+
+.card, .hub-choice-card, .public-form-card, .rallies-hub-option, .rally-sidebar, .page-banner, .home-events-card { border-color: var(--line); }
+.card { background: linear-gradient(180deg, var(--ink-soft-2), var(--ink-soft)); }
+.hub-choice-card:hover, .rallies-hub-option:hover { border-color: var(--gold); }
+
+.hub-hero h1, .home-events-card h2, .page-banner h1 { color: var(--parchment); }
+.home-menu-bar a:hover { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+
+.site-header { background: rgba(16, 20, 42, 0.86); border-bottom: 1px solid var(--line); }
+.site-brand { color: var(--parchment); font-family: var(--font-display); }
+.site-nav a { color: var(--text-muted); }
+.site-nav a:hover { background: rgba(217,169,78,0.10); color: var(--parchment); }
+.site-footer { background: var(--ink); border-top: 1px solid var(--line); color: var(--text-dim); }
+
+input, select, textarea { background: rgba(16, 20, 42, 0.6); }
+input:focus, select:focus, .public-form-card input:focus, .public-form-card select:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(217,169,78,0.20); }
+.hero-chip.selected, .availability-choice.selected { border-color: var(--gold); background: rgba(217,169,78,0.18); color: var(--parchment); }
+.admin-tab.active { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
