@@ -655,3 +655,68 @@ input:focus, select:focus, .public-form-card input:focus, .public-form-card sele
 .k710-page .home-footer .flinks { display: flex; gap: 20px; }
 .k710-page .home-footer .flinks a { font-size: 13px; color: var(--text-dim); font-weight: 600; }
 .k710-page .home-footer .flinks a:hover { color: var(--gold-bright); }
+
+/* HOME ADMIN INLINE EDITING (visible to logged-in admins only) */
+.k710-page .home-editable { position: relative; }
+.k710-page .home-edit-pencil {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-left: 6px;
+  padding: 0;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--ink, #10142a);
+  background: var(--gold, #d9a94e);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  vertical-align: middle;
+  opacity: 0.55;
+  transition: opacity 0.15s ease;
+}
+.k710-page .home-editable:hover .home-edit-pencil,
+.k710-page .home-edit-pencil:focus-visible { opacity: 1; }
+.k710-page .home-edit-field {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: 520px;
+  margin: 4px 0;
+  text-align: left;
+}
+.k710-page .home-edit-input {
+  width: 100%;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 14px;
+  color: #10142a;
+  background: #fff;
+  border: 1px solid var(--gold, #d9a94e);
+  border-radius: 6px;
+}
+.k710-page .home-edit-input:focus-visible {
+  outline: 2px solid var(--ember, #d9622d);
+  outline-offset: 1px;
+}
+.k710-page .home-edit-actions { display: flex; gap: 8px; }
+.k710-page .home-edit-actions button {
+  padding: 6px 14px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 6px;
+  border: 1px solid var(--gold, #d9a94e);
+  background: var(--gold, #d9a94e);
+  color: #10142a;
+}
+.k710-page .home-edit-actions button:last-child {
+  background: transparent;
+  color: var(--gold, #d9a94e);
+}
+.k710-page .home-edit-actions button:disabled { opacity: 0.6; cursor: default; }
+.k710-page .home-edit-error { font-size: 12px; color: var(--ember-bright, #ff8a4c); }
