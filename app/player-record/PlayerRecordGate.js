@@ -6,7 +6,7 @@ import { supabase } from '../../lib/supabaseClient';
 
 export default function PlayerRecordGate({ banner }) {
 const [memberId, setMemberId] = useState('');
-const [pin, setPin] = useState('');h
+const [pin, setPin] = useState('');
 const [unlocked, setUnlocked] = useState(false);
 const [verifiedMemberId, setVerifiedMemberId] = useState('');
 const [status, setStatus] = useState('');
