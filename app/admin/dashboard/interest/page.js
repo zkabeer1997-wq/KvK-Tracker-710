@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 const COLUMNS = [
+  { key: 'status', label: 'Status' },
   { key: 'in_game_name', label: 'In-game name' },
   { key: 'player_id', label: 'Player ID' },
   { key: 'discord_username', label: 'Discord' },
@@ -27,10 +28,36 @@ const COLUMNS = [
   { key: 'created_at', label: 'Submitted' },
 ];
 
+const EXPORT_COLUMNS = COLUMNS.filter((c) => c.key !== 'status');
+
 const NUMERIC_KEYS = new Set(['total_power', 'mystic_trial_stages', 'current_tg', 'passes_required', 'current_passes']);
 const SEARCH_KEYS = ['in_game_name', 'current_server', 'player_id', 'current_alliance'];
 
+const STATUS_ACTIONS = [
+  { value: 'special', label: 'Accept as Special', className: 'status-btn accept-special' },
+  { value: 'normal', label: 'Accept as Normal', className: 'status-btn accept-normal' },
+  { value: 'reject', label: 'Reject', className: 'status-btn reject' },
+  { value: 'waitlist', label: 'Waitlist', className: 'status-btn waitlist' },
+];
+
+const STATUS_LABELS = {
+  pending: 'Pending',
+  special: 'Accepted (Special)',
+  normal: 'Accepted (Normal)',
+  reject: 'Rejected',
+  waitlist: 'Waitlisted',
+};
+
+function statusColor(status) {
+  if (status === 'special') return '#c9a227';
+  if (status === 'normal') return '#3f9d58';
+  if (status === 'reject') return '#c0473b';
+  if (status === 'waitlist') return '#8a7cc0';
+  return '#8a94a6';
+}
+
 function cellValue(row, key) {
+  if (key === 'status') return STATUS_LABELS[row.status] || 'Pending';
   if (key === 't11_units') return (row.t11_units || []).join(', ');
   if (key === 'created_at') return row.created_at ? new Date(row.created_at).toLocaleString() : '';
   return row[key] == null ? '' : String(row[key]);
@@ -39,7 +66,7 @@ function cellValue(row, key) {
 function buildMatcher(query) {
   const q = query.trim();
   if (!q) return null;
-  const escaped = q.replace(/[.*+?^\${}()|[\]\\]/g, '\\$&');
+  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   if (q.includes('%')) {
     const pattern = '^' + escaped.split('%').join('.*') + '$';
     try { return new RegExp(pattern, 'i'); } catch (e) { return null; }
@@ -57,6 +84,9 @@ export default function AdminInterestPage() {
   const [serverFilter, setServerFilter] = useState('');
   const [sortKey, setSortKey] = useState('created_at');
   const [sortDir, setSortDir] = useState('desc');
+  const [busyId, setBusyId] = useState('');
+  const [rowMessage, setRowMessage] = useState({});
+  const [credentials, setCredentials] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -78,6 +108,39 @@ export default function AdminInterestPage() {
     await fetch('/api/admin-logout', { method: 'POST' });
     router.push('/admin/login');
     router.refresh();
+  }
+
+  async function updateStatus(row, status) {
+    setBusyId(row.id);
+    setRowMessage((prev) => ({ ...prev, [row.id]: '' }));
+    try {
+      const response = await fetch('/api/admin-interest-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: row.id, status }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        setRowMessage((prev) => ({ ...prev, [row.id]: result.error || 'Update failed.' }));
+        return;
+      }
+      setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, status: result.row.status, decided_at: result.row.decided_at } : r)));
+      if (result.account) {
+        setCredentials({
+          name: result.account.name,
+          member_id: result.account.member_id,
+          password: result.account.password,
+          reused: result.account.recordExisted || result.account.profileExisted,
+        });
+        setRowMessage((prev) => ({ ...prev, [row.id]: 'Accepted. Player record and profile ready.' }));
+      } else {
+        setRowMessage((prev) => ({ ...prev, [row.id]: 'Status updated to ' + (STATUS_LABELS[status] || status) + '.' }));
+      }
+    } catch (err) {
+      setRowMessage((prev) => ({ ...prev, [row.id]: 'Update failed: ' + err.message }));
+    } finally {
+      setBusyId('');
+    }
   }
 
   const intakeOptions = useMemo(
@@ -135,8 +198,8 @@ export default function AdminInterestPage() {
   }
 
   function exportExcel() {
-    const header = COLUMNS.map((c) => c.label);
-    const dataRows = visibleRows.map((row) => COLUMNS.map((c) => cellValue(row, c.key)));
+    const header = EXPORT_COLUMNS.map((c) => c.label);
+    const dataRows = visibleRows.map((row) => EXPORT_COLUMNS.map((c) => cellValue(row, c.key)));
     const allRows = [header, ...dataRows];
 
     const xmlEscape = (v) => String(v == null ? '' : v)
@@ -324,6 +387,18 @@ export default function AdminInterestPage() {
           </div>
         </div>
         <div className="card-body">
+          {credentials && (
+            <div className="status" style={{ margin: '12px 0', border: '1px solid #c9a227', background: 'rgba(201,162,39,0.12)' }}>
+              <strong>{credentials.reused ? 'Account already existed' : 'Account created'} for {credentials.name} (ID {credentials.member_id}).</strong>
+              <div style={{ marginTop: 6 }}>
+                Default password: <code style={{ fontSize: 15, fontWeight: 700 }}>{credentials.password}</code>
+              </div>
+              <div style={{ marginTop: 6, fontSize: 12, opacity: 0.85 }}>
+                Share this with the player. They enter it as their PIN to edit their player record and player profile.
+              </div>
+              <button type="button" onClick={() => setCredentials(null)} className="logout-btn" style={{ marginTop: 10 }}>Dismiss</button>
+            </div>
+          )}
           <div className="dashboard-stats" aria-label="Interest summary">
             <div>
               <span>Total submissions</span>
@@ -369,6 +444,7 @@ export default function AdminInterestPage() {
               <table className="admin-table">
                 <thead>
                   <tr>
+                    <th>Actions</th>
                     {COLUMNS.map((col) => (
                       <th key={col.key}>
                         <button type="button" onClick={() => toggleSort(col.key)} style={{ background: 'none', border: 'none', color: 'inherit', font: 'inherit', cursor: 'pointer', padding: 0 }}>
@@ -382,8 +458,39 @@ export default function AdminInterestPage() {
                 <tbody>
                   {visibleRows.map((row) => (
                     <tr key={row.id}>
+                      <td style={{ minWidth: 160 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          {STATUS_ACTIONS.map((action) => (
+                            <button
+                              key={action.value}
+                              type="button"
+                              disabled={busyId === row.id}
+                              onClick={() => updateStatus(row, action.value)}
+                              style={{
+                                cursor: busyId === row.id ? 'default' : 'pointer',
+                                fontSize: 11,
+                                padding: '4px 8px',
+                                borderRadius: 6,
+                                border: '1px solid ' + statusColor(action.value),
+                                background: row.status === action.value ? statusColor(action.value) : 'transparent',
+                                color: row.status === action.value ? '#10131a' : statusColor(action.value),
+                                fontWeight: 600,
+                              }}
+                            >
+                              {action.label}
+                            </button>
+                          ))}
+                          {rowMessage[row.id] && (
+                            <span style={{ fontSize: 10, opacity: 0.85 }}>{rowMessage[row.id]}</span>
+                          )}
+                        </div>
+                      </td>
                       {COLUMNS.map((col) => (
-                        <td key={col.key} className={col.key === 'created_at' ? 'updated-cell' : undefined}>
+                        <td
+                          key={col.key}
+                          className={col.key === 'created_at' ? 'updated-cell' : undefined}
+                          style={col.key === 'status' ? { color: statusColor(row.status), fontWeight: 700, whiteSpace: 'nowrap' } : undefined}
+                        >
                           {cellValue(row, col.key)}
                         </td>
                       ))}
