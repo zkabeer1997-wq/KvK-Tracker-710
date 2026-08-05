@@ -10,6 +10,8 @@ export const metadata = {
 // is editable inline by a logged-in admin only. Missing fields self-seed on
 // first render, so no manual setup is needed.
 export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
 
 export default async function HomePage() {
   const content = await getHomeContent();
