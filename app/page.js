@@ -42,14 +42,9 @@ export default async function HomePage() {
         </svg>
         <div className="wrap">
           <div className="hero-inner">
-            <div className="eyebrow">KINGDOM 710 &middot; KINGSHOT</div>
-            <h1>Rebuild the realm.<br />Rule the <em>server</em>.</h1>
-            <p className="sub">
-              710 is a KvK-first kingdom run across three coordinated warbands, with
-              Bear Hunt coverage spanning every timezone and war-room tooling most
-              kingdoms never bother building. If you&rsquo;re shopping for your next server,
-              start here.
-            </p>
+  {field('hero-kicker', { as: 'div', className: 'eyebrow' })}
+{field('hero-title', { as: 'h1' })}
+{field('hero-sub', { as: 'p', className: 'sub', multiline: true })}
             <div className="hero-ctas">
               <Link href="/interest" className="btn btn-primary">Apply to Transfer &nbsp;&rarr;</Link>
               <Link href="/player-record" className="btn btn-ghost">I&rsquo;m already in 710</Link>
