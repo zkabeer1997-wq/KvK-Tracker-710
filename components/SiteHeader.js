@@ -9,7 +9,6 @@ export default function SiteHeader() {
     <Link href="/">Home</Link>
   <Link href="/player-record">Rallies</Link>
   <Link href="/interest">Interest</Link>
-  <Link href="/power-profile">Power Profile</Link>
   <Link href="/admin">Admin</Link>
     </nav>
     </div>
