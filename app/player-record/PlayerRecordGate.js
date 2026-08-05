@@ -6,7 +6,7 @@ import { supabase } from '../../lib/supabaseClient';
 
 export default function PlayerRecordGate({ banner }) {
 const [memberId, setMemberId] = useState('');
-const [pin, setPin] = useState('');
+const [pin, setPin] = useState('');h
 const [unlocked, setUnlocked] = useState(false);
 const [verifiedMemberId, setVerifiedMemberId] = useState('');
 const [status, setStatus] = useState('');
@@ -54,11 +54,11 @@ return (
 <div className="card-body">
 <div className="rallies-hub-options">
 <Link href={`/power-profile?member_id=${encodedId}`} className="rallies-hub-option">
-<h2>Power Profile</h2>
+<h2>Rally Lead Form</h2>
 <p>Governor gear, charms, hero gear, and power stats.</p>
 </Link>
 <Link href={`/player-record/form?member_id=${encodedId}`} className="rallies-hub-option">
-<h2>Rally Troop Levels</h2>
+<h2>Rally Joiner Form</h2>
 <p>Troop tiers, TG, heroes, and battle availability.</p>
 </Link>
 </div>
