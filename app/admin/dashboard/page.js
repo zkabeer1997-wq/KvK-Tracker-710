@@ -34,6 +34,7 @@ const COLUMNS = [
 { key: 'heroes', label: 'Heroes' },
 { key: 'power_profile', label: 'Power' },
 { key: 'availability', label: 'Availability' },
+  { key: 'current_alliance', label: 'Alliance' },
 { key: 'updated_at', label: 'Updated' },
 ];
 
@@ -391,7 +392,8 @@ onDragStart={(event) => handleDragStart(event, row.member_id)}
 {row.availability || '-'}
 </span>
 </td>
-<td className="updated-cell">{row.updated_at ? new Date(row.updated_at).toLocaleString() : ''}</td>
+<td><span className="unit-pill">{row.current_alliance || '-'}</span></td>
+                  <td className="updated-cell">{row.updated_at ? new Date(row.updated_at).toLocaleString() : ''}</td>
 <td>
 <button
 type="button"
