@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 
 const HEROES = [
@@ -65,6 +65,13 @@ setAvailability(data.availability || '');
 setOnFile(null);
 }
 }
+
+useEffect(() => {
+if (initialMemberId) {
+lookup();
+}
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
 
 function toggleHero(hero) {
 setHeroes((prev) => (
