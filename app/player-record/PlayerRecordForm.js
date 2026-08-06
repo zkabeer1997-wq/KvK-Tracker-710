@@ -15,6 +15,7 @@ const AVAILABILITY_OPTIONS = [
 'Full battle (12-17 UTC)',
 'Not Available'
 ];
+const ALLIANCES = ['710', 'RED', 'SKY'];
 const UNIT_FIELDS = [
 { key: 'infantry', label: 'Infantry', tier: 'infantryTier', tg: 'infantryTg' },
 { key: 'cavalry', label: 'Cavalry', tier: 'cavalryTier', tg: 'cavalryTg' },
@@ -32,6 +33,7 @@ const [archerTier, setArcherTier] = useState('');
 const [archerTg, setArcherTg] = useState('');
 const [heroes, setHeroes] = useState([]);
 const [availability, setAvailability] = useState('');
+  const [currentAlliance, setCurrentAlliance] = useState('');
 const [pin, setPin] = useState('');
 const [onFile, setOnFile] = useState(null);
 const [status, setStatus] = useState('');
@@ -61,6 +63,7 @@ setArcherTier(data.archer_tier || '');
 setArcherTg(data.archer_tg || '');
 setHeroes(data.heroes || []);
 setAvailability(data.availability || '');
+        setCurrentAlliance(data.current_alliance || '');
 } else {
 setOnFile(null);
 }
@@ -113,6 +116,9 @@ setStatus('Something went wrong: ' + error.message);
 return;
 }
 setIsError(false);
+if (currentAlliance) {
+await supabase.from('submissions').update({ current_alliance: currentAlliance }).eq('member_id', memberId);
+}
 setStatus(
 data === 'created' ? 'Submitted! Your entry has been created.' : 'Updated! Your entry has been saved.'
 );
@@ -147,6 +153,10 @@ return (
 <section className="identity-grid">
 <label>Your name<input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your in-game name" /></label>
 <label>Member ID<input value={memberId} onChange={(e) => setMemberId(e.target.value)} onBlur={lookup} placeholder="Your Member ID" /></label>
+</section>
+<section className="troop-section public-section">
+<div className="section-title-row"><span>Alliance</span><h3>Current Alliance</h3><p>Select the alliance you are currently in.</p></div>
+<label>Current Alliance<select value={currentAlliance} onChange={(e) => setCurrentAlliance(e.target.value)}><option value="">Select alliance</option>{ALLIANCES.map((a) => <option key={a} value={a}>{a}</option>)}</select></label>
 </section>
 {onFile && (
 <div className="on-file">
