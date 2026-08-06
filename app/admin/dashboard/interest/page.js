@@ -375,6 +375,7 @@ export default function AdminInterestPage() {
         <div className="admin-tabs">
           <Link href="/admin/dashboard" className="admin-tab">Player Records</Link>
           <Link href="/admin/dashboard/interest" className="admin-tab active">Interest Submissions</Link>
+          <Link href="/admin/dashboard/prep-ministers" className="admin-tab">KvK Prep Ministers</Link>
         </div>
         <div className="admin-hero">
           <div>
