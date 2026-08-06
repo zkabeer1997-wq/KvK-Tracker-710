@@ -14,6 +14,7 @@ const ADMIN_COLUMNS = [
 'archer_tg',
 'heroes',
 'availability',
+  'current_alliance',
 'updated_at',
 ].join(',');
 
