@@ -61,6 +61,10 @@ return (
 <h2>Rally Joiner Form</h2>
 <p>Troop tiers, TG, heroes, and battle availability.</p>
 </Link>
+<Link href={`/prep-phase-backpack?member_id=${encodedId}`} className="rallies-hub-option">
+<h2>Prep Phase Backpack</h2>
+<p>Backpack Amounts and Minister Position Bookings</p>
+</Link>
 </div>
 </div>
 </div>
