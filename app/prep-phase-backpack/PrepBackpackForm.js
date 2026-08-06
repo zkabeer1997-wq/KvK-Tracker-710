@@ -142,7 +142,7 @@ export default function PrepBackpackForm({ initialMemberId = '' }) {
 
   return (
     <form className="public-form-card" onSubmit={handleSubmit}>
-      <div className="form-section-header">
+      <div className="form-section-header prep-header-block">
         <span>Prep Phase Backpack</span>
         <h2>Backpack Amounts and Minister Position Bookings</h2>
         <p>Booking as Member ID: <strong>{initialMemberId || '(unknown)'}</strong></p>
@@ -152,7 +152,8 @@ export default function PrepBackpackForm({ initialMemberId = '' }) {
         <label>In-game name<input value={form.inGameName} onChange={(e) => updateField('inGameName', e.target.value)} /></label>
       </section>
 
-      <section className="form-block">
+      <div className="prep-day-grid">
+        <section className="form-block">
         <h3>Chief Minister &mdash; Construction (Day 1)</h3>
         <label>Do you want the Construction Chief Minister buff?
           <select value={form.wantConstruction} onChange={(e) => updateField('wantConstruction', e.target.value)}>
@@ -230,6 +231,7 @@ export default function PrepBackpackForm({ initialMemberId = '' }) {
         <p className="prep-slot-sub">If you are not scheduled on Day 1 or Day 2, you may be placed here. Pick any times you are available.</p>
         <SlotPicker label="Available Times &mdash; Day 5 (Overflow)" sublabel="30-minute start times, UTC" selected={availDay5} onToggle={toggleInArray(setAvailDay5)} />
       </section>
+        </div>
 
       <section className="form-block">
         <label>Notes for the planner<textarea value={form.notes} onChange={(e) => updateField('notes', e.target.value)} rows={3} /></label>
