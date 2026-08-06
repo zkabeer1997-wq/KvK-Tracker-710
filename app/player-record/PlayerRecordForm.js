@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabaseClient';
 
 const HEROES = [
 'Chenko', 'Yeonwoo', 'Amane', 'Amadeus', 'Vivian', 'Margot', 'Thrud', 'Saul', 'Hilde', 'Gordon',
@@ -47,11 +46,9 @@ const tgSetters = { infantryTg: setInfantryTg, cavalryTg: setCavalryTg, archerTg
 
 async function lookup() {
 if (!memberId) return;
-const { data } = await supabase
-.from('public_submissions')
-.select('*')
-.eq('member_id', memberId)
-.maybeSingle();
+const response = await fetch(`/api/player-record?member_id=${encodeURIComponent(memberId)}`);
+const result = await response.json().catch(() => ({}));
+const data = response.ok ? result.record : null;
 if (data) {
 setOnFile(data);
 if (name === '') setName(data.name || '');
@@ -63,7 +60,7 @@ setArcherTier(data.archer_tier || '');
 setArcherTg(data.archer_tg || '');
 setHeroes(data.heroes || []);
 setAvailability(data.availability || '');
-        setCurrentAlliance(data.current_alliance || '');
+setCurrentAlliance(data.current_alliance || '');
 } else {
 setOnFile(null);
 }
@@ -92,36 +89,19 @@ setStatus('Please fill in your name, member ID, and PIN.');
 return;
 }
 setLoading(true);
-const { data, error } = await supabase.rpc('submit_troop_form', {
-p_name: name,
-p_member_id: memberId,
-p_infantry_tier: infantryTier || null,
-p_infantry_tg: infantryTg || null,
-p_cavalry_tier: cavalryTier || null,
-p_cavalry_tg: cavalryTg || null,
-p_archer_tier: archerTier || null,
-p_archer_tg: archerTg || null,
-p_heroes: heroes,
-p_availability: availability || null,
-p_pin: pin,
+const response = await fetch('/api/player-record', {
+method: 'POST', headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ name, member_id: memberId, infantry_tier: infantryTier, infantry_tg: infantryTg, cavalry_tier: cavalryTier, cavalry_tg: cavalryTg, archer_tier: archerTier, archer_tg: archerTg, heroes, availability, current_alliance: currentAlliance, pin }),
 });
+const result = await response.json().catch(() => ({}));
 setLoading(false);
-if (error) {
+if (!response.ok) {
 setIsError(true);
-if (error.message && error.message.includes('PIN_MISMATCH')) {
-setStatus('Incorrect PIN for this Member ID. Please try again.');
-} else {
-setStatus('Something went wrong: ' + error.message);
-}
+setStatus(result.error || 'Unable to save your entry.');
 return;
 }
 setIsError(false);
-if (currentAlliance) {
-await supabase.from('submissions').update({ current_alliance: currentAlliance }).eq('member_id', memberId);
-}
-setStatus(
-data === 'created' ? 'Submitted! Your entry has been created.' : 'Updated! Your entry has been saved.'
-);
+setStatus(result.status === 'created' ? 'Submitted! Your entry has been created.' : 'Updated! Your entry has been saved.');
 }
 
 return (

@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { supabase } from '../../lib/supabaseClient';
 
 export default function PlayerRecordGate({ banner }) {
 const [memberId, setMemberId] = useState('');
@@ -23,17 +22,15 @@ setStatus('Please enter your Member ID.');
 return;
 }
 setLoading(true);
-const { data, error } = await supabase.rpc('verify_page_pin', {
-p_member_id: memberId,
-p_pin: pin,
-});
+const response = await fetch('/api/player-access', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ member_id: memberId, pin }) });
+const result = await response.json().catch(() => ({}));
 setLoading(false);
-if (error) {
+if (!response.ok) {
 setIsError(true);
-setStatus('Something went wrong: ' + error.message);
+setStatus(result.error || 'Unable to verify access.');
 return;
 }
-if (data === true) {
+if (result.valid === true) {
 setVerifiedMemberId(memberId);
 setUnlocked(true);
 } else {

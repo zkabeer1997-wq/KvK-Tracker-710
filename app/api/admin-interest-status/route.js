@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { NextResponse } from 'next/server';
-import { isAdminRequest } from '../../../lib/adminAuth';
+import { isAdminRequest, isSameOriginRequest } from '../../../lib/adminAuth';
 import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
 
 const VALID_STATUSES = ['special', 'normal', 'reject', 'waitlist', 'pending'];
@@ -19,7 +19,7 @@ function isMissingTable(error) {
 }
 
 export async function POST(request) {
-  if (!(await isAdminRequest(request))) {
+  if (!(await isAdminRequest(request)) || !isSameOriginRequest(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
