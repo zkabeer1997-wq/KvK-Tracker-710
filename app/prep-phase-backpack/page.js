@@ -13,7 +13,7 @@ function PrepBackpackInner() {
 export default function PrepBackpackPage() {
   return (
     <main className="page public-page">
-      <div className="public-shell single-form">
+      <div className="public-shell single-form prep-wide">
         <Suspense fallback={null}>
           <PrepBackpackInner />
         </Suspense>
