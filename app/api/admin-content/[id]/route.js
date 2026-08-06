@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { isAdminRequest } from '../../../../lib/adminAuth';
+import { isAdminRequest, isSameOriginRequest } from '../../../../lib/adminAuth';
 import { createAdminSupabaseClient } from '../../../../lib/adminSupabase';
 
 export async function PATCH(request, { params }) {
-  if (!(await isAdminRequest(request))) {
+  if (!(await isAdminRequest(request)) || !isSameOriginRequest(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {
@@ -29,7 +29,7 @@ export async function PATCH(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-  if (!(await isAdminRequest(request))) {
+  if (!(await isAdminRequest(request)) || !isSameOriginRequest(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {

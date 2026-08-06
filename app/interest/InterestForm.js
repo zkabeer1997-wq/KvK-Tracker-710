@@ -56,7 +56,6 @@ mainLanguageOther: '',
 
 export default function InterestForm() {
 const [form, setForm] = useState(initialForm);
-const [screenshots, setScreenshots] = useState([]);
 const [status, setStatus] = useState('');
 const [isError, setIsError] = useState(false);
 const [loading, setLoading] = useState(false);
@@ -107,12 +106,6 @@ setIsError(true);
 setStatus('Please select at least one T11 option.');
 return;
 }
-if (screenshots.length === 0) {
-setIsError(true);
-setStatus('Please upload at least one screenshot.');
-return;
-}
-
 setLoading(true);
 const body = new FormData();
 body.append('in_game_name', form.inGameName);
@@ -141,7 +134,6 @@ body.append(
 'main_language',
 form.mainLanguage === 'Other' ? `Other: ${form.mainLanguageOther}` : form.mainLanguage
 );
-screenshots.forEach((file) => body.append('screenshots', file));
 
 const response = await fetch('/api/interest', { method: 'POST', body });
 const result = await response.json().catch(() => ({}));
@@ -155,7 +147,6 @@ return;
 setIsError(false);
 setStatus('Thanks! Your interest submission has been received.');
 setForm(initialForm);
-setScreenshots([]);
 }
 
 return (
@@ -313,12 +304,6 @@ return (
 {form.mainLanguage === 'Other' && (
 <input placeholder="Please specify" value={form.mainLanguageOther} onChange={(e) => updateField('mainLanguageOther', e.target.value)} />
 )}
-</section>
-
-<section className="troop-section public-section">
-<div className="section-title-row"><span>Screenshots</span><h3>Upload your most recent battle report</h3><p>Should show your in-game name, Gov Gears/charms, Hero Gears and Masters.</p></div>
-<input type="file" multiple accept="image/*" onChange={(e) => setScreenshots(Array.from(e.target.files || []))} />
-<p className="file-hint">{screenshots.length > 0 ? `${screenshots.length} file(s) selected` : 'No files selected yet.'}</p>
 </section>
 
 {status && <div className={isError ? 'status error' : 'status'}>{status}</div>}

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { ADMIN_COOKIE_NAME, isValidAdminToken } from '../../../lib/adminAuth';
+import { isAdminRequest, isSameOriginRequest } from '../../../lib/adminAuth';
 import { createSupabaseAdminClient } from '../../../lib/supabaseAdmin';
 import {
   formatRallyRows,
@@ -9,13 +9,9 @@ import {
 export const runtime = 'edge';
 
 async function requireAdmin(request) {
-  const token = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
-  const isAdmin = await isValidAdminToken(token);
-
-  if (!isAdmin) {
+  if (!(await isAdminRequest(request)) || !isSameOriginRequest(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
   return null;
 }
 

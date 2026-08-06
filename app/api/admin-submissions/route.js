@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { isAdminRequest } from '../../../lib/adminAuth';
+import { isAdminRequest, isSameOriginRequest } from '../../../lib/adminAuth';
 import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
 import { mergePowerProfilesIntoRows } from '../../../lib/powerProfiles.mjs';
 
@@ -36,7 +36,7 @@ error.code === '42P01' || String(error.message || '').toLowerCase().includes('po
 }
 
 export async function GET(request) {
-if (!(await isAdminRequest(request))) {
+if (!(await isAdminRequest(request)) || !isSameOriginRequest(request)) {
 return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 }
 try {
@@ -64,7 +64,7 @@ return NextResponse.json({ error: error.message }, { status: 500 });
 }
 
 export async function DELETE(request) {
-if (!(await isAdminRequest(request))) {
+if (!(await isAdminRequest(request)) || !isSameOriginRequest(request)) {
 return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 }
 const url = new URL(request.url);
