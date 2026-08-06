@@ -262,6 +262,7 @@ return (
 <div className="admin-tabs">
 <Link href="/admin/dashboard" className="admin-tab active">Player Records</Link>
 <Link href="/admin/dashboard/interest" className="admin-tab">Interest Submissions</Link>
+<Link href="/admin/dashboard/prep-ministers" className="admin-tab">KvK Prep Ministers</Link>
 </div>
 <div className="admin-hero">
 <div>
