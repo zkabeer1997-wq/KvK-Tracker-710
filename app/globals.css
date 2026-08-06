@@ -775,3 +775,13 @@ input:focus, select:focus, .public-form-card input:focus, .public-form-card sele
 @media (max-width: 640px) {
   .prep-day-grid { grid-template-columns: 1fr; }
 }
+
+
+/* Prep Phase Backpack: make notes textarea text visible (white) */
+.prep-wide textarea,
+.prep-wide .form-block textarea {
+  color: #ffffff;
+}
+.prep-wide textarea::placeholder {
+  color: rgba(255,255,255,0.55);
+}
