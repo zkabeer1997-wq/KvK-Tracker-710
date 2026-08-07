@@ -157,6 +157,10 @@ export default function AdminPrepMinistersPage() {
 
   function handleGenerate() { setResult(schedule(rows)); }
 
+  function updateCell(rowId, key, value) {
+    setRows((prev) => prev.map((row) => (row.id === rowId ? { ...row, [key]: value } : row)));
+  }
+
   function exportExcel() {
     const data = result || schedule(rows);
     const sheets = data.days.map((d) => ({
@@ -219,7 +223,7 @@ export default function AdminPrepMinistersPage() {
                 <thead><tr>{COLUMNS.map((col) => (<th key={col.key}>{col.label}</th>))}</tr></thead>
                 <tbody>
                   {visibleRows.map((row) => (
-                    <tr key={row.id}>{COLUMNS.map((col) => (<td key={col.key}>{cellValue(row, col.key)}</td>))}</tr>
+                    <tr key={row.id}>{COLUMNS.map((col) => (<td key={col.key}>{col.key === 'created_at' ? cellValue(row, col.key) : (<input className="admin-cell-input" value={cellValue(row, col.key)} onChange={(e) => updateCell(row.id, col.key, e.target.value)} />)}</td>))}</tr>
                   ))}
                 </tbody>
               </table>
