@@ -35,7 +35,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing Member ID or in-game name.' }, { status: 400 });
     }
 
-    const { error } = await supabase.from('prep_backpack_submissions').insert(payload);
+    const { error } = await supabase.from('prep_backpack_submissions').upsert(payload, { onConflict: 'member_id' });
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
