@@ -19,6 +19,10 @@ const COLUMNS = [
   { key: 'is_transfer', label: 'Transfer?' },
   { key: 'promoting_t11', label: 'Promoting T11?' },
   { key: 'troop_speedup_days', label: 'Troop SU days' },
+  { key: 'avail_day1', label: 'Day 1 Times (Construction)' },
+  { key: 'avail_day2', label: 'Day 2 Times (Research)' },
+  { key: 'avail_day4', label: 'Day 4 Times (Troop Training)' },
+  { key: 'avail_day5', label: 'Day 5 Times (Overflow)' },
   { key: 'created_at', label: 'Submitted' },
 ];
 
@@ -239,7 +243,7 @@ export default function AdminPrepMinistersPage() {
             </label>
             <button type="button" onClick={handleGenerate} className="logout-btn">Generate</button>
             <button type="button" onClick={exportExcel} className="logout-btn">Export to Excel</button>
-            {saveStatus && (<span className="prep-save-status">{saveStatus === 'saving' ? 'Saving…' : saveStatus === 'saved' ? 'Saved' : 'Save failed'}</span>)}
+            {saveStatus && (<span className="prep-save-status">{saveStatus === 'saving' ? 'Savingâ¦' : saveStatus === 'saved' ? 'Saved' : 'Save failed'}</span>)}
           </div>
           {loading && <p>Loading...</p>}
           {error && <div className="status error">{error}</div>}
