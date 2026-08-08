@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { schedule, OPEN_SPOT } from '../prepScheduler.mjs';
@@ -124,6 +124,7 @@ export default function AdminPrepMinistersPage() {
   const [resFilter, setResFilter] = useState('');
   const [ttFilter, setTtFilter] = useState('');
   const [result, setResult] = useState(null);
+  const [saveStatus, setSaveStatus] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -157,8 +158,32 @@ export default function AdminPrepMinistersPage() {
 
   function handleGenerate() { setResult(schedule(rows)); }
 
+  const saveTimers = useRef({});
+  const ARRAY_KEYS = ['construction_upgrades', 't11_troops', 'avail_day1', 'avail_day2', 'avail_day4', 'avail_day5'];
+
+  async function persistCell(rowId, key, value) {
+    const payloadValue = ARRAY_KEYS.includes(key)
+      ? String(value).split(',').map((s) => s.trim()).filter(Boolean)
+      : value;
+    setSaveStatus('saving');
+    try {
+      const res = await fetch('/api/admin-prep-backpack', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: rowId, key, value: payloadValue }),
+      });
+      if (!res.ok) throw new Error('save failed');
+      setSaveStatus('saved');
+    } catch (e) {
+      setSaveStatus('error');
+    }
+  }
+
   function updateCell(rowId, key, value) {
     setRows((prev) => prev.map((row) => (row.id === rowId ? { ...row, [key]: value } : row)));
+    const timerKey = rowId + ':' + key;
+    if (saveTimers.current[timerKey]) clearTimeout(saveTimers.current[timerKey]);
+    saveTimers.current[timerKey] = setTimeout(() => persistCell(rowId, key, value), 600);
   }
 
   function exportExcel() {
@@ -214,6 +239,7 @@ export default function AdminPrepMinistersPage() {
             </label>
             <button type="button" onClick={handleGenerate} className="logout-btn">Generate</button>
             <button type="button" onClick={exportExcel} className="logout-btn">Export to Excel</button>
+            {saveStatus && (<span className="prep-save-status">{saveStatus === 'saving' ? 'Saving…' : saveStatus === 'saved' ? 'Saved' : 'Save failed'}</span>)}
           </div>
           {loading && <p>Loading...</p>}
           {error && <div className="status error">{error}</div>}
