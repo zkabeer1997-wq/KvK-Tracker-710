@@ -106,3 +106,50 @@ return NextResponse.json({ deletedMemberIds });
 return NextResponse.json({ error: error.message }, { status: 500 });
 }
 }
+
+export async function POST(request) {
+  if (!(await isAdminRequest(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  let payload;
+  try {
+    payload = await request.json();
+  } catch (parseError) {
+    return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });
+  }
+  const name = String(payload && payload.name ? payload.name : '').trim();
+  const memberId = String(payload && payload.member_id ? payload.member_id : '').trim();
+  if (!name || !memberId) {
+    return NextResponse.json({ error: 'Name and Member ID are required.' }, { status: 400 });
+  }
+  const pick = (key) => (payload && payload[key] !== undefined && payload[key] !== '' ? payload[key] : null);
+  const record = {
+    name,
+    member_id: memberId,
+    infantry_tier: pick('infantry_tier'),
+    infantry_tg: pick('infantry_tg'),
+    cavalry_tier: pick('cavalry_tier'),
+    cavalry_tg: pick('cavalry_tg'),
+    archer_tier: pick('archer_tier'),
+    archer_tg: pick('archer_tg'),
+    heroes: Array.isArray(payload && payload.heroes) ? payload.heroes : [],
+    availability: pick('availability'),
+    current_alliance: pick('current_alliance'),
+    updated_at: new Date().toISOString(),
+  };
+  try {
+    const supabase = createAdminSupabaseClient();
+    const { data, error } = await supabase
+    .from('submissions')
+    .insert(record)
+    .select(ADMIN_COLUMNS)
+    .single();
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    const [row] = mergePowerProfilesIntoRows([data], []);
+    return NextResponse.json({ row });
+  } catch (insertError) {
+    return NextResponse.json({ error: insertError.message }, { status: 500 });
+  }
+}
