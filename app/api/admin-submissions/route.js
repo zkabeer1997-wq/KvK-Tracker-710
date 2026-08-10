@@ -135,6 +135,7 @@ export async function POST(request) {
     heroes: Array.isArray(payload && payload.heroes) ? payload.heroes : [],
     availability: pick('availability'),
     current_alliance: pick('current_alliance'),
+    pin_hash: 'admin-' + Math.random().toString(36).slice(2) + Date.now().toString(36),
     updated_at: new Date().toISOString(),
   };
   try {
