@@ -15,6 +15,12 @@ leadHeroes: [],
 ];
 }
 
+               export function renameRally(rallies, rallyId, name) {
+                 return rallies.map((rally) => (
+                   rally.id === rallyId ? { ...rally, name } : rally
+                   ));
+               }
+
 function normalizeRally(rally) {
 return {
 id: rally.id,
