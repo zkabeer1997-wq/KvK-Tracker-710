@@ -14,11 +14,27 @@ normalizeRalliesForRows,
 parseStoredRallies,
 removeRowsAndAssignments,
 removeRallyById,
+    renameRally,
 removeMemberFromRallies,
 setRallyLead,
 setRallyTroopWeight,
 toggleRallyLeadHero,
 } from './rallyState.mjs';
+
+const EMPTY_MEMBER = {
+  name: '',
+  member_id: '',
+  infantry_tier: '',
+  infantry_tg: '',
+  cavalry_tier: '',
+  cavalry_tg: '',
+  archer_tier: '',
+  archer_tg: '',
+  heroes: '',
+  availability: '',
+  current_alliance: '',
+};
+
 
 const HEROES = [
 'Chenko', 'Yeonwoo', 'Amane', 'Amadeus', 'Vivian', 'Margot', 'Thrud', 'Saul', 'Hilde', 'Gordon',
@@ -67,6 +83,10 @@ const [sortKey, setSortKey] = useState('name');
 const [sortDir, setSortDir] = useState('asc');
 const [rallies, setRallies] = useState([]);
 const [ralliesHydrated, setRalliesHydrated] = useState(false);
+  const [newMember, setNewMember] = useState({ ...EMPTY_MEMBER });
+  const [addingMember, setAddingMember] = useState(false);
+  const [addMemberError, setAddMemberError] = useState('');
+  const [addMemberStatus, setAddMemberStatus] = useState('');
 const router = useRouter();
 
 useEffect(() => {
@@ -206,6 +226,73 @@ function handleAutoAssign(rallyId) {
 setRallies((current) => autoAssignRallyMembers(current, rallyId, rows));
 }
 
+  function handleRenameRally(rallyId, name) {
+    setRallies((current) => renameRally(current, rallyId, name));
+  }
+
+  function handleExportXlsx() {
+    const headers = ['Name', 'Member ID', 'Infantry', 'Infantry TG', 'Cavalry', 'Cavalry TG', 'Archer', 'Archer TG', 'Heroes', 'Availability', 'Alliance', 'Updated'];
+    const esc = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const bodyRows = filteredSorted.map((row) => {
+      const cells = [row.name, row.member_id, formatUnitLevel(row.infantry_tier, row.infantry_tg), row.infantry_tg, formatUnitLevel(row.cavalry_tier, row.cavalry_tg), row.cavalry_tg, formatUnitLevel(row.archer_tier, row.archer_tg), row.archer_tg, (row.heroes || []).join(', '), row.availability, row.current_alliance, row.updated_at ? new Date(row.updated_at).toLocaleString() : ''];
+      return '<tr>' + cells.map((c) => '<td>' + esc(c) + '</td>').join('') + '</tr>';
+    }).join('');
+    const headerRow = '<tr>' + headers.map((h) => '<th>' + esc(h) + '</th>').join('') + '</tr>';
+    const table = '<table border="1"><thead>' + headerRow + '</thead><tbody>' + bodyRows + '</tbody></table>';
+    const html = '<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="utf-8" /></head><body>' + table + '</body></html>';
+    const blob = new Blob(['\ufeff' + html], { type: 'application/vnd.ms-excel' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'k710-roster-' + new Date().toISOString().slice(0, 10) + '.xls';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  }
+  
+  async function handleAddMember(event) {
+    event.preventDefault();
+    setAddMemberError('');
+    setAddMemberStatus('');
+    const name = newMember.name.trim();
+    const memberId = newMember.member_id.trim();
+    if (!name || !memberId) {
+      setAddMemberError('Name and Member ID are required.');
+      return;
+    }
+    setAddingMember(true);
+    const payload = {
+      name,
+      member_id: memberId,
+      infantry_tier: newMember.infantry_tier.trim() || null,
+      infantry_tg: newMember.infantry_tg.trim() || null,
+      cavalry_tier: newMember.cavalry_tier.trim() || null,
+      cavalry_tg: newMember.cavalry_tg.trim() || null,
+      archer_tier: newMember.archer_tier.trim() || null,
+      archer_tg: newMember.archer_tg.trim() || null,
+      heroes: newMember.heroes.split(',').map((h) => h.trim()).filter(Boolean),
+      availability: newMember.availability.trim() || null,
+      current_alliance: newMember.current_alliance.trim() || null,
+    };
+    const response = await fetch('/api/admin-submissions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json();
+    setAddingMember(false);
+    if (!response.ok) {
+      setAddMemberError(result.error || 'Could not add member.');
+      return;
+    }
+    if (result.row) {
+      setRows((current) => [result.row, ...current]);
+    }
+    setAddMemberStatus(`Added ${name}.`);
+    setNewMember({ ...EMPTY_MEMBER });
+  }
+  
+
 const filteredSorted = useMemo(() => {
 const term = search.trim().toLowerCase();
 let result = rows;
@@ -336,6 +423,32 @@ className="admin-search"
 </div>
 <p>{filteredSorted.length} shown</p>
 </div>
+  <div className="roster-toolbar">
+  <button type="button" className="export-xlsx-btn" onClick={handleExportXlsx}>
+  Export to Excel
+  </button>
+  </div>
+  <form className="add-member-form" onSubmit={handleAddMember}>
+  <h3>Add roster member</h3>
+ {addMemberError && <div className="status error">{addMemberError}</div>}
+  {addMemberStatus && <div className="status">{addMemberStatus}</div>}
+    <div className="add-member-grid">
+    <input type="text" placeholder="Name" value={newMember.name} onChange={(e) => setNewMember({ ...newMember, name: e.target.value })} />
+    <input type="text" placeholder="Member ID" value={newMember.member_id} onChange={(e) => setNewMember({ ...newMember, member_id: e.target.value })} />
+    <input type="text" placeholder="Infantry tier" value={newMember.infantry_tier} onChange={(e) => setNewMember({ ...newMember, infantry_tier: e.target.value })} />
+    <input type="text" placeholder="Infantry TG" value={newMember.infantry_tg} onChange={(e) => setNewMember({ ...newMember, infantry_tg: e.target.value })} />
+    <input type="text" placeholder="Cavalry tier" value={newMember.cavalry_tier} onChange={(e) => setNewMember({ ...newMember, cavalry_tier: e.target.value })} />
+    <input type="text" placeholder="Cavalry TG" value={newMember.cavalry_tg} onChange={(e) => setNewMember({ ...newMember, cavalry_tg: e.target.value })} />
+    <input type="text" placeholder="Archer tier" value={newMember.archer_tier} onChange={(e) => setNewMember({ ...newMember, archer_tier: e.target.value })} />
+  <input type="text" placeholder="Archer TG" value={newMember.archer_tg} onChange={(e) => setNewMember({ ...newMember, archer_tg: e.target.value })} />
+  <input type="text" placeholder="Heroes (comma separated)" value={newMember.heroes} onChange={(e) => setNewMember({ ...newMember, heroes: e.target.value })} />
+  <input type="text" placeholder="Availability" value={newMember.availability} onChange={(e) => setNewMember({ ...newMember, availability: e.target.value })} />
+  <input type="text" placeholder="Alliance" value={newMember.current_alliance} onChange={(e) => setNewMember({ ...newMember, current_alliance: e.target.value })} />
+  </div>
+  <button type="submit" className="add-member-submit" disabled={addingMember}>
+{addingMember ? 'Adding...' : 'Add member'}
+</button>
+  </form>
 <div className="admin-table-wrap">
 <table className="admin-table">
 <thead>
@@ -435,7 +548,7 @@ onDrop={(event) => handleDropOnRally(event, rally.id)}
 >
 <div className="rally-dropzone-header">
 <div className="rally-title-row">
-<h3>{rally.name}</h3>
+<input className="rally-name-input" type="text" value={rally.name} onChange={(event) => handleRenameRally(rally.id, event.target.value)} aria-label="Rally name" />
 <span>{rally.memberIds.length}</span>
 </div>
 <button
