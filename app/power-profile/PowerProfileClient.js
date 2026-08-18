@@ -117,10 +117,10 @@ return (
 <main className="page public-page">
 <div className="public-shell single-form power-shell">
 {intro}
-<form className="public-form-card" onSubmit={handleSubmit}>
+<form className="public-form-card war-ledger-form" onSubmit={handleSubmit}>
 <div className="form-section-header">
-<span>Power profile</span>
-<h2>Add governor gear and power stats.</h2>
+<span>War Ledger</span>
+<h2>Record your combat capability</h2>
 </div>
 <section className="identity-grid">
 <label>Your name<input value={form.name} onChange={(e) => updateField('name', e.target.value)} placeholder="Your in-game name" /></label>
@@ -131,65 +131,79 @@ return (
 Power profile on file - Governor Gear: {onFile.governor_gear || '-'} / Charms: {onFile.charms || '-'} / Hero Gear: {onFile.hero_gear || '-'} / Pet Power: {onFile.pet_power || '-'} / Masters Power: {onFile.masters_power || '-'}
 </div>
 )}
-<section className="troop-section public-section">
-<div className="section-title-row">
-<span>Power data</span>
-<h3>Gear and power</h3>
-<p>Use the exact labels or numbers you want admins to see.</p>
+
+<div className="ledger-block">
+  <div className="ledger-block-head">
+    <span className="ledger-block-kicker">Governor Armory</span>
+    <h3>Governor Gear</h3>
+  </div>
+  <div className="ledger-gear-grid">
+    {GOVERNOR_GEAR_SLOTS.map((slot) => (
+      <label key={slot.key} className="ledger-select">
+        <span>{slot.label}</span>
+        <select
+          value={governorGear[slot.key]}
+          onChange={(event) => updateGovernorGear(slot.key, event.target.value)}
+        >
+          <option value="">Select gear</option>
+          {GOVERNOR_GEAR_OPTIONS.map((option) => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
+      </label>
+    ))}
+  </div>
 </div>
-<div className="power-field-grid">
-<h4 className="power-subheader">Governor Gear</h4>
-<div className="governor-gear-grid">
-{GOVERNOR_GEAR_SLOTS.map((slot) => (
-<label key={slot.key}>
-{slot.label}
-<select
-value={governorGear[slot.key]}
-onChange={(event) => updateGovernorGear(slot.key, event.target.value)}
->
-<option value="">Select gear</option>
-{GOVERNOR_GEAR_OPTIONS.map((option) => (
-<option key={option} value={option}>{option}</option>
-))}
-</select>
-</label>
-))}
+
+<div className="ledger-block">
+  <div className="ledger-block-head">
+    <span className="ledger-block-kicker">Talisman Case</span>
+    <h3>Charms</h3>
+  </div>
+  <div className="ledger-charm-grid">
+    {CHARM_SLOTS.map((slot) => (
+      <label key={slot.key} className="ledger-select">
+        <span>{slot.label}</span>
+        <select
+          value={charms[slot.key]}
+          onChange={(event) => updateCharm(slot.key, event.target.value)}
+        >
+          <option value="">Select level</option>
+          {CHARM_LEVEL_OPTIONS.map((option) => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
+      </label>
+    ))}
+  </div>
 </div>
-<h4 className="power-subheader">Charms</h4>
-<div className="charm-grid">
-{CHARM_SLOTS.map((slot) => (
-<label key={slot.key}>
-{slot.label}
-<select
-value={charms[slot.key]}
-onChange={(event) => updateCharm(slot.key, event.target.value)}
->
-<option value="">Select level</option>
-{CHARM_LEVEL_OPTIONS.map((option) => (
-<option key={option} value={option}>{option}</option>
-))}
-</select>
-</label>
-))}
+
+<div className="ledger-block">
+  <div className="ledger-block-head">
+    <span className="ledger-block-kicker">War Stats</span>
+    <h3>Hero, Pet &amp; Masters Power</h3>
+    <p>Use the exact labels or numbers you want admins to see.</p>
+  </div>
+  <div className="ledger-stats-grid">
+    {POWER_PROFILE_FIELDS.map((field) => (
+      <label key={field.key} className="ledger-select">
+        <span>{field.label}</span>
+        <input
+          value={form[field.key]}
+          onChange={(event) => updateField(field.key, event.target.value)}
+          placeholder={field.label}
+        />
+      </label>
+    ))}
+  </div>
 </div>
-{POWER_PROFILE_FIELDS.map((field) => (
-<label key={field.key}>
-{field.label}
-<input
-value={form[field.key]}
-onChange={(event) => updateField(field.key, event.target.value)}
-placeholder={field.label}
-/>
-</label>
-))}
-</div>
-</section>
+
 <section className="pin-panel">
 <label>Enter your PIN<input type="password" value={form.pin} onChange={(e) => updateField('pin', e.target.value)} placeholder="Your PIN" /></label>
 <p className="hint">First power submission sets your PIN for this page. Enter the same PIN next time to update it.</p>
 </section>
 {status && <div className={isError ? 'status error' : 'status'}>{status}</div>}
-<button type="submit" disabled={loading}>{loading ? 'Saving...' : 'Save power profile'}</button>
+<button type="submit" disabled={loading}>{loading ? 'Saving...' : 'Save War Ledger'}</button>
 </form>
 </div>
 </main>

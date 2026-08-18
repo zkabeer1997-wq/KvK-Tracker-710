@@ -1029,3 +1029,46 @@ input:focus, select:focus, .public-form-card input:focus, .public-form-card sele
 .command-deck-tile:hover { transform: translateY(-2px); border-color: var(--gold); }
 .command-deck-tile h2 { margin: 0 0 8px; font-size: 19px; color: var(--gold-bright); }
 .command-deck-tile p { margin: 0; color: var(--text-muted); font-size: 13.5px; line-height: 1.5; }
+
+/* Request Entry petition chapters */
+.interest-progress { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 0 20px; border-bottom: 1px solid var(--border-soft); margin-bottom: 8px; }
+.interest-progress-item { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; color: var(--text-dim); text-decoration: none; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--border-soft); transition: border-color 0.15s ease, color 0.15s ease; }
+.interest-progress-item span { font-family: var(--font-mono); color: var(--gold); font-size: 10px; }
+.interest-progress-item:hover { border-color: var(--gold); color: var(--parchment); }
+
+.interest-chapter { padding: 22px 0; border-bottom: 1px solid var(--border-soft); display: flex; flex-direction: column; gap: 16px; scroll-margin-top: 90px; }
+.interest-chapter:last-of-type { border-bottom: none; }
+.interest-chapter-head { display: flex; align-items: baseline; gap: 12px; }
+.interest-chapter-num { font-family: var(--font-display); font-size: 22px; font-weight: 900; color: transparent; -webkit-text-stroke: 1.2px var(--gold); flex-shrink: 0; }
+.interest-chapter-head h3 { margin: 0; font-size: 13px; color: var(--gold); text-transform: uppercase; letter-spacing: 0.08em; font-family: var(--font-mono); font-weight: 700; }
+.interest-chapter-body { display: flex; flex-direction: column; gap: 14px; }
+.interest-chapter-body .troop-section, .interest-chapter-body .identity-grid { margin: 0; }
+
+@media (max-width: 720px) {
+  .interest-progress { display: none; }
+}
+
+/* War Ledger (power profile) */
+.ledger-block { border: 1px solid var(--border-soft); border-radius: 10px; background: rgba(255,255,255,0.02); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.ledger-block-head { display: flex; flex-direction: column; gap: 3px; }
+.ledger-block-kicker { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); }
+.ledger-block-head h3 { margin: 0; font-size: 16px; color: var(--parchment); text-transform: none; }
+.ledger-block-head p { margin: 2px 0 0; font-size: 12.5px; color: var(--text-muted); }
+.ledger-gear-grid, .ledger-charm-grid, .ledger-stats-grid { display: grid; gap: 10px; }
+.ledger-gear-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ledger-charm-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ledger-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ledger-select { display: flex; flex-direction: column; gap: 5px; }
+.ledger-select span { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted); }
+.ledger-select select, .ledger-select input { border-color: rgba(217,169,78,0.22); background: rgba(10,14,22,0.55); color: var(--text); border-radius: 8px; padding: 9px 10px; }
+.ledger-select select:focus, .ledger-select input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(217,169,78,0.2); }
+@media (max-width: 720px) {
+  .ledger-gear-grid, .ledger-charm-grid, .ledger-stats-grid { grid-template-columns: 1fr; }
+}
+
+/* Minister's Hall (prep phase backpack) */
+.minister-day-badge { display: inline-flex; align-self: flex-start; font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold-bright); background: rgba(217,169,78,0.14); border: 1px solid rgba(217,169,78,0.35); border-radius: 999px; padding: 3px 10px; margin-bottom: 4px; }
+.minister-day-badge-overflow { color: #b6a4e0; background: rgba(148,130,201,0.14); border-color: rgba(148,130,201,0.35); }
+.prep-slot-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.prep-slot-count { font-family: var(--font-mono); font-size: 11px; color: var(--gold-bright); background: rgba(217,169,78,0.1); border-radius: 999px; padding: 2px 8px; }
+.prep-slot-sub { width: 100%; font-family: var(--font-mono); }

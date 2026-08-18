@@ -35,7 +35,8 @@ function SlotPicker({ label, sublabel, selected, onToggle }) {
     <div className="prep-slot-group">
       <div className="prep-slot-head">
         <strong>{label}</strong>
-        {sublabel ? <span className="prep-slot-sub">{sublabel}</span> : null}
+        <span className="prep-slot-count">{selected.length} selected</span>
+        {sublabel ? <span className="prep-slot-sub">{sublabel} &middot; UTC</span> : null}
       </div>
       <div className="prep-slot-grid">
         {TIME_SLOTS.map((slot) => {
@@ -141,10 +142,10 @@ export default function PrepBackpackForm({ initialMemberId = '' }) {
   }
 
   return (
-    <form className="public-form-card" onSubmit={handleSubmit}>
+    <form className="public-form-card minister-hall-form" onSubmit={handleSubmit}>
       <div className="form-section-header prep-header-block">
-        <span>Prep Phase Backpack</span>
-        <h2>Backpack Amounts and Minister Position Bookings</h2>
+        <span>Minister&rsquo;s Hall</span>
+        <h2>Backpack Amounts &amp; Minister Position Bookings</h2>
         <p>Booking as Member ID: <strong>{initialMemberId || '(unknown)'}</strong></p>
       </div>
 
@@ -154,7 +155,8 @@ export default function PrepBackpackForm({ initialMemberId = '' }) {
 
       <div className="prep-day-grid">
         <section className="form-block">
-        <h3>Chief Minister &mdash; Construction (Day 1)</h3>
+        <span className="minister-day-badge">Day 1</span>
+        <h3>Chief Minister &mdash; Construction</h3>
         <label>Do you want the Construction Chief Minister buff?
           <select value={form.wantConstruction} onChange={(e) => updateField('wantConstruction', e.target.value)}>
             <option value="">Select</option>
@@ -177,7 +179,8 @@ export default function PrepBackpackForm({ initialMemberId = '' }) {
       </section>
 
       <section className="form-block">
-        <h3>Chief Minister &mdash; Research (Day 2)</h3>
+        <span className="minister-day-badge">Day 2</span>
+        <h3>Chief Minister &mdash; Research</h3>
         <label>Do you want Chief Minister for research?
           <select value={form.wantResearch} onChange={(e) => updateField('wantResearch', e.target.value)}>
             <option value="">Select</option>
@@ -200,7 +203,8 @@ export default function PrepBackpackForm({ initialMemberId = '' }) {
       </section>
 
       <section className="form-block">
-        <h3>Noble Advisor &mdash; Troop Training (Day 4)</h3>
+        <span className="minister-day-badge">Day 4</span>
+        <h3>Noble Advisor &mdash; Troop Training</h3>
         <label>Do you want a Troop Training appointment?
           <select value={form.wantTroopTraining} onChange={(e) => updateField('wantTroopTraining', e.target.value)}>
             <option value="">Select</option>
@@ -227,7 +231,8 @@ export default function PrepBackpackForm({ initialMemberId = '' }) {
       </section>
 
       <section className="form-block">
-        <h3>Overflow (Day 5) &mdash; Construction &amp; Research second chance</h3>
+        <span className="minister-day-badge minister-day-badge-overflow">Day 5</span>
+        <h3>Overflow &mdash; Construction &amp; Research second chance</h3>
         <p className="prep-slot-sub">If you are not scheduled on Day 1 or Day 2, you may be placed here. Pick any times you are available.</p>
         <SlotPicker label="Available Times &mdash; Day 5 (Overflow)" sublabel="30-minute start times, UTC" selected={availDay5} onToggle={toggleInArray(setAvailDay5)} />
       </section>

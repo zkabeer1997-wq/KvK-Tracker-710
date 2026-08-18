@@ -29,6 +29,30 @@ const SPENDING_OPTIONS = [
 'F2P (pure skills, always on)',
 ];
 
+const CHAPTERS = [
+  { id: 'identity', label: 'Identity' },
+  { id: 'intake', label: 'Intake' },
+  { id: 'migration', label: 'Migration' },
+  { id: 'troops', label: 'Troops' },
+  { id: 'power', label: 'Power' },
+  { id: 'commitment', label: 'Commitment' },
+  { id: 'spending', label: 'Spending' },
+  { id: 'language', label: 'Language' },
+  { id: 'battle-report', label: 'Battle Report' },
+];
+
+function Chapter({ id, num, title, children }) {
+  return (
+    <section id={id} className="interest-chapter">
+      <div className="interest-chapter-head">
+        <span className="interest-chapter-num">{num}</span>
+        <h3>{title}</h3>
+      </div>
+      <div className="interest-chapter-body">{children}</div>
+    </section>
+  );
+}
+
 const initialForm = {
 inGameName: '',
 playerId: '',
@@ -159,21 +183,32 @@ setScreenshots([]);
 }
 
 return (
-<form className="public-form-card" onSubmit={handleSubmit}>
+<form className="public-form-card interest-petition" onSubmit={handleSubmit}>
 <div className="form-section-header">
-<span>Interest form</span>
+<span>Petition for Entry</span>
 <h2>710 Transfer Onboarding</h2>
 </div>
 
-<section className="identity-grid">
+<nav className="interest-progress" aria-label="Petition sections">
+  {CHAPTERS.map((c, i) => (
+    <a key={c.id} href={`#${c.id}`} className="interest-progress-item">
+      <span>{String(i + 1).padStart(2, '0')}</span>{c.label}
+    </a>
+  ))}
+</nav>
+
+<Chapter id="identity" num="01" title="Identity">
+<div className="identity-grid">
 <label>In-game name<input value={form.inGameName} onChange={(e) => updateField('inGameName', e.target.value)} /></label>
 <label>Player ID<input value={form.playerId} onChange={(e) => updateField('playerId', e.target.value)} /></label>
 <label>Discord username<input value={form.discordUsername} onChange={(e) => updateField('discordUsername', e.target.value)} /></label>
 <label>Your current server (prior to transfer)<input value={form.currentServer} onChange={(e) => updateField('currentServer', e.target.value)} /></label>
 <label>Your current alliance (prior to transfer)<input value={form.currentAlliance} onChange={(e) => updateField('currentAlliance', e.target.value)} /></label>
-</section>
+</div>
+</Chapter>
 
-<section className="troop-section public-section">
+<Chapter id="intake" num="02" title="Intake">
+<div className="troop-section public-section">
 <div className="section-title-row"><span>Intake</span><h3>Which intake period are you applying for?</h3></div>
 <div className="radio-group">
 {INTAKE_PERIOD_OPTIONS.map((option) => (
@@ -183,9 +218,11 @@ return (
 </label>
 ))}
 </div>
-</section>
+</div>
+</Chapter>
 
-<section className="troop-section public-section">
+<Chapter id="migration" num="03" title="Migration">
+<div className="troop-section public-section">
 <div className="section-title-row"><span>Migration</span><h3>Which alliance are you looking to migrate to?</h3></div>
 <div className="radio-group">
 {MIGRATE_OPTIONS.map((option) => (
@@ -198,9 +235,11 @@ return (
 {form.migrateAlliance === 'Other' && (
 <input placeholder="Please specify" value={form.migrateAllianceOther} onChange={(e) => updateField('migrateAllianceOther', e.target.value)} />
 )}
-</section>
+</div>
+</Chapter>
 
-<section className="troop-section public-section">
+<Chapter id="troops" num="04" title="Troops">
+<div className="troop-section public-section">
 <div className="section-title-row"><span>Troops</span><h3>Current highest troop level (not TC)</h3></div>
 <div className="radio-group">
 {TROOP_LEVEL_OPTIONS.map((option) => (
@@ -210,13 +249,13 @@ return (
 </label>
 ))}
 </div>
-</section>
+</div>
 
-<section className="identity-grid">
+<div className="identity-grid">
 <label>Current amount of TG<input value={form.currentTg} onChange={(e) => updateField('currentTg', e.target.value)} placeholder="We need to understand how far you can push your TG level" /></label>
-</section>
+</div>
 
-<section className="troop-section public-section">
+<div className="troop-section public-section">
 <div className="section-title-row"><span>Troops</span><h3>Do you have T11?</h3></div>
 <div className="checkbox-grid">
 {T11_OPTIONS.map((option) => (
@@ -226,14 +265,16 @@ return (
 </label>
 ))}
 </div>
-</section>
+</div>
+</Chapter>
 
-<section className="identity-grid">
+<Chapter id="power" num="05" title="Power">
+<div className="identity-grid">
 <label>Current Mystic Trial TOTAL STAGES<input value={form.mysticTrialStages} onChange={(e) => updateField('mysticTrialStages', e.target.value)} /></label>
 <label>Total Power<input value={form.totalPower} onChange={(e) => updateField('totalPower', e.target.value)} /></label>
-</section>
+</div>
 
-<section className="troop-section public-section">
+<div className="troop-section public-section">
 <div className="section-title-row"><span>Power</span><h3>Are you willing to reduce your power? (for normal invite power cap)</h3></div>
 <div className="radio-group">
 {YES_NO.map((option) => (
@@ -243,14 +284,16 @@ return (
 </label>
 ))}
 </div>
-</section>
+</div>
 
-<section className="identity-grid">
+<div className="identity-grid">
 <label>Number of passes required for you to transfer to 710<input value={form.passesRequired} onChange={(e) => updateField('passesRequired', e.target.value)} /></label>
 <label>Your current number of transfer passes<input value={form.currentPasses} onChange={(e) => updateField('currentPasses', e.target.value)} /></label>
-</section>
+</div>
+</Chapter>
 
-<section className="troop-section public-section">
+<Chapter id="commitment" num="06" title="Commitment">
+<div className="troop-section public-section">
 <div className="section-title-row"><span>Commitment</span><h3>Are you able to actively commit to game, and participate in alliance events?</h3></div>
 <div className="radio-group">
 {YES_NO.map((option) => (
@@ -260,9 +303,9 @@ return (
 </label>
 ))}
 </div>
-</section>
+</div>
 
-<section className="troop-section public-section">
+<div className="troop-section public-section">
 <div className="section-title-row"><span>Commitment</span><h3>Are you willing to save resources for kvk prep, doing only minimal rewards on sub-events?</h3></div>
 <div className="radio-group">
 {YES_NO.map((option) => (
@@ -272,9 +315,9 @@ return (
 </label>
 ))}
 </div>
-</section>
+</div>
 
-<section className="troop-section public-section">
+<div className="troop-section public-section">
 <div className="section-title-row"><span>Commitment</span><h3>Do you participate in Sanctuaries, Castle and KVK battles?</h3></div>
 <div className="radio-group">
 {YES_NO.map((option) => (
@@ -284,9 +327,11 @@ return (
 </label>
 ))}
 </div>
-</section>
+</div>
+</Chapter>
 
-<section className="troop-section public-section">
+<Chapter id="spending" num="07" title="Spending">
+<div className="troop-section public-section">
 <div className="section-title-row"><span>Spending</span><h3>Your spending archetype</h3></div>
 <div className="radio-group">
 {SPENDING_OPTIONS.map((option) => (
@@ -296,9 +341,11 @@ return (
 </label>
 ))}
 </div>
-</section>
+</div>
+</Chapter>
 
-<section className="troop-section public-section">
+<Chapter id="language" num="08" title="Language">
+<div className="troop-section public-section">
 <div className="section-title-row"><span>Language</span><h3>Main language of communication in-game</h3></div>
 <div className="radio-group">
 <label className="radio-option">
@@ -313,16 +360,19 @@ return (
 {form.mainLanguage === 'Other' && (
 <input placeholder="Please specify" value={form.mainLanguageOther} onChange={(e) => updateField('mainLanguageOther', e.target.value)} />
 )}
-</section>
+</div>
+</Chapter>
 
-<section className="troop-section public-section">
+<Chapter id="battle-report" num="09" title="Battle Report">
+<div className="troop-section public-section">
 <div className="section-title-row"><span>Screenshots</span><h3>Upload your most recent battle report</h3><p>Should show your in-game name, Gov Gears/charms, Hero Gears and Masters.</p></div>
 <input type="file" multiple accept="image/*" onChange={(e) => setScreenshots(Array.from(e.target.files || []))} />
 <p className="file-hint">{screenshots.length > 0 ? `${screenshots.length} file(s) selected` : 'No files selected yet.'}</p>
-</section>
+</div>
+</Chapter>
 
 {status && <div className={isError ? 'status error' : 'status'}>{status}</div>}
-<button type="submit" disabled={loading}>{loading ? 'Submitting...' : 'Submit interest form'}</button>
+<button type="submit" disabled={loading}>{loading ? 'Submitting...' : 'Submit Petition'}</button>
 </form>
 );
 }
