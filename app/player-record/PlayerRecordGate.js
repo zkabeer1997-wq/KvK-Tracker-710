@@ -65,6 +65,10 @@ return (
 <h2>Prep Phase Backpack</h2>
 <p>Backpack Amounts and Minister Position Bookings</p>
 </Link>
+<Link href={`/flamedragon?member_id=${encodedId}`} className="rallies-hub-option">
+<h2>Flamedragon Tyrant Form</h2>
+<p>Availability, Levels, and Heroes</p>
+</Link>
 </div>
 </div>
 </div>
