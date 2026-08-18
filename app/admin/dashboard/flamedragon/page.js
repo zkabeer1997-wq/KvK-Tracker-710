@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+// Columns used for search, sort, and CSV export (keeps every field).
 const COLUMNS = [
   { key: 'name', label: 'Name' },
   { key: 'member_id', label: 'Player ID' },
@@ -22,8 +23,30 @@ const COLUMNS = [
   { key: 'updated_at', label: 'Updated' },
 ];
 
+// Consolidated columns actually rendered in the table so all fits on one screen.
+const TABLE_COLUMNS = [
+  { key: 'name', label: 'Name' },
+  { key: 'member_id', label: 'Player ID' },
+  { key: 'infantry', label: 'Troops' },
+  { key: 'heroes', label: 'Heroes' },
+  { key: 'governor_gear', label: 'Power' },
+  { key: 'availability', label: 'Availability' },
+  { key: 'voice_chat', label: 'Voice Chat' },
+  { key: 'auto_help', label: 'Auto Help' },
+  { key: 'updated_at', label: 'Updated' },
+];
+
 function unitLevel(tier, tg) {
   return [tier, tg].filter(Boolean).join(' / ') || '-';
+}
+
+function availabilityTone(availability) {
+  const text = String(availability || '').toLowerCase();
+  if (text.includes('not available')) return 'unavailable';
+  if (text.includes('full')) return 'full';
+  if (text.includes('second')) return 'late';
+  if (text.includes('first')) return 'early';
+  return 'partial';
 }
 
 function cellValue(row, key) {
@@ -97,7 +120,7 @@ export default function AdminFlamedragonPage() {
     const header = COLUMNS.map((c) => c.label).join(',');
     const lines = visibleRows.map((row) => COLUMNS.map((c) => {
       const val = cellValue(row, c.key).replace(/"/g, '""');
-      return `"${val}"`;
+      return '"' + val + '"';
     }).join(','));
     const csv = [header, ...lines].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -110,6 +133,67 @@ export default function AdminFlamedragonPage() {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   }
+
+  function renderCell(row, key) {
+    if (key === 'name') {
+      return (
+        <div className="member-name-cell">
+          <span>{row.name || '-'}</span>
+          {row.current_alliance && <span className="rally-badge">{row.current_alliance}</span>}
+        </div>
+      );
+    }
+    if (key === 'member_id') {
+      return <span className="member-id-cell">{row.member_id || '-'}</span>;
+    }
+    if (key === 'infantry') {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+          <span className="unit-pill">Inf {unitLevel(row.infantry_tier, row.infantry_tg)}</span>
+          <span className="unit-pill cavalry">Cav {unitLevel(row.cavalry_tier, row.cavalry_tg)}</span>
+          <span className="unit-pill archer">Arc {unitLevel(row.archer_tier, row.archer_tg)}</span>
+        </div>
+      );
+    }
+    if (key === 'heroes') {
+      const heroes = Array.isArray(row.heroes) ? row.heroes : [];
+      return (
+        <div className="heroes-cell">
+          <strong>{heroes.length}</strong>
+          <span>{heroes.slice(0, 3).join(', ') || '-'}</span>
+        </div>
+      );
+    }
+    if (key === 'governor_gear') {
+      return (
+        <div className="power-cell" style={{ width: 170, maxWidth: 170 }}>
+          <span>Gov {row.governor_gear || '-'}</span>
+          <span>Charms {row.charms || '-'}</span>
+          <span>Pet {row.pet_power || '-'}</span>
+          <span>Masters {row.masters_power || '-'}</span>
+          <span>Mystic {row.mystic_trial_score || '-'}</span>
+        </div>
+      );
+    }
+    if (key === 'availability') {
+      return (
+        <span className={'availability-pill ' + availabilityTone(row.availability)}>
+          {row.availability || '-'}
+        </span>
+      );
+    }
+    if (key === 'voice_chat') {
+      return <span className="unit-pill">{row.voice_chat || '-'}</span>;
+    }
+    if (key === 'auto_help') {
+      return <span className="unit-pill archer">{row.auto_help || '-'}</span>;
+    }
+    if (key === 'updated_at') {
+      return <span className="updated-cell">{row.updated_at ? new Date(row.updated_at).toLocaleString() : '-'}</span>;
+    }
+    return <span>{cellValue(row, key) || '-'}</span>;
+  }
+
   return (
     <div className="page admin-page">
       <div className="card admin-dashboard-card">
@@ -151,21 +235,21 @@ export default function AdminFlamedragonPage() {
             <table className="admin-table">
               <thead>
                 <tr>
-                  {COLUMNS.map((col) => (
+                  {TABLE_COLUMNS.map((col) => (
                     <th key={col.key} onClick={() => toggleSort(col.key)} style={{ cursor: 'pointer' }}>
-                      {col.label}{sortKey === col.key ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
+                      {col.label}{sortKey === col.key ? (sortDir === 'asc' ? ' \u2191' : ' \u2193') : ''}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {visibleRows.length === 0 ? (
-                  <tr><td colSpan={COLUMNS.length}>No submissions yet.</td></tr>
+                  <tr><td colSpan={TABLE_COLUMNS.length}>No submissions yet.</td></tr>
                 ) : (
                   visibleRows.map((row) => (
                     <tr key={row.member_id}>
-                      {COLUMNS.map((col) => (
-                        <td key={col.key}>{cellValue(row, col.key) || '-'}</td>
+                      {TABLE_COLUMNS.map((col) => (
+                        <td key={col.key}>{renderCell(row, col.key)}</td>
                       ))}
                     </tr>
                   ))
