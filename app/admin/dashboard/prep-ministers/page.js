@@ -206,23 +206,23 @@ export default function AdminPrepMinistersPage() {
 
   return (
     <AdminShell title="Prep Ministers" subtitle="K710 command board" onLogout={handleLogout}>
-          <p style={{ color: 'var(--text-muted)', marginTop: 0 }}>Backpack amounts and minister position bookings submitted through the Prep Phase Backpack form.</p>
+          <p className="admin-page-lead">Backpack amounts and minister position bookings submitted through the Prep Phase Backpack form.</p>
           <div className="dashboard-stats" aria-label="Prep summary">
             <div><span>Total submissions</span><strong>{rows.length}</strong></div>
             <div><span>Showing</span><strong>{visibleRows.length}</strong></div>
           </div>
-          <div className="interest-controls" style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end', margin: '16px 0' }}>
-            <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12 }}>
+          <div className="admin-filter-bar">
+            <label className="admin-filter-field">
               Search (name or Member ID) &mdash; use % as wildcard
-              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. Legend%" style={{ minWidth: 260 }} />
+              <input className="narrow" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. Legend%" />
             </label>
-            <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12 }}>Construction?
+            <label className="admin-filter-field">Construction?
               <select value={consFilter} onChange={(e) => setConsFilter(e.target.value)}><option value="">All</option><option value="Yes">Yes</option><option value="No">No</option></select>
             </label>
-            <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12 }}>Research?
+            <label className="admin-filter-field">Research?
               <select value={resFilter} onChange={(e) => setResFilter(e.target.value)}><option value="">All</option><option value="Yes">Yes</option><option value="No">No</option></select>
             </label>
-            <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12 }}>Troop Training?
+            <label className="admin-filter-field">Troop Training?
               <select value={ttFilter} onChange={(e) => setTtFilter(e.target.value)}><option value="">All</option><option value="Yes">Yes</option><option value="No">No</option></select>
             </label>
             <button type="button" onClick={handleGenerate} className="logout-btn">Generate</button>

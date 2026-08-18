@@ -64,14 +64,6 @@ const STATUS_LABELS = {
   waitlist: 'Waitlisted',
 };
 
-function statusColor(status) {
-  if (status === 'special') return '#c9a227';
-  if (status === 'normal') return '#3f9d58';
-  if (status === 'reject') return '#c0473b';
-  if (status === 'waitlist') return '#8a7cc0';
-  return '#8a94a6';
-}
-
 function cellValue(row, key) {
   if (key === 'status') return STATUS_LABELS[row.status] || 'Pending';
   if (key === 't11_units') return (row.t11_units || []).join(', ');
@@ -393,7 +385,7 @@ export default function AdminInterestPage() {
 
   return (
     <AdminShell title="Transfer Requests" subtitle="K710 command board" onLogout={handleLogout}>
-          <p style={{ color: 'var(--text-muted)', marginTop: 0 }}>Review 710 transfer onboarding requests submitted through the public interest form.</p>
+          <p className="admin-page-lead">Review 710 transfer onboarding requests submitted through the public interest form.</p>
           {credentials && (
             <div className="credentials-modal-overlay" role="presentation" onClick={() => setCredentials(null)}>
               <div className="credentials-modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
@@ -423,26 +415,26 @@ export default function AdminInterestPage() {
               <strong>{visibleRows.length}</strong>
             </div>
           </div>
-          <div className="interest-controls" style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end', margin: '16px 0' }}>
-            <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12 }}>
+          <div className="admin-filter-bar">
+            <label className="admin-filter-field">
               Search (Name, server, player ID, alliance) — use % as wildcard
-              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. Legend%" style={{ minWidth: 260 }} />
+              <input className="narrow" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. Legend%" />
             </label>
-            <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12 }}>
+            <label className="admin-filter-field">
               Intake period
               <select value={intakeFilter} onChange={(e) => setIntakeFilter(e.target.value)}>
                 <option value="">All</option>
                 {intakeOptions.map((opt) => (<option key={opt} value={opt}>{opt}</option>))}
               </select>
             </label>
-            <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12 }}>
+            <label className="admin-filter-field">
               Migrating to
               <select value={migrateFilter} onChange={(e) => setMigrateFilter(e.target.value)}>
                 <option value="">All</option>
                 {migrateOptions.map((opt) => (<option key={opt} value={opt}>{opt}</option>))}
               </select>
             </label>
-            <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12 }}>
+            <label className="admin-filter-field">
               Current server
               <select value={serverFilter} onChange={(e) => setServerFilter(e.target.value)}>
                 <option value="">All</option>
@@ -461,7 +453,7 @@ export default function AdminInterestPage() {
                     <th>Status</th>
                     {COMPACT_COLUMNS.map((col) => (
                       <th key={col.key}>
-                        <button type="button" onClick={() => toggleSort(col.key)} style={{ background: 'none', border: 'none', color: 'inherit', font: 'inherit', cursor: 'pointer', padding: 0 }}>
+                        <button type="button" onClick={() => toggleSort(col.key)} className="admin-sort-btn">
                           {col.label}{sortKey === col.key ? (sortDir === 'asc' ? ' \u25B2' : ' \u25BC') : ''}
                         </button>
                       </th>
@@ -508,7 +500,7 @@ export default function AdminInterestPage() {
                       </button>
                     ))}
                   </div>
-                  {rowMessage[selectedRow.id] && <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>{rowMessage[selectedRow.id]}</p>}
+                  {rowMessage[selectedRow.id] && <p className="admin-row-message">{rowMessage[selectedRow.id]}</p>}
                 </div>
 
                 <div className="admin-drawer-section">

@@ -870,6 +870,16 @@ input:focus, select:focus, .public-form-card input:focus, .public-form-card sele
 .admin-compact-table td, .admin-compact-table th { cursor: pointer; }
 .admin-row-clickable:hover { background: rgba(217,169,78,0.06); }
 
+.admin-page-lead { color: var(--text-muted); margin-top: 0; }
+.admin-filter-bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin: 16px 0; }
+.admin-filter-field { display: flex; flex-direction: column; gap: 5px; font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
+.admin-filter-field input, .admin-filter-field select { min-width: 220px; font-weight: 400; text-transform: none; letter-spacing: 0; }
+.admin-filter-field input.narrow { min-width: 260px; }
+.admin-sort-btn { background: none; border: none; color: inherit; font: inherit; cursor: pointer; padding: 0; }
+.admin-row-message { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+.flamedragon-troop-stack { display: flex; flex-direction: column; gap: 5px; }
+.flamedragon-power-cell { width: 170px; max-width: 170px; }
+
 /* Command Hall admin login */
 .command-hall-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; background: radial-gradient(ellipse 50% 40% at 50% 20%, rgba(217,169,78,0.1), transparent 60%), linear-gradient(180deg, #0b0e1e, #171c33); }
 .command-hall-card { width: min(400px, 100%); text-align: center; }

@@ -148,7 +148,7 @@ export default function AdminFlamedragonPage() {
     }
     if (key === 'infantry') {
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+        <div className="flamedragon-troop-stack">
           <span className="unit-pill">Inf {unitLevel(row.infantry_tier, row.infantry_tg)}</span>
           <span className="unit-pill cavalry">Cav {unitLevel(row.cavalry_tier, row.cavalry_tg)}</span>
           <span className="unit-pill archer">Arc {unitLevel(row.archer_tier, row.archer_tg)}</span>
@@ -166,7 +166,7 @@ export default function AdminFlamedragonPage() {
     }
     if (key === 'governor_gear') {
       return (
-        <div className="power-cell" style={{ width: 170, maxWidth: 170 }}>
+        <div className="power-cell flamedragon-power-cell">
           <span>Gov {row.governor_gear || '-'}</span>
           <span>Charms {row.charms || '-'}</span>
           <span>Pet {row.pet_power || '-'}</span>
@@ -201,7 +201,7 @@ export default function AdminFlamedragonPage() {
       onLogout={handleLogout}
       actions={<button type="button" onClick={exportCsv} className="logout-btn">Export CSV</button>}
     >
-        <p style={{ color: 'var(--text-muted)', marginTop: 0 }}>Availability, levels, and heroes submitted through the public Flamedragon Tyrant form.</p>
+        <p className="admin-page-lead">Availability, levels, and heroes submitted through the public Flamedragon Tyrant form.</p>
         <div className="admin-toolbar">
           <input
             type="text"
@@ -223,7 +223,7 @@ export default function AdminFlamedragonPage() {
               <thead>
                 <tr>
                   {TABLE_COLUMNS.map((col) => (
-                    <th key={col.key} onClick={() => toggleSort(col.key)} style={{ cursor: 'pointer' }}>
+                    <th key={col.key} onClick={() => toggleSort(col.key)}>
                       {col.label}{sortKey === col.key ? (sortDir === 'asc' ? ' \u2191' : ' \u2193') : ''}
                     </th>
                   ))}
