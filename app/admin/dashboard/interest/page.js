@@ -376,6 +376,7 @@ export default function AdminInterestPage() {
           <Link href="/admin/dashboard" className="admin-tab">Player Records</Link>
           <Link href="/admin/dashboard/interest" className="admin-tab active">Interest Submissions</Link>
           <Link href="/admin/dashboard/prep-ministers" className="admin-tab">KvK Prep Ministers</Link>
+          <Link href="/admin/dashboard/flamedragon" className="admin-tab">Flamedragon Tyrant</Link>
         </div>
         <div className="admin-hero">
           <div>
@@ -412,7 +413,7 @@ export default function AdminInterestPage() {
           </div>
           <div className="interest-controls" style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end', margin: '16px 0' }}>
             <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12 }}>
-              Search (Name, server, player ID, alliance) — use % as wildcard
+              Search (Name, server, player ID, alliance) â use % as wildcard
               <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. Legend%" style={{ minWidth: 260 }} />
             </label>
             <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12 }}>
