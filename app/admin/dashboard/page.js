@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import AdminShell from '../../../components/admin/AdminShell';
+import ConfirmDialog from '../../../components/admin/ConfirmDialog';
 import {
 RALLY_STORAGE_KEY,
 formatRallyRows,
@@ -89,6 +90,8 @@ const [ralliesHydrated, setRalliesHydrated] = useState(false);
   const [addingMember, setAddingMember] = useState(false);
   const [addMemberError, setAddMemberError] = useState('');
   const [addMemberStatus, setAddMemberStatus] = useState('');
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [confirmState, setConfirmState] = useState(null);
 const router = useRouter();
 
 useEffect(() => {
@@ -176,9 +179,16 @@ return nextRows;
 });
 }
 
-async function deleteMember(row) {
+function deleteMember(row) {
 const label = `${row.name || 'this entry'} (${row.member_id})`;
-if (!window.confirm(`Remove ${label}? This cannot be undone.`)) return;
+setConfirmState({
+message: `Remove ${label}? This cannot be undone.`,
+confirmLabel: 'Remove',
+onConfirm: () => { setConfirmState(null); performDeleteMember(row, label); },
+});
+}
+
+async function performDeleteMember(row, label) {
 setActionStatus('');
 setActionError('');
 setDeletingIds((current) => [...current, String(row.member_id)]);
@@ -195,8 +205,15 @@ applyDeletedMemberIds(result.deletedMemberIds || [row.member_id]);
 setActionStatus(`Removed ${label}.`);
 }
 
-async function clearTestData() {
-if (!window.confirm('Remove all Test Seed / TEST710 entries? This cannot be undone.')) return;
+function clearTestData() {
+setConfirmState({
+message: 'Remove all Test Seed / TEST710 entries? This cannot be undone.',
+confirmLabel: 'Clear test data',
+onConfirm: () => { setConfirmState(null); performClearTestData(); },
+});
+}
+
+async function performClearTestData() {
 setActionStatus('');
 setActionError('');
 setDeletingIds(['__test_data__']);
@@ -233,8 +250,14 @@ setRallies((current) => removeMemberFromRallies(current, memberId));
 }
 
 function handleDeleteRally(rally) {
-if (!window.confirm(`Delete ${rally.name}? Members will stay in the table.`)) return;
+setConfirmState({
+message: `Delete ${rally.name}? Members will stay in the table.`,
+confirmLabel: 'Delete rally',
+onConfirm: () => {
+setConfirmState(null);
 setRallies((current) => removeRallyById(current, rally.id));
+},
+});
 }
 
 function handleRallyLeadChange(rallyId, memberId) {
@@ -317,6 +340,7 @@ setRallies((current) => autoAssignRallyMembers(current, rallyId, rows));
     }
     setAddMemberStatus(`Added ${name}.`);
     setNewMember({ ...EMPTY_MEMBER });
+    setShowAddMember(false);
   }
   
 
@@ -372,21 +396,12 @@ return timestamp > latest ? timestamp : latest;
 }, 0);
 
 return (
-<div className="page admin-page">
-<div className="card admin-dashboard-card">
-<div className="admin-tabs">
-<Link href="/admin/dashboard" className="admin-tab active">Player Records</Link>
-<Link href="/admin/dashboard/interest" className="admin-tab">Interest Submissions</Link>
-<Link href="/admin/dashboard/prep-ministers" className="admin-tab">KvK Prep Ministers</Link>
-<Link href="/admin/dashboard/flamedragon" className="admin-tab">Flamedragon Tyrant</Link>
-</div>
-<div className="admin-hero">
-<div>
-<span className="admin-kicker">K710 command board</span>
-<h1>Admin Dashboard</h1>
-<p>Roster intake, rally composition, and hero guidance in one live planning view.</p>
-</div>
-<div className="admin-hero-actions">
+<AdminShell
+title="Player Records"
+subtitle="K710 command board"
+onLogout={handleLogout}
+actions={(
+<>
 <button
 type="button"
 onClick={clearTestData}
@@ -395,10 +410,17 @@ disabled={deletingIds.includes('__test_data__')}
 >
 {deletingIds.includes('__test_data__') ? 'Clearing...' : 'Clear test data'}
 </button>
-<button type="button" onClick={handleLogout} className="logout-btn">Log Out</button>
-</div>
-</div>
-<div className="card-body">
+</>
+)}
+>
+<ConfirmDialog
+open={Boolean(confirmState)}
+message={confirmState ? confirmState.message : ''}
+confirmLabel={confirmState ? confirmState.confirmLabel : 'Confirm'}
+onConfirm={() => confirmState && confirmState.onConfirm()}
+onCancel={() => setConfirmState(null)}
+/>
+<p style={{ color: 'var(--text-muted)', marginTop: 0 }}>Roster intake, rally composition, and hero guidance in one live planning view.</p>
 <div className="dashboard-stats" aria-label="Dashboard summary">
 <div>
 <span>Total members</span>
@@ -455,28 +477,40 @@ className="admin-search"
   <button type="button" className="export-xlsx-btn" onClick={handleExportXlsx}>
   Export to Excel
   </button>
+  <button type="button" className="create-rally-btn" onClick={() => setShowAddMember(true)}>
+  + Add Member
+  </button>
   </div>
-  <form className="add-member-form" onSubmit={handleAddMember}>
-  <h3>Add roster member</h3>
- {addMemberError && <div className="status error">{addMemberError}</div>}
-  {addMemberStatus && <div className="status">{addMemberStatus}</div>}
-    <div className="add-member-grid">
-    <input type="text" placeholder="Name" value={newMember.name} onChange={(e) => setNewMember({ ...newMember, name: e.target.value })} />
-    <input type="text" placeholder="Member ID" value={newMember.member_id} onChange={(e) => setNewMember({ ...newMember, member_id: e.target.value })} />
-    <input type="text" placeholder="Infantry tier" value={newMember.infantry_tier} onChange={(e) => setNewMember({ ...newMember, infantry_tier: e.target.value })} />
-    <input type="text" placeholder="Infantry TG" value={newMember.infantry_tg} onChange={(e) => setNewMember({ ...newMember, infantry_tg: e.target.value })} />
-    <input type="text" placeholder="Cavalry tier" value={newMember.cavalry_tier} onChange={(e) => setNewMember({ ...newMember, cavalry_tier: e.target.value })} />
-    <input type="text" placeholder="Cavalry TG" value={newMember.cavalry_tg} onChange={(e) => setNewMember({ ...newMember, cavalry_tg: e.target.value })} />
-    <input type="text" placeholder="Archer tier" value={newMember.archer_tier} onChange={(e) => setNewMember({ ...newMember, archer_tier: e.target.value })} />
-  <input type="text" placeholder="Archer TG" value={newMember.archer_tg} onChange={(e) => setNewMember({ ...newMember, archer_tg: e.target.value })} />
-  <input type="text" placeholder="Heroes (comma separated)" value={newMember.heroes} onChange={(e) => setNewMember({ ...newMember, heroes: e.target.value })} />
-  <input type="text" placeholder="Availability" value={newMember.availability} onChange={(e) => setNewMember({ ...newMember, availability: e.target.value })} />
-  <input type="text" placeholder="Alliance" value={newMember.current_alliance} onChange={(e) => setNewMember({ ...newMember, current_alliance: e.target.value })} />
+  {showAddMember && (
+  <div className="admin-drawer-overlay" role="presentation" onClick={() => setShowAddMember(false)}>
+    <div className="admin-drawer" role="dialog" aria-modal="true" aria-labelledby="add-member-title" onClick={(e) => e.stopPropagation()}>
+      <div className="admin-drawer-header">
+        <h2 id="add-member-title">Add roster member</h2>
+        <button type="button" className="admin-drawer-close" onClick={() => setShowAddMember(false)} aria-label="Close">&times;</button>
+      </div>
+      <form className="add-member-form" onSubmit={handleAddMember}>
+     {addMemberError && <div className="status error">{addMemberError}</div>}
+      {addMemberStatus && <div className="status">{addMemberStatus}</div>}
+        <div className="add-member-grid">
+        <input type="text" placeholder="Name" value={newMember.name} onChange={(e) => setNewMember({ ...newMember, name: e.target.value })} />
+        <input type="text" placeholder="Member ID" value={newMember.member_id} onChange={(e) => setNewMember({ ...newMember, member_id: e.target.value })} />
+        <input type="text" placeholder="Infantry tier" value={newMember.infantry_tier} onChange={(e) => setNewMember({ ...newMember, infantry_tier: e.target.value })} />
+        <input type="text" placeholder="Infantry TG" value={newMember.infantry_tg} onChange={(e) => setNewMember({ ...newMember, infantry_tg: e.target.value })} />
+        <input type="text" placeholder="Cavalry tier" value={newMember.cavalry_tier} onChange={(e) => setNewMember({ ...newMember, cavalry_tier: e.target.value })} />
+        <input type="text" placeholder="Cavalry TG" value={newMember.cavalry_tg} onChange={(e) => setNewMember({ ...newMember, cavalry_tg: e.target.value })} />
+        <input type="text" placeholder="Archer tier" value={newMember.archer_tier} onChange={(e) => setNewMember({ ...newMember, archer_tier: e.target.value })} />
+      <input type="text" placeholder="Archer TG" value={newMember.archer_tg} onChange={(e) => setNewMember({ ...newMember, archer_tg: e.target.value })} />
+      <input type="text" placeholder="Heroes (comma separated)" value={newMember.heroes} onChange={(e) => setNewMember({ ...newMember, heroes: e.target.value })} />
+      <input type="text" placeholder="Availability" value={newMember.availability} onChange={(e) => setNewMember({ ...newMember, availability: e.target.value })} />
+      <input type="text" placeholder="Alliance" value={newMember.current_alliance} onChange={(e) => setNewMember({ ...newMember, current_alliance: e.target.value })} />
+      </div>
+      <button type="submit" className="add-member-submit" disabled={addingMember}>
+    {addingMember ? 'Adding...' : 'Add member'}
+    </button>
+      </form>
+    </div>
   </div>
-  <button type="submit" className="add-member-submit" disabled={addingMember}>
-{addingMember ? 'Adding...' : 'Add member'}
-</button>
-  </form>
+  )}
 <div className="admin-table-wrap">
 <table className="admin-table">
 <thead>
@@ -484,7 +518,7 @@ className="admin-search"
 {COLUMNS.map((col) => (
 <th key={col.key} onClick={() => handleSort(col.key)}>
 {col.label}
-{sortKey === col.key ? (sortDir === 'asc' ? ' â²' : ' â¼') : ''}
+{sortKey === col.key ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''}
 </th>
 ))}
 <th>Actions</th>
@@ -698,8 +732,6 @@ x
 </aside>
 </div>
 )}
-</div>
-</div>
-</div>
+</AdminShell>
 );
 }

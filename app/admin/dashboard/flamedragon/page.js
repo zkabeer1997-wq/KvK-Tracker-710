@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import AdminShell from '../../../../components/admin/AdminShell';
 
 // Columns used for search, sort, and CSV export (keeps every field).
 const COLUMNS = [
@@ -195,26 +195,13 @@ export default function AdminFlamedragonPage() {
   }
 
   return (
-    <div className="page admin-page">
-      <div className="card admin-dashboard-card">
-        <div className="admin-tabs">
-          <Link href="/admin/dashboard" className="admin-tab">Player Records</Link>
-          <Link href="/admin/dashboard/interest" className="admin-tab">Interest Submissions</Link>
-          <Link href="/admin/dashboard/prep-ministers" className="admin-tab">KvK Prep Ministers</Link>
-          <Link href="/admin/dashboard/flamedragon" className="admin-tab active">Flamedragon Tyrant</Link>
-        </div>
-        <div className="admin-hero">
-          <div>
-            <span className="admin-kicker">K710 command board</span>
-            <h1>Flamedragon Tyrant Form</h1>
-            <p>Availability, levels, and heroes submitted through the public Flamedragon Tyrant form.</p>
-          </div>
-          <div className="admin-hero-actions">
-            <button type="button" onClick={exportCsv} className="logout-btn">Export CSV</button>
-            <button type="button" onClick={handleLogout} className="logout-btn">Log Out</button>
-          </div>
-        </div>
-
+    <AdminShell
+      title="Flamedragon Tyrant"
+      subtitle="K710 command board"
+      onLogout={handleLogout}
+      actions={<button type="button" onClick={exportCsv} className="logout-btn">Export CSV</button>}
+    >
+        <p style={{ color: 'var(--text-muted)', marginTop: 0 }}>Availability, levels, and heroes submitted through the public Flamedragon Tyrant form.</p>
         <div className="admin-toolbar">
           <input
             type="text"
@@ -258,7 +245,6 @@ export default function AdminFlamedragonPage() {
             </table>
           )}
         </div>
-      </div>
-    </div>
+    </AdminShell>
   );
 }

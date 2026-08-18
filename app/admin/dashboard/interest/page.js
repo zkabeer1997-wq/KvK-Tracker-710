@@ -1,7 +1,22 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import AdminShell from '../../../../components/admin/AdminShell';
+import StatusBadge from '../../../../components/admin/StatusBadge';
+
+const COMPACT_COLUMNS = [
+  { key: 'in_game_name', label: 'Name' },
+  { key: 'current_server', label: 'Server' },
+  { key: 'current_alliance', label: 'Alliance' },
+  { key: 'migrate_alliance', label: 'Target' },
+  { key: 'highest_troop_level', label: 'Troop Level' },
+  { key: 't11_units', label: 'T11' },
+  { key: 'mystic_trial_stages', label: 'Mystic Trial' },
+  { key: 'total_power', label: 'Power' },
+  { key: 'passes_required', label: 'Passes' },
+  { key: 'intake_period', label: 'Intake' },
+  { key: 'created_at', label: 'Submitted' },
+];
 
 const COLUMNS = [
   { key: 'status', label: 'Status' },
@@ -87,6 +102,7 @@ export default function AdminInterestPage() {
   const [busyId, setBusyId] = useState('');
   const [rowMessage, setRowMessage] = useState({});
   const [credentials, setCredentials] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -155,6 +171,8 @@ export default function AdminInterestPage() {
     () => Array.from(new Set(rows.map((r) => r.current_server).filter(Boolean))).sort(),
     [rows]
   );
+
+  const selectedRow = useMemo(() => rows.find((r) => r.id === selectedId) || null, [rows, selectedId]);
 
   const visibleRows = useMemo(() => {
     const matcher = buildMatcher(query);
@@ -370,35 +388,25 @@ export default function AdminInterestPage() {
   }
 
   return (
-    <div className="page admin-page">
-      <div className="card admin-dashboard-card">
-        <div className="admin-tabs">
-          <Link href="/admin/dashboard" className="admin-tab">Player Records</Link>
-          <Link href="/admin/dashboard/interest" className="admin-tab active">Interest Submissions</Link>
-          <Link href="/admin/dashboard/prep-ministers" className="admin-tab">KvK Prep Ministers</Link>
-          <Link href="/admin/dashboard/flamedragon" className="admin-tab">Flamedragon Tyrant</Link>
-        </div>
-        <div className="admin-hero">
-          <div>
-            <span className="admin-kicker">K710 command board</span>
-            <h1>Interest Submissions</h1>
-            <p>Review 710 transfer onboarding requests submitted through the public interest form.</p>
-          </div>
-          <div className="admin-hero-actions">
-            <button type="button" onClick={handleLogout} className="logout-btn">Log Out</button>
-          </div>
-        </div>
-        <div className="card-body">
+    <AdminShell title="Transfer Requests" subtitle="K710 command board" onLogout={handleLogout}>
+          <p style={{ color: 'var(--text-muted)', marginTop: 0 }}>Review 710 transfer onboarding requests submitted through the public interest form.</p>
           {credentials && (
-            <div className="status" style={{ margin: '12px 0', border: '1px solid #c9a227', background: 'rgba(201,162,39,0.12)' }}>
-              <strong>{credentials.reused ? 'Account already existed' : 'Account created'} for {credentials.name} (ID {credentials.member_id}).</strong>
-              <div style={{ marginTop: 6 }}>
-                Default password: <code style={{ fontSize: 15, fontWeight: 700 }}>{credentials.password}</code>
+            <div className="credentials-modal-overlay" role="presentation" onClick={() => setCredentials(null)}>
+              <div className="credentials-modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+                <h2>{credentials.reused ? 'Account already existed' : 'Account created'}</h2>
+                <p>{credentials.name} &middot; ID {credentials.member_id}. Share this password with the player &mdash; they enter it as their PIN to edit their player record and power profile.</p>
+                <div className="credentials-modal-row">
+                  <code>{credentials.password}</code>
+                  <button
+                    type="button"
+                    className="credentials-modal-copy"
+                    onClick={() => navigator.clipboard && navigator.clipboard.writeText(credentials.password)}
+                  >
+                    Copy
+                  </button>
+                </div>
+                <button type="button" onClick={() => setCredentials(null)} className="credentials-modal-close">Dismiss</button>
               </div>
-              <div style={{ marginTop: 6, fontSize: 12, opacity: 0.85 }}>
-                Share this with the player. They enter it as their PIN to edit their player record and player profile.
-              </div>
-              <button type="button" onClick={() => setCredentials(null)} className="logout-btn" style={{ marginTop: 10 }}>Dismiss</button>
             </div>
           )}
           <div className="dashboard-stats" aria-label="Interest summary">
@@ -413,7 +421,7 @@ export default function AdminInterestPage() {
           </div>
           <div className="interest-controls" style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end', margin: '16px 0' }}>
             <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12 }}>
-              Search (Name, server, player ID, alliance) â use % as wildcard
+              Search (Name, server, player ID, alliance) — use % as wildcard
               <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. Legend%" style={{ minWidth: 260 }} />
             </label>
             <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12 }}>
@@ -443,64 +451,28 @@ export default function AdminInterestPage() {
           {error && <div className="status error">{error}</div>}
           {!loading && !error && (
             <div className="admin-table-wrap">
-              <table className="admin-table">
+              <table className="admin-table admin-compact-table">
                 <thead>
                   <tr>
-                    <th>Actions</th>
-                    {COLUMNS.map((col) => (
+                    <th>Status</th>
+                    {COMPACT_COLUMNS.map((col) => (
                       <th key={col.key}>
                         <button type="button" onClick={() => toggleSort(col.key)} style={{ background: 'none', border: 'none', color: 'inherit', font: 'inherit', cursor: 'pointer', padding: 0 }}>
                           {col.label}{sortKey === col.key ? (sortDir === 'asc' ? ' \u25B2' : ' \u25BC') : ''}
                         </button>
                       </th>
                     ))}
-                    <th>Screenshots</th>
                   </tr>
                 </thead>
                 <tbody>
                   {visibleRows.map((row) => (
-                    <tr key={row.id}>
-                      <td style={{ minWidth: 160 }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          {STATUS_ACTIONS.map((action) => (
-                            <button
-                              key={action.value}
-                              type="button"
-                              disabled={busyId === row.id}
-                              onClick={() => updateStatus(row, action.value)}
-                              style={{
-                                cursor: busyId === row.id ? 'default' : 'pointer',
-                                fontSize: 11,
-                                padding: '4px 8px',
-                                borderRadius: 6,
-                                border: '1px solid ' + statusColor(action.value),
-                                background: row.status === action.value ? statusColor(action.value) : 'transparent',
-                                color: row.status === action.value ? '#10131a' : statusColor(action.value),
-                                fontWeight: 600,
-                              }}
-                            >
-                              {action.label}
-                            </button>
-                          ))}
-                          {rowMessage[row.id] && (
-                            <span style={{ fontSize: 10, opacity: 0.85 }}>{rowMessage[row.id]}</span>
-                          )}
-                        </div>
-                      </td>
-                      {COLUMNS.map((col) => (
-                        <td
-                          key={col.key}
-                          className={col.key === 'created_at' ? 'updated-cell' : undefined}
-                          style={col.key === 'status' ? { color: statusColor(row.status), fontWeight: 700, whiteSpace: 'nowrap' } : undefined}
-                        >
+                    <tr key={row.id} className="admin-row-clickable" onClick={() => setSelectedId(row.id)}>
+                      <td><StatusBadge status={row.status || 'pending'} label={STATUS_LABELS[row.status] || 'Pending'} /></td>
+                      {COMPACT_COLUMNS.map((col) => (
+                        <td key={col.key} className={col.key === 'created_at' ? 'updated-cell' : undefined}>
                           {cellValue(row, col.key)}
                         </td>
                       ))}
-                      <td className="updated-cell">
-                        {(row.screenshot_urls || []).map((url, index) => (
-                          <a key={url} href={url} target="_blank" rel="noreferrer" style={{ marginRight: 6 }}>Image {index + 1}</a>
-                        ))}
-                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -508,8 +480,58 @@ export default function AdminInterestPage() {
               {visibleRows.length === 0 && <p>No interest submissions match your filters.</p>}
             </div>
           )}
-        </div>
-      </div>
-    </div>
+
+          {selectedRow && (
+            <div className="admin-drawer-overlay" role="presentation" onClick={() => setSelectedId(null)}>
+              <div className="admin-drawer" role="dialog" aria-modal="true" aria-labelledby="review-drawer-title" onClick={(e) => e.stopPropagation()}>
+                <div className="admin-drawer-header">
+                  <h2 id="review-drawer-title">{selectedRow.in_game_name || 'Applicant'}</h2>
+                  <button type="button" className="admin-drawer-close" onClick={() => setSelectedId(null)} aria-label="Close">&times;</button>
+                </div>
+
+                <div className="admin-drawer-section">
+                  <h3>Decision</h3>
+                  <div className="admin-drawer-actions">
+                    {STATUS_ACTIONS.map((action) => (
+                      <button
+                        key={action.value}
+                        type="button"
+                        disabled={busyId === selectedRow.id}
+                        onClick={() => updateStatus(selectedRow, action.value)}
+                        className={'status-action-btn' + (selectedRow.status === action.value ? ' active-' + action.value : '')}
+                      >
+                        {action.label}
+                      </button>
+                    ))}
+                  </div>
+                  {rowMessage[selectedRow.id] && <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>{rowMessage[selectedRow.id]}</p>}
+                </div>
+
+                <div className="admin-drawer-section">
+                  <h3>Application</h3>
+                  <div className="admin-drawer-grid">
+                    {COLUMNS.filter((c) => c.key !== 'status').map((col) => (
+                      <div key={col.key} className="admin-drawer-field">
+                        <span>{col.label}</span>
+                        <strong>{cellValue(selectedRow, col.key) || '-'}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {(selectedRow.screenshot_urls || []).length > 0 && (
+                  <div className="admin-drawer-section">
+                    <h3>Screenshots</h3>
+                    <div className="admin-drawer-actions">
+                      {selectedRow.screenshot_urls.map((url, index) => (
+                        <a key={url} href={url} target="_blank" rel="noreferrer" className="status-action-btn">Image {index + 1}</a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+    </AdminShell>
   );
 }

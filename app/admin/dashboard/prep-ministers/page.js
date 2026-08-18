@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import AdminShell from '../../../../components/admin/AdminShell';
 import { schedule, OPEN_SPOT } from '../prepScheduler.mjs';
 
 const COLUMNS = [
@@ -205,25 +205,8 @@ export default function AdminPrepMinistersPage() {
   }
 
   return (
-    <div className="page admin-page">
-      <div className="card admin-dashboard-card">
-        <div className="admin-tabs">
-          <Link href="/admin/dashboard" className="admin-tab">Player Records</Link>
-          <Link href="/admin/dashboard/interest" className="admin-tab">Interest Submissions</Link>
-          <Link href="/admin/dashboard/prep-ministers" className="admin-tab active">KvK Prep Ministers</Link>
-          <Link href="/admin/dashboard/flamedragon" className="admin-tab">Flamedragon Tyrant</Link>
-        </div>
-        <div className="admin-hero">
-          <div>
-            <span className="admin-kicker">K710 command board</span>
-            <h1>KvK Prep Ministers</h1>
-            <p>Backpack amounts and minister position bookings submitted through the Prep Phase Backpack form.</p>
-          </div>
-          <div className="admin-hero-actions">
-            <button type="button" onClick={handleLogout} className="logout-btn">Log Out</button>
-          </div>
-        </div>
-        <div className="card-body">
+    <AdminShell title="Prep Ministers" subtitle="K710 command board" onLogout={handleLogout}>
+          <p style={{ color: 'var(--text-muted)', marginTop: 0 }}>Backpack amounts and minister position bookings submitted through the Prep Phase Backpack form.</p>
           <div className="dashboard-stats" aria-label="Prep summary">
             <div><span>Total submissions</span><strong>{rows.length}</strong></div>
             <div><span>Showing</span><strong>{visibleRows.length}</strong></div>
@@ -283,8 +266,6 @@ export default function AdminPrepMinistersPage() {
               </div>
             </div>
           )}
-        </div>
-      </div>
-    </div>
+    </AdminShell>
   );
 }
