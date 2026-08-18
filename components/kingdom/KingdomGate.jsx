@@ -7,10 +7,10 @@ import { Sparkles } from '@react-three/drei';
 const GOLD = '#d9a94e';
 const EMBER = '#d9622d';
 const BLUE = '#5c86c9';
-const STONE = '#232a45';
-const STONE_DARK = '#171c33';
+const STONE = '#3a4470';
+const STONE_DARK = '#2a3358';
 
-function Torch({ position, color = EMBER, intensity = 2.2 }) {
+function Torch({ position, color = EMBER, intensity = 3.5 }) {
   const light = useRef(null);
   const seed = useRef(Math.random() * 10);
   useFrame(({ clock }) => {
@@ -28,7 +28,7 @@ function Torch({ position, color = EMBER, intensity = 2.2 }) {
         <sphereGeometry args={[0.14, 8, 8]} />
         <meshStandardMaterial color={color} emissive={color} emissiveIntensity={2.2} toneMapped={false} />
       </mesh>
-      <pointLight ref={light} position={[0, 0.85, 0]} color={color} intensity={intensity} distance={6} decay={2} />
+      <pointLight ref={light} position={[0, 0.85, 0]} color={color} intensity={intensity} distance={9} decay={2} />
     </group>
   );
 }

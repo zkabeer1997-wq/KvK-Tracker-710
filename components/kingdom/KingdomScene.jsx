@@ -59,10 +59,11 @@ function SceneContents({ hoveredRoad, phase, selectedRoad, elapsedSinceSelect })
   return (
     <>
       <color attach="background" args={[NAVY]} />
-      <fog attach="fog" args={[NAVY, 8, phase === 'transitioning' ? 6 : 22]} />
-      <ambientLight intensity={0.28} color="#2a3358" />
-      <directionalLight position={[-6, 8, 4]} intensity={0.35} color="#6f7cad" />
-      <hemisphereLight args={['#232c52', '#05060c', 0.4]} />
+      <fog attach="fog" args={[NAVY, 10, phase === 'transitioning' ? 6 : 30]} />
+      <ambientLight intensity={0.85} color="#4a5488" />
+      <directionalLight position={[-6, 10, 6]} intensity={1.1} color="#8f9bd4" />
+      <hemisphereLight args={['#4a5590', '#0a0d1c', 0.9]} />
+      <pointLight position={[0, 5, 4]} color="#d9a94e" intensity={1.4} distance={20} decay={2} />
 
       <KingdomGate />
       <group ref={travelerRef} position={[0, 0, 3.4]}>
