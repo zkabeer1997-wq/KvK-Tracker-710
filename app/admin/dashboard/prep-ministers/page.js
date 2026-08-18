@@ -227,7 +227,7 @@ export default function AdminPrepMinistersPage() {
             </label>
             <button type="button" onClick={handleGenerate} className="logout-btn">Generate</button>
             <button type="button" onClick={exportExcel} className="logout-btn">Export to Excel</button>
-            {saveStatus && (<span className="prep-save-status">{saveStatus === 'saving' ? 'SavingÃ¢ÂÂ¦' : saveStatus === 'saved' ? 'Saved' : 'Save failed'}</span>)}
+            {saveStatus && (<span className="prep-save-status">{saveStatus === 'saving' ? 'Saving…' : saveStatus === 'saved' ? 'Saved' : 'Save failed'}</span>)}
           </div>
           {loading && <p>Loading...</p>}
           {error && <div className="status error">{error}</div>}

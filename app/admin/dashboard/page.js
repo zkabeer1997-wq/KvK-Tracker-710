@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminShell from '../../../components/admin/AdminShell';
 import ConfirmDialog from '../../../components/admin/ConfirmDialog';
+import { useEscapeToClose } from '../../../lib/useEscapeToClose';
 import {
 RALLY_STORAGE_KEY,
 formatRallyRows,
@@ -93,6 +94,8 @@ const [ralliesHydrated, setRalliesHydrated] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
   const [confirmState, setConfirmState] = useState(null);
 const router = useRouter();
+
+useEscapeToClose(showAddMember, () => setShowAddMember(false));
 
 useEffect(() => {
 async function load() {

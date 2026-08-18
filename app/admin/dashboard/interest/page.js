@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminShell from '../../../../components/admin/AdminShell';
 import StatusBadge from '../../../../components/admin/StatusBadge';
+import { useEscapeToClose } from '../../../../lib/useEscapeToClose';
 
 const COMPACT_COLUMNS = [
   { key: 'in_game_name', label: 'Name' },
@@ -173,6 +174,9 @@ export default function AdminInterestPage() {
   );
 
   const selectedRow = useMemo(() => rows.find((r) => r.id === selectedId) || null, [rows, selectedId]);
+
+  useEscapeToClose(Boolean(selectedRow), () => setSelectedId(null));
+  useEscapeToClose(Boolean(credentials), () => setCredentials(null));
 
   const visibleRows = useMemo(() => {
     const matcher = buildMatcher(query);
