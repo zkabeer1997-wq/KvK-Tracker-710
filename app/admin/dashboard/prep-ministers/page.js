@@ -211,6 +211,7 @@ export default function AdminPrepMinistersPage() {
           <Link href="/admin/dashboard" className="admin-tab">Player Records</Link>
           <Link href="/admin/dashboard/interest" className="admin-tab">Interest Submissions</Link>
           <Link href="/admin/dashboard/prep-ministers" className="admin-tab active">KvK Prep Ministers</Link>
+          <Link href="/admin/dashboard/flamedragon" className="admin-tab">Flamedragon Tyrant</Link>
         </div>
         <div className="admin-hero">
           <div>
@@ -243,7 +244,7 @@ export default function AdminPrepMinistersPage() {
             </label>
             <button type="button" onClick={handleGenerate} className="logout-btn">Generate</button>
             <button type="button" onClick={exportExcel} className="logout-btn">Export to Excel</button>
-            {saveStatus && (<span className="prep-save-status">{saveStatus === 'saving' ? 'Savingâ¦' : saveStatus === 'saved' ? 'Saved' : 'Save failed'}</span>)}
+            {saveStatus && (<span className="prep-save-status">{saveStatus === 'saving' ? 'SavingÃ¢ÂÂ¦' : saveStatus === 'saved' ? 'Saved' : 'Save failed'}</span>)}
           </div>
           {loading && <p>Loading...</p>}
           {error && <div className="status error">{error}</div>}
