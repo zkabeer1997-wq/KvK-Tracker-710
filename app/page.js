@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import HomeEditableText from '../components/HomeEditableText';
 import { getHomeContent, checkIsAdmin } from '../lib/homeContent';
+import KingdomEntrance from '../components/kingdom/KingdomEntrance';
 
 export const metadata = {
   title: 'K710 Dashboard',
@@ -33,32 +34,25 @@ export default async function HomePage() {
 
   return (
     <main className="k710-page">
-      {/* HERO */}
-      <div className="hero">
-        <svg className="hero-crest" viewBox="0 0 200 200" fill="none">
-          <path d="M100 10 L175 35 V95 C175 140 145 170 100 190 C55 170 25 140 25 95 V35 Z" stroke="#d9a94e" strokeWidth="2" />
-          <path d="M100 30 L155 48 V96 C155 130 132 154 100 168 C68 154 45 130 45 96 V48 Z" stroke="#d9a94e" strokeWidth="1" />
-          <text x="100" y="112" textAnchor="middle" fontFamily="Cinzel, serif" fontWeight="900" fontSize="46" fill="#d9a94e">710</text>
-        </svg>
-        <div className="wrap">
-          <div className="hero-inner">
-  {field('hero-kicker', { as: 'div', className: 'eyebrow' })}
-{field('hero-title', { as: 'h1' })}
-{field('hero-sub', { as: 'p', className: 'sub', multiline: true })}
-            <div className="hero-ctas">
-              <Link href="/interest" className="btn btn-primary">Apply to Transfer &nbsp;&rarr;</Link>
-              <Link href="/player-record" className="btn btn-ghost">I&rsquo;m already in 710</Link>
-            </div>
-            <div className="stat-row">
-              <div className="stat"><span className="num">3</span><span className="label">Warbands, one kingdom</span></div>
-              <div className="stat"><span className="num">7</span><span className="label">Bear Hunt windows / day</span></div>
-              <div className="stat"><span className="num">Monthly</span><span className="label">Intake windows open</span></div>
-            </div>
+      {/* KINGDOM GATE — 3D entrance experience */}
+      <KingdomEntrance />
+
+      {/* KINGDOM DOSSIER — the informational content, unlocked below the gate */}
+      <div id="dossier" className="section" style={{ paddingBottom: 0 }}>
+        <div className="wrap kingdom-dossier-lead">
+          {field('hero-kicker', { as: 'div', className: 'eyebrow' })}
+          {field('hero-title', { as: 'h1' })}
+          {field('hero-sub', { as: 'p', className: 'sub', multiline: true })}
+          <div className="hero-ctas" style={{ justifyContent: 'center', marginTop: 24 }}>
+            <Link href="/interest" className="btn btn-primary">Apply to Transfer &nbsp;&rarr;</Link>
+            <Link href="/player-record" className="btn btn-ghost">I&rsquo;m already in 710</Link>
+          </div>
+          <div className="stat-row" style={{ margin: '32px auto 0' }}>
+            <div className="stat"><span className="num">3</span><span className="label">Warbands, one kingdom</span></div>
+            <div className="stat"><span className="num">7</span><span className="label">Bear Hunt windows / day</span></div>
+            <div className="stat"><span className="num">Monthly</span><span className="label">Intake windows open</span></div>
           </div>
         </div>
-        <svg className="torn" viewBox="0 0 1200 34" preserveAspectRatio="none">
-          <path d="M0 34 L0 18 L40 26 L80 10 L120 22 L160 6 L200 20 L240 12 L280 24 L320 8 L360 20 L400 14 L440 26 L480 10 L520 22 L560 6 L600 20 L640 12 L680 24 L720 8 L760 20 L800 14 L840 26 L880 10 L920 22 L960 6 L1000 20 L1040 12 L1080 24 L1120 8 L1160 20 L1200 14 L1200 34 Z" fill="#1a2140" />
-        </svg>
       </div>
 
       {/* WHY 710 */}
