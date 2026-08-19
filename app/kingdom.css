@@ -1,6 +1,6 @@
 /* ============================================================
    KINGDOM 710 — WORLD DESIGN SYSTEM
-   Material language, warband heraldry, motion, and scene
+   Material language, alliance heraldry, motion, and scene
    primitives. Loaded after globals.css.
 
    Principle: the world carries the emotion, the interface
@@ -36,7 +36,7 @@
   --fire-core:       #ffb257;
   --smoke:           rgba(20, 22, 30, 0.72);
 
-  /* --- Warband heraldry ----------------------------------- */
+  /* --- Alliance heraldry ---------------------------------- */
   --wb-710:          #d9a94e;
   --wb-710-deep:     #8a6a28;
   --wb-red:          #a3283c;
@@ -664,7 +664,7 @@
 .chamber-head { margin-bottom: clamp(26px, 4vh, 44px); }
 .chamber-h2 { margin: 10px 0 0; font-size: clamp(21px, 3vw, 34px); letter-spacing: 0.09em; }
 
-/* --- Warband standards ---
+/* --- Alliance standards ---
    Three real standards hanging in the chamber: an iron rod, cloth with a
    brass hem, the band's gemstone set beneath, and the writing engraved on
    the wall under it. No plate, no card, no panel edge. */

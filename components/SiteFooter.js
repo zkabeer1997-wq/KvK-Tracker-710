@@ -10,7 +10,7 @@ export default function SiteFooter() {
           </svg>
           <div>
             <span className="site-footer-name">Kingdom 710</span>
-            <span className="site-footer-tag">One kingdom, three warbands, every timezone covered.</span>
+            <span className="site-footer-tag">One kingdom, three alliances, every timezone covered.</span>
           </div>
         </div>
         <nav className="site-footer-links" aria-label="Footer">

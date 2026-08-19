@@ -44,7 +44,7 @@ function CommandTable({ lit }) {
       <path d="M56 104 q26 -9 48 -3 t44 -6" stroke="#a8834a" strokeWidth="1.1" fill="none" opacity="0.55" />
       <path d="M74 86 q14 8 34 6 t32 -8" stroke="#7d6a44" strokeWidth="1" fill="none" opacity="0.5" />
 
-      {/* standing markers: a pin and a pennant for each warband */}
+      {/* standing markers: a pin and a pennant for each alliance */}
       <g className="station-glint" fill="#d9a94e">
         <path d="M74 88 l0 -20 l12 5 l-12 5 Z" />
         <circle cx="74" cy="89" r="3.4" />
@@ -89,7 +89,7 @@ function MusterBoard({ lit }) {
       <rect x="42" y="36" width="116" height="66" rx="2" fill="#2b2114" stroke="#6b5024" strokeWidth="2" />
       <rect x="46" y="40" width="108" height="58" fill="#3a2c18" />
 
-      {/* pinned parchment slips, each sealed in a warband colour */}
+      {/* pinned parchment slips, each sealed in an alliance colour */}
       {[0, 1, 2].map((i) => (
         <g key={i}>
           <rect x={52} y={45 + i * 18} width="66" height="14" rx="1" fill="#d8c69c" opacity="0.88" />

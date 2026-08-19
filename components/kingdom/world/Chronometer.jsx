@@ -37,7 +37,7 @@ export function nextHunt(nowMin) {
 }
 
 /**
- * A monumental brass instrument: 24-hour ring, warband gemstones set at
+ * A monumental brass instrument: 24-hour ring, alliance gemstones set at
  * each hunt window, a sweeping watch hand on real UTC, and the next
  * window physically lit. Rendered as SVG so it stays crisp, cheap,
  * accessible, and works with no WebGL.
@@ -79,7 +79,7 @@ export default function Chronometer() {
         className="chrono-dial"
         viewBox="0 0 480 480"
         role="img"
-        aria-label={`Kingdom watch. Current time ${data.utc} UTC. Next Bear Hunt: ${data.next.band} warband at ${data.next.utc} UTC, in ${data.countdown}.`}
+        aria-label={`Kingdom watch. Current time ${data.utc} UTC. Next Bear Hunt: ${data.next.band} alliance at ${data.next.utc} UTC, in ${data.countdown}.`}
       >
         <defs>
           <radialGradient id="chronoFace" cx="42%" cy="34%">

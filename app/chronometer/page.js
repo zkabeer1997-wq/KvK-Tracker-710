@@ -6,7 +6,7 @@ import Chronometer from '../../components/kingdom/world/Chronometer';
 export const metadata = {
   title: 'Chronometer Chamber',
   description:
-    'The unbroken watch of Kingdom 710 — three warbands, seven Bear Hunt windows, continuous coverage across every timezone.',
+    'The unbroken watch of Kingdom 710 — three alliances, seven Bear Hunt windows, continuous coverage across every timezone.',
 };
 
 // Recruitment copy still lives in content_blocks (page = 'home') and stays
@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 export const revalidate = 0;
 
-const WARBANDS = [
+const ALLIANCES = [
   { band: '710', nameKey: 'wb-1-name', descKey: 'wb-1-desc', windows: ['02:00', '13:00'], role: 'Early & midday anchor' },
   { band: 'RED', nameKey: 'wb-2-name', descKey: 'wb-2-desc', windows: ['11:05', '19:00', '23:20'], role: 'EU evening → NA late' },
   { band: 'SKY', nameKey: 'wb-3-name', descKey: 'wb-3-desc', windows: ['12:00', '20:00'], role: 'SEA / AU daytime' },
@@ -56,20 +56,20 @@ export default async function ChronometerPage() {
         <span className="k-mark">The Unbroken Watch</span>
         <h1 className="k-display chamber-title k-engraved">Chronometer Chamber</h1>
         <p className="k-narrative chamber-lede">
-          Kingdom 710 does not sleep. Three warbands hold seven Bear Hunt windows
+          Kingdom 710 does not sleep. Three alliances hold seven Bear Hunt windows
           between them, so whatever hour you log in, somebody is already rallying.
         </p>
         <Chronometer />
       </section>
 
-      {/* ---- Three warband standards ---- */}
+      {/* ---- Three alliance standards ---- */}
       <section className="chamber-section">
         <header className="chamber-head">
           <span className="k-mark">{field('wb-head-kicker')}</span>
           <h2 className="k-display chamber-h2">{field('wb-head-title')}</h2>
         </header>
         <div className="standards">
-          {WARBANDS.map((w) => (
+          {ALLIANCES.map((w) => (
             <article key={w.band} className="standard k-wb" data-band={w.band}>
               <div className="standard-cloth" aria-hidden="true" />
               <span className="standard-gem" aria-hidden="true" />

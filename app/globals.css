@@ -537,11 +537,11 @@ input:focus, select:focus, .public-form-card input:focus, .public-form-card sele
 .k710-page .card h3 { font-family: var(--font-body); font-size: 17px; font-weight: 700; color: var(--parchment); margin: 0 0 10px; text-transform: none; letter-spacing: 0; }
 .k710-page .card p { font-size: 14.5px; color: var(--text-muted); line-height: 1.65; margin: 0; }
 
-/* WARBANDS */
-.k710-page .warband-card { position: relative; background: var(--ink-soft-2); border: 1px solid var(--line); border-radius: 12px; padding: 26px 26px 24px; border-top: 3px solid var(--band-color, var(--gold)); }
-.k710-page .warband-card .wb-name { font-family: var(--font-display); font-weight: 800; font-size: 21px; letter-spacing: 0.03em; color: var(--parchment); display: flex; align-items: center; gap: 10px; margin-bottom: 6px; text-transform: none; }
+/* ALLIANCES */
+.k710-page .alliance-card { position: relative; background: var(--ink-soft-2); border: 1px solid var(--line); border-radius: 12px; padding: 26px 26px 24px; border-top: 3px solid var(--band-color, var(--gold)); }
+.k710-page .alliance-card .wb-name { font-family: var(--font-display); font-weight: 800; font-size: 21px; letter-spacing: 0.03em; color: var(--parchment); display: flex; align-items: center; gap: 10px; margin-bottom: 6px; text-transform: none; }
 .k710-page .wb-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--band-color, var(--gold)); flex-shrink: 0; }
-.k710-page .warband-card .wb-desc { font-size: 13.5px; color: var(--text-muted); margin: 0 0 18px; line-height: 1.55; }
+.k710-page .alliance-card .wb-desc { font-size: 13.5px; color: var(--text-muted); margin: 0 0 18px; line-height: 1.55; }
 .k710-page .wb-times { display: flex; flex-wrap: wrap; gap: 8px; }
 .k710-page .wb-time { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--parchment); background: rgba(217,169,78,0.09); border: 1px solid var(--line); padding: 6px 10px; border-radius: 6px; }
 .k710-page .wb-tag { position: absolute; top: 24px; right: 24px; font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--band-color, var(--gold)); border: 1px solid var(--line-bright); padding: 3px 8px; border-radius: 20px; }

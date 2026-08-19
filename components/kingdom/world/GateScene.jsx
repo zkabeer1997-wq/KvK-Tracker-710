@@ -131,7 +131,7 @@ function Brazier({ position, color = FIRE, scale = 1, intensity = 7 }) {
   );
 }
 
-/* --- Warband banner hanging on the wall -------------------------- */
+/* --- Alliance banner hanging on the wall ------------------------- */
 function Banner({ position, color, height = 7, width = 1.8 }) {
   const ref = useRef(null);
   const seed = useRef(Math.random() * 6);
@@ -505,7 +505,7 @@ function Scene({ hovered, phase, chosen, travel, quality }) {
       <Tower x={-40} z={-33} h={WALL_H + 3} r={3.4} stone={stone.towerC} />
       <Tower x={40} z={-33} h={WALL_H + 3} r={3.4} stone={stone.towerD} />
 
-      {/* ---- three warband banners on the wall ---- */}
+      {/* ---- three alliance banners on the wall ---- */}
       <Banner position={[-11, WALL_H - 1.2, -28.2]} color="#c9963c" height={8.5} width={2.4} />
       <Banner position={[0, WALL_H - 0.2, -28.2]} color="#a3283c" height={4.6} width={2.6} />
       <Banner position={[11, WALL_H - 1.2, -28.2]} color="#3f74bd" height={8.5} width={2.4} />
