@@ -1,0 +1,688 @@
+/* ============================================================
+   KINGDOM 710 — WORLD DESIGN SYSTEM
+   Material language, warband heraldry, motion, and scene
+   primitives. Loaded after globals.css.
+
+   Principle: the world carries the emotion, the interface
+   carries the task. Surfaces read as physical materials
+   (obsidian, brass, leather, parchment) rather than as cards.
+   ============================================================ */
+
+:root {
+  /* --- Materials ------------------------------------------ */
+  --obsidian:        #07080d;
+  --obsidian-deep:   #04050a;
+  --stone:           #171a24;
+  --stone-lit:       #23283a;
+  --steel:           #2c313f;
+  --steel-bright:    #3d4456;
+  --timber:          #241a12;
+  --leather:         #2a1d14;
+  --leather-lit:     #3a2a1d;
+
+  /* Brass reads as a gradient, never a flat fill. */
+  --brass:           #a8834a;
+  --brass-bright:    #d9b878;
+  --brass-dim:       #6e5530;
+  --gold-aged:       #c9a44e;
+  --gold-hot:        #f3d99a;
+
+  --parchment:       #e8dcc0;
+  --parchment-dim:   #c4b493;
+  --ink:             #14100a;
+
+  /* Fire / atmosphere */
+  --fire:            #e2692a;
+  --fire-core:       #ffb257;
+  --smoke:           rgba(20, 22, 30, 0.72);
+
+  /* --- Warband heraldry ----------------------------------- */
+  --wb-710:          #d9a94e;
+  --wb-710-deep:     #8a6a28;
+  --wb-red:          #a3283c;
+  --wb-red-deep:     #611620;
+  --wb-sky:          #3f74bd;
+  --wb-sky-deep:     #1f3f6d;
+
+  /* --- Text ----------------------------------------------- */
+  --t-primary:       #ece3d0;
+  --t-secondary:     #9aa1b4;
+  --t-muted:         #6a7085;
+  --t-gold:          var(--gold-aged);
+
+  /* --- Edges / depth -------------------------------------- */
+  --edge:            rgba(201, 164, 78, 0.18);
+  --edge-strong:     rgba(201, 164, 78, 0.42);
+  --edge-cold:       rgba(120, 140, 180, 0.16);
+  --depth-1:         0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 24px rgba(0,0,0,0.5);
+  --depth-2:         0 1px 0 rgba(255,255,255,0.05) inset, 0 18px 48px rgba(0,0,0,0.62);
+
+  /* --- Motion --------------------------------------------- */
+  --ease-cine:       cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-heavy:      cubic-bezier(0.65, 0.02, 0.25, 1);
+  --t-fast:          160ms;
+  --t-ui:            260ms;
+  --t-scene:         900ms;
+
+  /* Narrative serif, loaded via next/font in layout.js */
+  --font-narrative:  var(--font-narrative-loaded), Georgia, 'Times New Roman', serif;
+}
+
+/* ============================================================
+   TYPOGRAPHY
+   Three voices, deliberately separated:
+   display  = engraved Roman capitals (titles only)
+   narrative= refined serif (prose, doctrine, ledger copy)
+   ui       = modern sans (every control and label)
+   ============================================================ */
+
+.k-display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--parchment);
+  line-height: 1.05;
+}
+
+.k-narrative {
+  font-family: var(--font-narrative), Georgia, serif;
+  font-weight: 400;
+  line-height: 1.62;
+  color: var(--t-secondary);
+  letter-spacing: 0.004em;
+}
+
+.k-ui,
+.k-ui input,
+.k-ui select,
+.k-ui textarea,
+.k-ui button {
+  font-family: var(--font-body);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Small engraved technical label — UTC times, IDs, counters. */
+.k-mark {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+
+/* Engraved / struck-metal title treatment. */
+.k-engraved {
+  color: transparent;
+  background: linear-gradient(178deg, var(--gold-hot) 0%, var(--gold-aged) 38%, var(--brass-dim) 78%, var(--gold-aged) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.55);
+}
+
+/* ============================================================
+   SCENE SHELL
+   Every location is a full-bleed stage, not a page section.
+   ============================================================ */
+
+.k-scene {
+  position: relative;
+  min-height: 100svh;
+  width: 100%;
+  overflow: hidden;
+  background: var(--obsidian);
+  isolation: isolate;
+}
+
+.k-scene-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.k-scene-content {
+  position: relative;
+  z-index: 5;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Atmospheric vignette + haze, applied over art or WebGL alike. */
+.k-vignette {
+  background:
+    radial-gradient(ellipse 120% 80% at 50% 42%, transparent 38%, rgba(4, 5, 10, 0.72) 100%),
+    linear-gradient(180deg, rgba(4, 5, 10, 0.55) 0%, transparent 22%, transparent 68%, rgba(4, 5, 10, 0.88) 100%);
+}
+
+.k-haze {
+  background: radial-gradient(ellipse 90% 55% at 50% 78%, rgba(226, 105, 42, 0.10), transparent 62%);
+  mix-blend-mode: screen;
+}
+
+/* ============================================================
+   SURFACES — physical, not glassmorphic
+   ============================================================ */
+
+/* Brass plate: engraved metal panel. Used for readouts and rails. */
+.k-plate {
+  position: relative;
+  background:
+    linear-gradient(168deg, rgba(216, 184, 120, 0.10) 0%, rgba(110, 85, 48, 0.06) 46%, rgba(0, 0, 0, 0.18) 100%),
+    linear-gradient(180deg, var(--stone-lit), var(--stone));
+  border: 1px solid var(--edge);
+  border-radius: 3px;
+  box-shadow: var(--depth-1);
+}
+
+.k-plate::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgba(201, 164, 78, 0.10);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+/* Parchment: petitions, ledgers, manifests. */
+.k-parchment {
+  background:
+    radial-gradient(ellipse 70% 50% at 22% 12%, rgba(255, 250, 235, 0.5), transparent 60%),
+    linear-gradient(172deg, #efe4ca 0%, #e2d4b4 52%, #d3c19c 100%);
+  color: var(--ink);
+  border: 1px solid #b9a67f;
+  border-radius: 2px;
+  box-shadow: var(--depth-2);
+}
+
+/* Leather desk surface. */
+.k-leather {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(120, 84, 52, 0.30), transparent 62%),
+    linear-gradient(180deg, var(--leather-lit), var(--leather));
+  border: 1px solid rgba(120, 84, 52, 0.34);
+}
+
+/* Hairline brass divider. */
+.k-rule {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(90deg, transparent, var(--edge-strong) 18%, var(--edge-strong) 82%, transparent);
+}
+
+/* ============================================================
+   CONTROLS
+   Restrained, tactile, unmistakably interactive.
+   ============================================================ */
+
+.k-btn {
+  --btn-accent: var(--gold-aged);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 0 26px;
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--parchment);
+  cursor: pointer;
+  background: linear-gradient(180deg, rgba(201, 164, 78, 0.16), rgba(201, 164, 78, 0.05));
+  border: 1px solid var(--btn-accent);
+  border-radius: 2px;
+  transition: background var(--t-fast) var(--ease-cine),
+              box-shadow var(--t-fast) var(--ease-cine),
+              transform var(--t-fast) var(--ease-cine);
+}
+
+.k-btn:hover {
+  background: linear-gradient(180deg, rgba(201, 164, 78, 0.30), rgba(201, 164, 78, 0.10));
+  box-shadow: 0 0 0 1px rgba(201, 164, 78, 0.22), 0 10px 30px rgba(201, 164, 78, 0.14);
+}
+
+.k-btn:active { transform: translateY(1px); }
+.k-btn:disabled { opacity: 0.45; cursor: default; transform: none; box-shadow: none; }
+
+.k-btn-quiet {
+  background: transparent;
+  border-color: rgba(154, 161, 180, 0.28);
+  color: var(--t-secondary);
+}
+.k-btn-quiet:hover {
+  border-color: var(--gold-aged);
+  color: var(--parchment);
+  background: rgba(201, 164, 78, 0.07);
+  box-shadow: none;
+}
+
+.k-btn-sky { --btn-accent: var(--wb-sky); }
+.k-btn-sky:hover {
+  background: linear-gradient(180deg, rgba(63, 116, 189, 0.30), rgba(63, 116, 189, 0.10));
+  box-shadow: 0 0 0 1px rgba(63, 116, 189, 0.26), 0 10px 30px rgba(63, 116, 189, 0.16);
+}
+
+/* Field: engraved slot in a metal plate, not a floating box. */
+.k-field { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+
+.k-field > span,
+.k-label {
+  font-family: var(--font-body);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--t-muted);
+}
+
+.k-input,
+.k-field input,
+.k-field select,
+.k-field textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 11px 13px;
+  font-family: var(--font-body);
+  font-size: 14.5px;
+  color: var(--t-primary);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.42), rgba(0, 0, 0, 0.22));
+  border: 1px solid rgba(201, 164, 78, 0.20);
+  border-radius: 2px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+
+.k-input:focus,
+.k-field input:focus,
+.k-field select:focus,
+.k-field textarea:focus {
+  outline: none;
+  border-color: var(--gold-aged);
+  box-shadow: 0 0 0 3px rgba(201, 164, 78, 0.16);
+}
+
+.k-input::placeholder { color: var(--t-muted); }
+
+/* Choice chip — radio/checkbox rendered as a struck marker. */
+.k-choice {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 8px 15px;
+  font-size: 13.5px;
+  color: var(--t-secondary);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(201, 164, 78, 0.16);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: border-color var(--t-fast), background var(--t-fast), color var(--t-fast);
+}
+.k-choice:hover { border-color: rgba(201, 164, 78, 0.42); color: var(--t-primary); }
+.k-choice input { position: absolute; opacity: 0; pointer-events: none; }
+.k-choice[data-on='true'] {
+  border-color: var(--gold-aged);
+  background: rgba(201, 164, 78, 0.14);
+  color: var(--parchment);
+}
+.k-choice[data-on='true']::before {
+  content: '';
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--gold-hot);
+  box-shadow: 0 0 8px var(--gold-aged);
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   HERALDRY
+   ============================================================ */
+
+.k-wb { --wb: var(--wb-710); --wb-deep: var(--wb-710-deep); }
+.k-wb[data-band='RED'] { --wb: var(--wb-red); --wb-deep: var(--wb-red-deep); }
+.k-wb[data-band='SKY'] { --wb: var(--wb-sky); --wb-deep: var(--wb-sky-deep); }
+
+/* Gem: enamel/gemstone marker, used on the chronometer ring. */
+.k-gem {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, rgba(255,255,255,0.85), var(--wb) 44%, var(--wb-deep) 100%);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--wb) 60%, transparent), 0 1px 2px rgba(0,0,0,0.6);
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   ACCESSIBILITY
+   ============================================================ */
+
+.k-skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 999;
+}
+.k-skip:focus {
+  left: 12px; top: 12px;
+  padding: 10px 16px;
+  background: var(--stone-lit);
+  color: var(--parchment);
+  border: 1px solid var(--gold-aged);
+  border-radius: 2px;
+}
+
+.k-sr {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--gold-hot);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .k-btn, .k-choice, .k-input { transition: none; }
+}
+
+/* ============================================================
+   SCENE 1 — SIGIL FORGE
+   ============================================================ */
+.forge2 {
+  position: fixed; inset: 0; z-index: 400;
+  background: radial-gradient(ellipse 60% 50% at 50% 55%, rgba(226,105,42,0.09), transparent 62%), #04050a;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: opacity 480ms var(--ease-cine), transform 480ms var(--ease-heavy), filter 480ms ease;
+}
+/* camera pushes THROUGH the crest */
+.forge2-through { opacity: 0; transform: scale(2.6); filter: blur(6px); pointer-events: none; }
+.forge2-canvas { position: absolute; inset: 0; }
+.forge2-copy { position: absolute; left: 0; right: 0; bottom: clamp(12vh, 18vh, 22vh); text-align: center; pointer-events: none; }
+.forge2-kicker { display: block; opacity: 0; animation: forge2-in 700ms var(--ease-cine) 340ms forwards; }
+.forge2-title {
+  margin-top: 12px; font-size: clamp(13px, 1.9vw, 19px); letter-spacing: 0.30em;
+  color: var(--parchment-dim); opacity: 0;
+  animation: forge2-in 900ms var(--ease-cine) 900ms forwards;
+}
+@keyframes forge2-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.forge2-skip {
+  position: absolute; right: 22px; bottom: 22px;
+  min-height: 40px; padding: 0 18px;
+  background: transparent; border: 1px solid rgba(201,164,78,0.34);
+  color: var(--t-secondary); border-radius: 2px; cursor: pointer;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+}
+.forge2-skip:hover { border-color: var(--gold-aged); color: var(--parchment); }
+@media (prefers-reduced-motion: reduce) {
+  .forge2, .forge2-through { transition: opacity 160ms linear; transform: none; filter: none; }
+  .forge2-kicker, .forge2-title { animation: none; opacity: 1; }
+}
+
+/* ============================================================
+   SCENE 2 — KINGDOM GATE
+   ============================================================ */
+.gate-scene, .gate-fallback { height: 100svh; }
+.gate-canvas canvas { display: block; }
+
+.gate-fallback-art {
+  background:
+    radial-gradient(ellipse 46% 34% at 50% 62%, rgba(201,132,58,0.34), transparent 66%),
+    radial-gradient(ellipse 80% 40% at 50% 100%, rgba(226,105,42,0.16), transparent 70%),
+    linear-gradient(180deg, #05060d 0%, #0b0f1c 46%, #141a2a 100%);
+}
+
+.gate-content {
+  justify-content: space-between;
+  padding: clamp(20px, 4vh, 48px) clamp(16px, 4vw, 56px) clamp(28px, 5vh, 60px);
+  transition: opacity 420ms var(--ease-cine);
+}
+.gate-content.is-travelling { opacity: 0; pointer-events: none; }
+
+.gate-head { text-align: center; }
+.gate-title {
+  margin: 10px 0 0;
+  font-size: clamp(18px, 2.7vw, 34px);
+  letter-spacing: 0.16em;
+  text-shadow: 0 6px 30px rgba(0,0,0,0.85);
+}
+.gate-lede { max-width: 46ch; margin: 14px auto 0; font-size: 16px; }
+
+/* Roads: pushed to the outer thirds and low, so they sit beside the
+   paths in the render rather than floating in the middle of frame. */
+.gate-roads {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  gap: clamp(12px, 4vw, 60px);
+  width: 100%; max-width: 1240px; margin: 0 auto;
+}
+.gate-road {
+  display: flex; flex-direction: column; gap: 5px;
+  flex: 0 1 clamp(220px, 27vw, 330px);
+  padding: 16px 20px 18px;
+  text-align: left; text-decoration: none; cursor: pointer;
+  background: linear-gradient(180deg, rgba(6,8,14,0.10), rgba(6,8,14,0.66));
+  border: 0; border-bottom: 1px solid var(--edge);
+  border-left: 2px solid var(--gold-aged);
+  transition: transform var(--t-ui) var(--ease-cine),
+              border-color var(--t-ui), background var(--t-ui);
+}
+.gate-road-right { border-left: 0; border-right: 2px solid var(--wb-sky); text-align: right; align-items: flex-end; }
+.gate-road:hover, .gate-road:focus-visible, .gate-road[data-active='true'] {
+  transform: translateY(-5px);
+  background: linear-gradient(180deg, rgba(6,8,14,0.06), rgba(6,8,14,0.78));
+}
+.gate-road-left:hover, .gate-road-left[data-active='true'] { border-bottom-color: var(--gold-aged); }
+.gate-road-right:hover, .gate-road-right[data-active='true'] { border-bottom-color: var(--wb-sky); }
+.gate-road:disabled { opacity: 0.4; cursor: default; transform: none; }
+
+.gate-road-kicker { color: var(--gold-aged); }
+.gate-road-right .gate-road-kicker { color: #86a9dd; }
+.gate-road-title {
+  font-size: clamp(22px, 2.6vw, 32px); letter-spacing: 0.05em;
+  text-shadow: 0 4px 22px rgba(0,0,0,0.9);
+}
+.gate-road-sub { font-size: 14.5px; max-width: 30ch; }
+
+.gate-veil {
+  position: fixed; inset: 0; z-index: 300; background: #04050a;
+  opacity: 0; pointer-events: none; transition: opacity 900ms var(--ease-heavy);
+}
+.gate-veil.is-on { opacity: 1; }
+
+@media (max-width: 820px) {
+  .gate-roads { flex-direction: column; align-items: stretch; gap: 12px; }
+  .gate-road, .gate-road-right {
+    flex: none; text-align: left; align-items: flex-start;
+    border-left: 2px solid var(--gold-aged); border-right: 0;
+    background: linear-gradient(180deg, rgba(6,8,14,0.42), rgba(6,8,14,0.80));
+  }
+  .gate-road-right { border-left-color: var(--wb-sky); }
+  .gate-title { font-size: clamp(15px, 4.6vw, 22px); letter-spacing: 0.12em; }
+}
+
+/* ============================================================
+   CREST MENU
+   ============================================================ */
+.crest-btn {
+  position: fixed; top: 18px; left: 18px; z-index: 260;
+  width: 48px; height: 48px; padding: 7px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--gold-aged); cursor: pointer;
+  background: linear-gradient(180deg, rgba(10,12,20,0.72), rgba(10,12,20,0.5));
+  border: 1px solid var(--edge); border-radius: 3px;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast);
+}
+.crest-btn:hover { border-color: var(--gold-aged); color: var(--gold-hot); }
+.crest-btn svg { width: 100%; height: 100%; }
+
+.crest-overlay { position: fixed; inset: 0; z-index: 280; display: flex; }
+.crest-overlay-scrim {
+  position: absolute; inset: 0; border: 0; padding: 0; cursor: pointer;
+  background: rgba(3,4,9,0.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  animation: crest-fade 240ms var(--ease-cine);
+}
+@keyframes crest-fade { from { opacity: 0; } to { opacity: 1; } }
+.crest-nav {
+  position: relative; z-index: 1;
+  width: min(400px, 88vw); height: 100%;
+  padding: 92px 34px 34px;
+  background: linear-gradient(160deg, #10131d 0%, #080a11 100%);
+  border-right: 1px solid var(--edge-strong);
+  box-shadow: 40px 0 90px rgba(0,0,0,0.7);
+  animation: crest-slide 300ms var(--ease-cine);
+  overflow-y: auto;
+}
+@keyframes crest-slide { from { transform: translateX(-24px); opacity: 0; } to { transform: none; opacity: 1; } }
+.crest-nav-head { display: block; margin-bottom: 26px; }
+.crest-nav ul { list-style: none; margin: 0; padding: 0; }
+.crest-nav li + li { margin-top: 4px; }
+.crest-dest {
+  display: block; padding: 15px 16px; text-decoration: none; border-radius: 2px;
+  border-left: 2px solid transparent;
+  transition: background var(--t-fast), border-color var(--t-fast);
+}
+.crest-dest:hover, .crest-dest[data-active='true'] {
+  background: rgba(201,164,78,0.08); border-left-color: var(--gold-aged);
+}
+.crest-dest-label { display: block; font-size: 17px; letter-spacing: 0.10em; }
+.crest-dest-note { display: block; margin-top: 3px; font-size: 13.5px; color: var(--t-muted); }
+.crest-dest.is-restricted .crest-dest-label { color: var(--t-secondary); font-size: 14px; }
+.crest-dest.is-restricted { margin-top: 18px; border-top: 1px solid var(--edge); padding-top: 18px; }
+
+/* ============================================================
+   CHRONOMETER CHAMBER
+   ============================================================ */
+.chamber {
+  position: relative; min-height: 100svh;
+  background: linear-gradient(180deg, #05070e 0%, #0b0e18 34%, #0a0d16 100%);
+  padding: 0 0 90px;
+  overflow: hidden;
+}
+.chamber-atmos {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 40% at 50% 6%, rgba(201,164,78,0.13), transparent 62%),
+    radial-gradient(ellipse 90% 50% at 50% 100%, rgba(226,105,42,0.07), transparent 66%);
+}
+/* light shafts from an unseen ceiling oculus */
+.chamber-shafts {
+  position: absolute; inset: 0; pointer-events: none; opacity: 0.5;
+  background:
+    linear-gradient(101deg, transparent 42%, rgba(230,201,141,0.055) 45%, transparent 49%),
+    linear-gradient(79deg, transparent 52%, rgba(230,201,141,0.045) 55%, transparent 59%);
+}
+
+.chamber-hero {
+  position: relative; z-index: 2;
+  padding: clamp(88px, 12vh, 140px) 20px clamp(30px, 5vh, 56px);
+  text-align: center;
+}
+.chamber-title { margin: 12px 0 0; font-size: clamp(28px, 5.2vw, 62px); letter-spacing: 0.10em; }
+.chamber-lede { max-width: 56ch; margin: 18px auto 0; font-size: clamp(15px, 1.4vw, 18px); }
+
+.chrono { position: relative; margin: clamp(28px, 5vh, 56px) auto 0; max-width: 560px; }
+.chrono-dial { width: min(100%, 460px); height: auto; display: block; margin: 0 auto; }
+.chrono-rail {
+  display: flex; align-items: stretch; gap: 0;
+  margin: 26px auto 0; max-width: 520px; padding: 4px;
+}
+.chrono-read { flex: 1; padding: 14px 18px; text-align: center; display: flex; flex-direction: column; gap: 5px; }
+.chrono-rail-div { width: 1px; background: linear-gradient(180deg, transparent, var(--edge-strong), transparent); }
+.chrono-utc {
+  font-family: var(--font-mono); font-size: clamp(20px, 2.4vw, 27px);
+  color: var(--gold-hot); letter-spacing: 0.06em; font-weight: 700;
+}
+.chrono-next {
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  font-family: var(--font-display); font-size: clamp(16px, 1.9vw, 21px);
+  color: var(--parchment); letter-spacing: 0.07em;
+}
+.chrono-unit { font-size: 11.5px; color: var(--t-muted); letter-spacing: 0.12em; text-transform: uppercase; }
+
+.chamber-section { position: relative; z-index: 2; max-width: 1140px; margin: 0 auto; padding: clamp(48px, 8vh, 96px) clamp(18px, 4vw, 40px) 0; }
+.chamber-head { margin-bottom: clamp(26px, 4vh, 44px); }
+.chamber-h2 { margin: 10px 0 0; font-size: clamp(21px, 3vw, 34px); letter-spacing: 0.09em; }
+
+/* --- Warband standards --- */
+.standards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(14px, 2.2vw, 26px); }
+.standard { position: relative; }
+.standard-cloth {
+  height: 74px; margin-bottom: -1px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--wb) 62%, #0a0c14), color-mix(in srgb, var(--wb-deep) 84%, #05060d));
+  clip-path: polygon(0 0, 100% 0, 100% 74%, 50% 100%, 0 74%);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.55);
+}
+.standard-plate { padding: 22px 20px 20px; }
+.standard-role { display: block; color: var(--wb); }
+.standard-name { margin: 8px 0 0; font-size: 30px; letter-spacing: 0.1em; color: var(--parchment); }
+.standard-desc { margin: 9px 0 0; font-size: 14.5px; }
+.standard-windows { list-style: none; margin: 16px 0 0; padding: 14px 0 0; display: flex; flex-wrap: wrap; gap: 9px; border-top: 1px solid var(--edge); }
+.standard-windows li { display: inline-flex; align-items: center; gap: 7px; }
+
+/* --- Doctrine wall --- */
+.doctrine { display: grid; gap: 2px; background: var(--edge); border: 1px solid var(--edge); }
+.doctrine-entry {
+  display: grid; grid-template-columns: 86px 1fr; gap: clamp(14px, 3vw, 34px); align-items: start;
+  padding: clamp(22px, 3.4vw, 34px);
+  background: linear-gradient(180deg, rgba(35,40,58,0.5), rgba(23,26,36,0.72));
+}
+.doctrine-num {
+  font-size: clamp(28px, 4vw, 44px); color: transparent;
+  -webkit-text-stroke: 1.4px var(--brass); letter-spacing: 0.04em;
+}
+.doctrine-title { margin: 0; font-size: clamp(15px, 1.6vw, 19px); letter-spacing: 0.08em; color: var(--parchment); }
+.doctrine-body { margin: 9px 0 0; font-size: 15px; max-width: 62ch; }
+
+/* --- The march --- */
+.march { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(12px, 2vw, 22px); position: relative; }
+.march::before {
+  content: ''; position: absolute; left: 6%; right: 6%; top: 9px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--edge-strong), var(--edge-strong), transparent);
+}
+.march-stone { position: relative; padding-top: 34px; }
+.march-marker {
+  position: absolute; top: 3px; left: 0;
+  width: 13px; height: 13px; border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, var(--gold-hot), var(--brass-dim));
+  box-shadow: 0 0 12px rgba(201,164,78,0.5);
+}
+.march-num { display: block; color: var(--brass); }
+.march-title { margin: 8px 0 0; font-size: 15px; letter-spacing: 0.06em; color: var(--parchment); }
+.march-body { margin: 8px 0 0; font-size: 14px; }
+
+/* --- Registry doors --- */
+.registry-doors {
+  position: relative; z-index: 2; margin: clamp(60px, 10vh, 120px) auto 0;
+  max-width: 900px; padding: clamp(46px, 7vw, 84px) 28px clamp(52px, 8vw, 92px);
+  text-align: center; overflow: hidden;
+  background: linear-gradient(180deg, rgba(20,15,8,0.5), rgba(8,10,17,0.9));
+  border-top: 1px solid var(--edge-strong); border-bottom: 1px solid var(--edge-strong);
+}
+.registry-doors-light {
+  position: absolute; left: 50%; top: 0; width: 60%; height: 100%; transform: translateX(-50%);
+  background: radial-gradient(ellipse 50% 60% at 50% 0%, rgba(226,150,60,0.24), transparent 70%);
+  pointer-events: none;
+}
+.registry-doors-title { position: relative; margin: 12px 0 0; font-size: clamp(22px, 3.4vw, 40px); letter-spacing: 0.10em; }
+.registry-doors-copy { position: relative; max-width: 52ch; margin: 14px auto 26px; }
+.registry-doors-cta { position: relative; }
+
+@media (max-width: 900px) {
+  .standards { grid-template-columns: minmax(0, 1fr); }
+  .march { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .march::before { display: none; }
+  .doctrine-entry { grid-template-columns: 54px 1fr; }
+}
+@media (max-width: 560px) {
+  .march { grid-template-columns: minmax(0, 1fr); }
+}
