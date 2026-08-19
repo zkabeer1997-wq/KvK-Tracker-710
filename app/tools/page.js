@@ -11,6 +11,7 @@ const tools = [
     title: 'Charm Merge Optimizer',
     description: 'Calculate how many Common and Premium Tidal Treasure merges to make for a target Charm level, including the 75% Exquisite / 25% Majestic outcome.',
     status: 'Available',
+    icon: '/images/wavebound-charm-sail.svg',
   },
 ];
 
@@ -36,8 +37,8 @@ export default function ToolsPage({ searchParams }) {
           {tools.map((tool) => (
             <Link key={tool.key} href={`/tools/${tool.key}${query}`} className="tool-entry" role="listitem">
               <span className="tool-device" aria-hidden="true">
-                <span className="tool-device-ring">⚙</span>
-                <span className="tool-device-foot" />
+                <img className="tool-device-art" src={tool.icon} alt="" />
+                <span className="tool-device-glow" />
               </span>
               <span className="tool-entry-copy">
                 <span className="k-mark tool-event">{tool.event}</span>
@@ -67,10 +68,11 @@ export default function ToolsPage({ searchParams }) {
         .tools-directory{border-top:1px solid var(--edge)}
         .tool-entry{display:grid;grid-template-columns:150px minmax(0,1fr) 112px;gap:26px;align-items:center;min-height:190px;padding:26px 6px;text-decoration:none;color:inherit;border-bottom:1px solid var(--edge);transition:background var(--t-ui) ease,padding var(--t-ui) var(--ease-cine)}
         .tool-entry:hover,.tool-entry:focus-visible{background:rgba(201,164,78,.055);padding-inline:18px;outline:none}
-        .tool-device{height:132px;position:relative;display:grid;place-items:center}
-        .tool-device-ring{width:92px;height:92px;border-radius:50%;display:grid;place-items:center;font-size:38px;color:var(--gold-hot);background:radial-gradient(circle,#3f3a2c 0 34%,#171820 36% 48%,#5a4d2e 50% 54%,#171820 56%);border:2px solid rgba(201,164,78,.55);box-shadow:inset 0 0 18px rgba(0,0,0,.7);transition:transform var(--t-ui) var(--ease-cine),filter var(--t-ui) ease}
-        .tool-device-foot{position:absolute;bottom:4px;width:104px;height:16px;background:linear-gradient(180deg,#595141,#24221d);border-top:1px solid rgba(201,164,78,.35);clip-path:polygon(10% 0,90% 0,100% 100%,0 100%)}
-        .tool-entry:hover .tool-device-ring,.tool-entry:focus-visible .tool-device-ring{transform:rotate(16deg) scale(1.04);filter:drop-shadow(0 0 8px rgba(201,164,78,.28))}
+        .tool-device{height:142px;position:relative;display:grid;place-items:center;isolation:isolate}
+        .tool-device-art{position:relative;z-index:2;width:132px;height:132px;object-fit:contain;filter:drop-shadow(0 10px 10px rgba(0,0,0,.55));transform:translateY(0) scale(1);transition:transform var(--t-ui) var(--ease-cine),filter var(--t-ui) ease}
+        .tool-device-glow{position:absolute;z-index:1;width:96px;height:96px;border-radius:50%;background:radial-gradient(circle,rgba(65,164,255,.2),rgba(201,164,78,.09) 46%,transparent 72%);filter:blur(8px);opacity:.72;transition:opacity var(--t-ui) ease,transform var(--t-ui) var(--ease-cine)}
+        .tool-entry:hover .tool-device-art,.tool-entry:focus-visible .tool-device-art{transform:translateY(-5px) scale(1.055);filter:drop-shadow(0 14px 12px rgba(0,0,0,.6)) drop-shadow(0 0 8px rgba(68,174,255,.28))}
+        .tool-entry:hover .tool-device-glow,.tool-entry:focus-visible .tool-device-glow{opacity:1;transform:scale(1.12)}
         .tool-entry-copy{display:flex;flex-direction:column;align-items:flex-start;min-width:0}
         .tool-event{color:var(--brass);font-size:10px;margin-bottom:8px}
         .tool-entry-copy strong{font-size:clamp(19px,2.5vw,28px);letter-spacing:.07em;color:var(--parchment)}
@@ -81,8 +83,8 @@ export default function ToolsPage({ searchParams }) {
         .tools-empty-note p{margin:8px 0 0;color:var(--t-muted);font-size:14px}
         .tools-back{display:inline-block;margin-top:34px;color:var(--brass);font-family:var(--font-body);font-size:12px;text-decoration:none;letter-spacing:.06em}
         .tools-back:hover{color:var(--gold-hot)}
-        @media(max-width:700px){.tool-entry{grid-template-columns:92px minmax(0,1fr);gap:18px;padding-block:22px}.tool-entry-meta{grid-column:2;align-items:flex-start;flex-direction:row}.tool-device{height:100px}.tool-device-ring{width:70px;height:70px;font-size:30px}.tool-device-foot{width:82px}.tool-entry:hover,.tool-entry:focus-visible{padding-inline:8px}.tools-workshop-inner{padding-top:86px}}
-        @media(prefers-reduced-motion:reduce){.tool-entry,.tool-device-ring{transition:none}}
+        @media(max-width:700px){.tool-entry{grid-template-columns:92px minmax(0,1fr);gap:18px;padding-block:22px}.tool-entry-meta{grid-column:2;align-items:flex-start;flex-direction:row}.tool-device{height:104px}.tool-device-art{width:92px;height:92px}.tool-device-glow{width:72px;height:72px}.tool-entry:hover,.tool-entry:focus-visible{padding-inline:8px}.tools-workshop-inner{padding-top:86px}}
+        @media(prefers-reduced-motion:reduce){.tool-entry,.tool-device-art,.tool-device-glow{transition:none}}
       `}</style>
     </main>
   );
