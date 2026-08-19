@@ -11,7 +11,7 @@ import {
   Vector3,
 } from 'three';
 import KingdomAtmosphere from './KingdomAtmosphere';
-import KingdomGate from './KingdomGate';
+import KingdomGroundDetails from './KingdomGroundDetails';
 import AnimatedKnightTraveler from './AnimatedKnightTraveler';
 import { AuthoredEntranceArchitecture } from './AuthoredCastleAssets';
 
@@ -218,7 +218,7 @@ function SceneContents({ hoveredRoad, phase, selectedRoad, active, mobile }) {
       <pointLight position={[4.5, 2.8, -6.0]} color="#94b5eb" intensity={rightActive ? 4.2 : 1.35} distance={16} decay={2} />
 
       <KingdomAtmosphere activeRoad={activeRoad} />
-      <KingdomGate hoveredRoad={hoveredRoad} selectedRoad={selectedRoad} />
+      <KingdomGroundDetails hoveredRoad={hoveredRoad} selectedRoad={selectedRoad} mobile={mobile} />
       <Suspense fallback={null}>
         <AuthoredEntranceArchitecture activeRoad={activeRoad} mobile={mobile} />
       </Suspense>
