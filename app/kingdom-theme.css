@@ -1,0 +1,540 @@
+/*
+ * K710 blue-hour theme layer
+ *
+ * This file intentionally loads after globals.css. It keeps the existing
+ * component vocabulary and information architecture, while carrying the
+ * brighter kingdom-gate art direction into public forms, member tools, and
+ * the Command Hall. Product surfaces stay quieter than the cinematic home.
+ */
+
+:root {
+  --bg: #132142;
+  --bg-alt: #192b52;
+  --ink: #0e1935;
+  --ink-soft: #17284d;
+  --ink-soft-2: #1d315b;
+  --surface: #1b2d54;
+  --surface-strong: #20365f;
+  --glass: rgba(25, 43, 80, 0.94);
+  --glass-strong: rgba(20, 36, 70, 0.97);
+  --line: rgba(229, 188, 99, 0.26);
+  --line-bright: rgba(236, 199, 118, 0.52);
+  --border-soft: rgba(194, 210, 241, 0.15);
+  --gold: #e2b75c;
+  --gold-bright: #f4cf7a;
+  --ember: #df713f;
+  --ember-bright: #f08b58;
+  --parchment: #fff8e8;
+  --text: #f4f6fd;
+  --text-muted: #c1cbe2;
+  --text-dim: #8fa1c4;
+  --moss: #9aba87;
+  --success: #9aba87;
+  --moon-blue: #a4c2ef;
+  --moon-blue-strong: #79a7e8;
+  --danger: #ff8585;
+  --danger-bg: rgba(127, 29, 29, 0.28);
+  --glow: 0 4px 8px rgba(4, 9, 23, 0.22);
+}
+
+body {
+  background: var(--ink);
+}
+
+/* Shared site chrome — a quieter continuation of the gate sky. */
+.site-header {
+  background: rgba(18, 31, 62, 0.96);
+  border-bottom-color: rgba(228, 184, 91, 0.24);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.site-brand-crest,
+.site-footer-brand svg {
+  color: var(--gold-bright);
+}
+
+.site-nav a:hover,
+.site-nav a.active,
+.site-nav-mobile a:hover,
+.site-nav-mobile a.active {
+  background: rgba(226, 183, 92, 0.11);
+}
+
+.site-nav a.active,
+.site-nav-mobile a.active {
+  color: var(--gold-bright);
+}
+
+.site-nav-toggle {
+  width: 44px;
+  height: 44px;
+  border-color: rgba(228, 184, 91, 0.34);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.site-nav-mobile {
+  background: #142448;
+}
+
+.site-footer {
+  background:
+    radial-gradient(circle at 12% 0%, rgba(226, 183, 92, 0.08), transparent 28%),
+    #0d1832;
+  border-top-color: rgba(228, 184, 91, 0.22);
+}
+
+/* Public/member surfaces — visible, readable, and themed without game-UI gimmicks. */
+.page,
+.public-page,
+.inner-gate-page,
+.command-deck-page,
+.command-hall-page {
+  background:
+    radial-gradient(circle at 14% 5%, rgba(232, 190, 101, 0.17), transparent 27%),
+    radial-gradient(circle at 88% 10%, rgba(164, 194, 239, 0.18), transparent 31%),
+    linear-gradient(180deg, #1a2c55 0%, #132142 48%, #0e1935 100%);
+}
+
+.public-page {
+  align-items: flex-start;
+  padding-top: clamp(24px, 4vw, 48px);
+  padding-bottom: clamp(36px, 6vw, 72px);
+}
+
+.public-intro,
+.public-form-card,
+.rally-sidebar {
+  background: var(--glass-strong);
+  border-color: rgba(210, 220, 244, 0.18);
+  box-shadow: var(--glow);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.public-intro {
+  background:
+    radial-gradient(circle at 20% 0%, rgba(235, 194, 106, 0.17), transparent 38%),
+    radial-gradient(circle at 100% 85%, rgba(164, 194, 239, 0.11), transparent 42%),
+    #1a2c52;
+}
+
+.power-intro {
+  background:
+    radial-gradient(circle at 22% 0%, rgba(164, 194, 239, 0.17), transparent 38%),
+    radial-gradient(circle at 100% 88%, rgba(226, 183, 92, 0.1), transparent 42%),
+    #1a2c52;
+}
+
+.public-intro::after {
+  border-color: rgba(164, 194, 239, 0.22);
+}
+
+.public-intro p,
+.section-title-row p,
+.ledger-block-head p,
+.command-deck-tile p,
+.inner-gate-card .sub,
+.command-deck-header p {
+  color: var(--text-muted);
+}
+
+.public-form-card {
+  background: #17284b;
+}
+
+.public-section,
+.ledger-block,
+.form-block,
+.prep-day-grid > section {
+  background: rgba(255, 255, 255, 0.035);
+  border-color: rgba(196, 210, 241, 0.17);
+}
+
+.public-form-card input,
+.public-form-card select,
+.public-form-card textarea,
+.ledger-select select,
+.ledger-select input,
+.inner-gate-form input,
+.command-hall-field input,
+input,
+select,
+textarea {
+  background: rgba(10, 24, 53, 0.72);
+  border-color: rgba(185, 204, 240, 0.22);
+  color: var(--text);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #9daccc;
+  opacity: 1;
+}
+
+input:not([type='checkbox']):not([type='radio']):not([type='file']),
+select {
+  min-height: 44px;
+}
+
+.radio-option,
+.checkbox-item,
+.hero-chip,
+.availability-choice,
+.prep-slot {
+  min-height: 44px;
+}
+
+.radio-option,
+.checkbox-item {
+  padding-block: 7px;
+}
+
+.hero-chip,
+.availability-choice,
+.prep-slot {
+  background: rgba(255, 255, 255, 0.045);
+  border-color: rgba(196, 210, 241, 0.18);
+}
+
+.hero-chip:hover,
+.availability-choice:hover,
+.prep-slot:hover {
+  border-color: rgba(244, 207, 122, 0.62);
+  background: rgba(226, 183, 92, 0.08);
+}
+
+.hero-chip.selected,
+.availability-choice.selected,
+.prep-slot.on {
+  border-color: var(--gold);
+  background: rgba(226, 183, 92, 0.2);
+  color: var(--parchment);
+}
+
+.public-form-card button[type='submit'],
+.submit-btn {
+  min-height: 48px;
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #111a2d;
+}
+
+.public-form-card button[type='submit']:hover,
+.submit-btn:hover {
+  background: var(--gold-bright);
+}
+
+.interest-progress {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(244, 207, 122, 0.45) transparent;
+}
+
+.interest-progress-item {
+  min-height: 36px;
+  color: #aebbd7;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.interest-progress-item:hover,
+.interest-progress-item:focus-visible {
+  background: rgba(226, 183, 92, 0.08);
+}
+
+.interest-chapter-num {
+  -webkit-text-stroke-color: var(--gold-bright);
+}
+
+/* Member gate + member command deck: echo the two-path entrance without replaying it. */
+.inner-gate-card,
+.command-hall-card {
+  width: min(430px, 100%);
+  padding: clamp(24px, 4vw, 34px);
+  border: 1px solid rgba(190, 208, 242, 0.2);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 50% -10%, rgba(164, 194, 239, 0.12), transparent 38%),
+    #182b50;
+  box-shadow: var(--glow);
+}
+
+.command-hall-card {
+  background:
+    radial-gradient(circle at 50% -10%, rgba(226, 183, 92, 0.15), transparent 38%),
+    #182b50;
+}
+
+.inner-gate-crest {
+  color: var(--moon-blue);
+}
+
+.inner-gate-submit {
+  min-height: 48px;
+  background: var(--moon-blue-strong);
+  color: #0c1831;
+}
+
+.inner-gate-submit:hover {
+  background: var(--moon-blue);
+}
+
+.command-hall-submit {
+  min-height: 48px;
+}
+
+.command-deck-inner {
+  width: min(980px, 100%);
+}
+
+.command-deck-tile {
+  background: #1a2d53;
+  border-color: rgba(196, 210, 241, 0.2);
+  box-shadow: none;
+}
+
+.command-deck-tile:hover,
+.command-deck-tile:focus-visible {
+  border-color: var(--gold-bright);
+  background: #20375f;
+}
+
+.command-deck-tile:nth-child(even):hover,
+.command-deck-tile:nth-child(even):focus-visible {
+  border-color: var(--moon-blue);
+}
+
+/* Command Hall — restrained product UI using the same environmental palette. */
+.admin-shell {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(164, 194, 239, 0.08), transparent 30%),
+    linear-gradient(180deg, #142449 0%, #0e1935 100%);
+}
+
+.admin-sidebar {
+  top: 69px;
+  height: calc(100vh - 69px);
+  background: #101e3e;
+  border-right-color: rgba(196, 210, 241, 0.14);
+}
+
+.admin-sidebar-nav a {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+}
+
+.admin-sidebar-nav a:hover {
+  background: rgba(226, 183, 92, 0.08);
+}
+
+.admin-sidebar-nav a.active {
+  padding-left: 12px;
+  border-left: 0;
+  background: rgba(226, 183, 92, 0.13);
+  box-shadow: inset 0 0 0 1px rgba(226, 183, 92, 0.23);
+}
+
+.admin-topbar {
+  border-bottom: 1px solid rgba(196, 210, 241, 0.1);
+  background: rgba(14, 25, 53, 0.36);
+}
+
+.admin-content-body {
+  padding-top: 20px;
+}
+
+.dashboard-stats div,
+.search-shell,
+.admin-table-wrap,
+.rally-empty-state,
+.rally-dropzone,
+.rally-member,
+.admin-skeleton {
+  background: rgba(255, 255, 255, 0.035);
+  border-color: rgba(196, 210, 241, 0.14);
+}
+
+.admin-table th,
+.admin-skeleton-head {
+  background: #17284b;
+}
+
+.admin-table tbody tr:hover,
+.admin-row-clickable:hover {
+  background: rgba(164, 194, 239, 0.055);
+}
+
+.rally-sidebar {
+  top: 18px;
+}
+
+.admin-drawer,
+.confirm-dialog,
+.credentials-modal {
+  background: #182b50;
+  box-shadow: 0 4px 8px rgba(4, 9, 23, 0.26);
+}
+
+.admin-drawer-close {
+  width: 40px;
+  height: 40px;
+}
+
+.add-member-form input,
+.admin-filter-field input,
+.admin-filter-field select {
+  min-height: 42px;
+}
+
+/* Keep the homepage's dossier in the same lighter family as the entrance. */
+.k710-page {
+  background: #0f1b39;
+}
+
+.k710-page .section-alt {
+  background: #16264b;
+}
+
+.k710-page .card,
+.k710-page .warband-card,
+.k710-page .deck-tile,
+.k710-page .events-card,
+.k710-page .stat {
+  background: #1a2c52;
+  border-color: rgba(200, 214, 242, 0.17);
+}
+
+.k710-page .deck-tile:hover,
+.k710-page .deck-tile:focus-visible {
+  background: #20375f;
+  border-color: var(--gold-bright);
+}
+
+/* Responsive QA fixes. */
+@media (max-width: 960px) {
+  .admin-sidebar {
+    position: static;
+    top: auto;
+    height: auto;
+  }
+
+  .rally-sidebar {
+    top: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .public-page {
+    padding: 18px 14px 42px;
+  }
+
+  .public-form-card,
+  .prep-wide .public-form-card {
+    padding: 18px 15px;
+  }
+
+  .public-intro {
+    padding: 22px 20px;
+  }
+
+  .interest-progress {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-inline: -2px;
+    padding-bottom: 12px;
+  }
+
+  .interest-progress-item {
+    flex: 0 0 auto;
+    min-height: 40px;
+  }
+
+  .admin-sidebar {
+    display: block;
+    padding: 14px 14px 10px;
+  }
+
+  .admin-sidebar-brand {
+    margin-bottom: 10px;
+  }
+
+  .admin-sidebar-nav {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 6px;
+    padding-bottom: 5px;
+    scrollbar-width: none;
+  }
+
+  .admin-sidebar-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .admin-sidebar-nav a {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding-inline: 12px;
+  }
+
+  .admin-sidebar-bottom {
+    margin: 8px 0 0;
+    display: flex;
+    gap: 8px;
+  }
+
+  .admin-sidebar-view-site,
+  .admin-sidebar-logout,
+  .status-action-btn,
+  .create-rally-btn,
+  .clear-test-data-btn,
+  .delete-entry-btn,
+  .export-xlsx-btn,
+  .admin-sort-btn {
+    min-height: 44px;
+  }
+
+  .admin-drawer-close,
+  .rally-collapse-btn,
+  .rally-member button {
+    min-width: 44px;
+    min-height: 44px;
+    width: 44px;
+    height: 44px;
+  }
+
+  .admin-topbar {
+    padding-top: 16px;
+  }
+
+  .admin-content-body {
+    padding-top: 16px;
+  }
+}
+
+@media (max-width: 520px) {
+  .public-intro-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .command-deck-page {
+    padding: 36px 16px;
+  }
+
+  .command-deck-tile {
+    padding: 20px;
+  }
+
+  .inner-gate-page,
+  .command-hall-page {
+    padding: 18px 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
