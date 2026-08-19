@@ -13,9 +13,9 @@ function useSoftTexture() {
     canvas.height = 128;
     const context = canvas.getContext('2d');
     const gradient = context.createRadialGradient(128, 64, 4, 128, 64, 118);
-    gradient.addColorStop(0, 'rgba(255,255,255,0.72)');
-    gradient.addColorStop(0.35, 'rgba(255,255,255,0.34)');
-    gradient.addColorStop(0.7, 'rgba(255,255,255,0.09)');
+    gradient.addColorStop(0, 'rgba(255,255,255,0.78)');
+    gradient.addColorStop(0.35, 'rgba(255,255,255,0.38)');
+    gradient.addColorStop(0.7, 'rgba(255,255,255,0.10)');
     gradient.addColorStop(1, 'rgba(255,255,255,0)');
     context.fillStyle = gradient;
     context.fillRect(0, 0, canvas.width, canvas.height);
@@ -35,7 +35,7 @@ function MistBank({ position, scale, drift = 0.4, opacity = 0.12, phase = 0 }) {
     const t = clock.getElapsedTime() * drift + phase;
     ref.current.position.x = base.x + Math.sin(t) * 1.4;
     ref.current.position.y = base.y + Math.sin(t * 0.63) * 0.08;
-    ref.current.material.opacity = opacity * (0.82 + Math.sin(t * 0.72) * 0.12);
+    ref.current.material.opacity = opacity * (0.86 + Math.sin(t * 0.72) * 0.10);
   });
 
   if (!texture) return null;
@@ -44,7 +44,7 @@ function MistBank({ position, scale, drift = 0.4, opacity = 0.12, phase = 0 }) {
     <sprite ref={ref} position={position} scale={scale}>
       <spriteMaterial
         map={texture}
-        color="#7986aa"
+        color="#b8c8e7"
         transparent
         opacity={opacity}
         depthWrite={false}
@@ -59,12 +59,12 @@ function Moon() {
   return (
     <group position={[-10.5, 10.8, -42]}>
       {texture && (
-        <sprite scale={[12, 12, 1]}>
+        <sprite scale={[13.5, 13.5, 1]}>
           <spriteMaterial
             map={texture}
-            color="#9aa8d0"
+            color="#cbd8f2"
             transparent
-            opacity={0.28}
+            opacity={0.38}
             blending={AdditiveBlending}
             depthWrite={false}
             toneMapped={false}
@@ -73,26 +73,26 @@ function Moon() {
       )}
       <mesh>
         <sphereGeometry args={[2.2, 24, 24]} />
-        <meshBasicMaterial color="#c9d2e8" toneMapped={false} />
+        <meshBasicMaterial color="#edf3ff" toneMapped={false} />
       </mesh>
     </group>
   );
 }
 
 export default function KingdomAtmosphere({ activeRoad }) {
-  const roadColor = activeRoad === 'left' ? '#d9a94e' : activeRoad === 'right' ? '#7594c8' : '#d9622d';
+  const roadColor = activeRoad === 'left' ? '#e4b85b' : activeRoad === 'right' ? '#9ebef1' : '#e77a4a';
 
   return (
     <>
-      <Stars radius={54} depth={36} count={900} factor={2.2} saturation={0.08} fade speed={0.13} />
+      <Stars radius={54} depth={36} count={950} factor={2.45} saturation={0.08} fade speed={0.13} />
       <Moon />
 
-      <MistBank position={[-7.5, 0.75, -3.5]} scale={[13, 3.3, 1]} drift={0.24} opacity={0.12} phase={0.5} />
-      <MistBank position={[6.8, 0.62, -5.5]} scale={[14, 3.6, 1]} drift={0.2} opacity={0.11} phase={2.2} />
-      <MistBank position={[0.4, 0.42, 2.1]} scale={[12, 2.5, 1]} drift={0.28} opacity={0.065} phase={4.1} />
-      <MistBank position={[1.2, 1.05, -13]} scale={[20, 4.8, 1]} drift={0.13} opacity={0.085} phase={1.4} />
+      <MistBank position={[-7.5, 0.75, -3.5]} scale={[13, 3.3, 1]} drift={0.24} opacity={0.14} phase={0.5} />
+      <MistBank position={[6.8, 0.62, -5.5]} scale={[14, 3.6, 1]} drift={0.2} opacity={0.13} phase={2.2} />
+      <MistBank position={[0.4, 0.42, 2.1]} scale={[12, 2.5, 1]} drift={0.28} opacity={0.075} phase={4.1} />
+      <MistBank position={[1.2, 1.05, -13]} scale={[20, 4.8, 1]} drift={0.13} opacity={0.10} phase={1.4} />
 
-      <Sparkles count={58} scale={[18, 5, 15]} position={[0, 1.8, -2]} size={1.45} speed={0.18} color={roadColor} opacity={0.34} />
+      <Sparkles count={62} scale={[18, 5, 15]} position={[0, 1.8, -2]} size={1.55} speed={0.18} color={roadColor} opacity={0.40} />
     </>
   );
 }
