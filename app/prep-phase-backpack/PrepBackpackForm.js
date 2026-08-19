@@ -145,7 +145,7 @@ export default function PrepBackpackForm({ initialMemberId = '' }) {
     <form className="public-form-card minister-hall-form" onSubmit={handleSubmit}>
       <div className="form-section-header prep-header-block">
         <span>Minister&rsquo;s Hall</span>
-        <h2>Backpack Amounts &amp; Minister Position Bookings</h2>
+        <h1>Backpack Amounts &amp; Minister Position Bookings</h1>
         <p>Booking as Member ID: <strong>{initialMemberId || '(unknown)'}</strong></p>
       </div>
 

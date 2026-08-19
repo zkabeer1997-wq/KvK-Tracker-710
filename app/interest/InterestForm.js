@@ -186,7 +186,7 @@ return (
 <form className="public-form-card interest-petition" onSubmit={handleSubmit}>
 <div className="form-section-header">
 <span>Petition for Entry</span>
-<h2>710 Transfer Onboarding</h2>
+<h1>710 Transfer Onboarding</h1>
 </div>
 
 <nav className="interest-progress" aria-label="Petition sections">
@@ -366,7 +366,7 @@ return (
 <Chapter id="battle-report" num="09" title="Battle Report">
 <div className="troop-section public-section">
 <div className="section-title-row"><span>Screenshots</span><h3>Upload your most recent battle report</h3><p>Should show your in-game name, Gov Gears/charms, Hero Gears and Masters.</p></div>
-<input type="file" multiple accept="image/*" onChange={(e) => setScreenshots(Array.from(e.target.files || []))} />
+<input id="battle-report-upload" type="file" multiple accept="image/*" aria-label="Upload battle report screenshots" onChange={(e) => setScreenshots(Array.from(e.target.files || []))} />
 <p className="file-hint">{screenshots.length > 0 ? `${screenshots.length} file(s) selected` : 'No files selected yet.'}</p>
 </div>
 </Chapter>

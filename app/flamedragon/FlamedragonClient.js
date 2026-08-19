@@ -161,7 +161,7 @@ function FlamedragonForm({ initialMemberId = '', intro }) {
         <form className="public-form-card" onSubmit={handleSubmit}>
           <div className="form-section-header">
             <span>Flamedragon Tyrant</span>
-            <h2>Availability, Levels, and Heroes</h2>
+            <h1>Availability, Levels, and Heroes</h1>
           </div>
 
           <section className="identity-grid">

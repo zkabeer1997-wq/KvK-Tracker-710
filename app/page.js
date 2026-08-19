@@ -4,7 +4,8 @@ import { getHomeContent, checkIsAdmin } from '../lib/homeContent';
 import KingdomEntrance from '../components/kingdom/KingdomEntrance';
 
 export const metadata = {
-  title: 'K710 Dashboard',
+  // Absolute so the homepage isn't "K710 Hub · K710 Hub".
+  title: { absolute: 'K710 Hub · Kingdom 710' },
 };
 
 // Homepage content is stored in the content_blocks table (page = 'home') and
@@ -41,7 +42,7 @@ export default async function HomePage() {
       <div id="dossier" className="section" style={{ paddingBottom: 0 }}>
         <div className="wrap kingdom-dossier-lead">
           {field('hero-kicker', { as: 'div', className: 'eyebrow' })}
-          {field('hero-title', { as: 'h1' })}
+          {field('hero-title', { as: 'h2' })}
           {field('hero-sub', { as: 'p', className: 'sub', multiline: true })}
           <div className="hero-ctas" style={{ justifyContent: 'center', marginTop: 24 }}>
             <Link href="/interest" className="btn btn-primary">Apply to Transfer &nbsp;&rarr;</Link>

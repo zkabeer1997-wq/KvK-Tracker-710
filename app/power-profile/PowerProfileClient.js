@@ -120,7 +120,7 @@ return (
 <form className="public-form-card war-ledger-form" onSubmit={handleSubmit}>
 <div className="form-section-header">
 <span>War Ledger</span>
-<h2>Record your combat capability</h2>
+<h1>Record your combat capability</h1>
 </div>
 <section className="identity-grid">
 <label>Your name<input value={form.name} onChange={(e) => updateField('name', e.target.value)} placeholder="Your in-game name" /></label>

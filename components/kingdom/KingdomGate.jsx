@@ -1,33 +1,85 @@
 'use client';
 
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Sparkles } from '@react-three/drei';
+import { AdditiveBlending, CanvasTexture } from 'three';
+
+// Radial-gradient sprite texture. A uniformly-opaque sphere reads as a hard
+// disc; a gradient sprite gives real falloff so torches look like light.
+function useGlowTexture() {
+  return useMemo(() => {
+    if (typeof document === 'undefined') return null;
+    const size = 128;
+    const c = document.createElement('canvas');
+    c.width = size;
+    c.height = size;
+    const ctx = c.getContext('2d');
+    const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+    g.addColorStop(0, 'rgba(255,255,255,1)');
+    g.addColorStop(0.25, 'rgba(255,255,255,0.55)');
+    g.addColorStop(0.55, 'rgba(255,255,255,0.16)');
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, size, size);
+    return new CanvasTexture(c);
+  }, []);
+}
 
 const GOLD = '#d9a94e';
 const EMBER = '#d9622d';
-const BLUE = '#5c86c9';
+// Restrained steel-blue for the inner/member path: cool, not a saturated
+// primary, so it reads as cold torchlight rather than a UI dot.
+const BLUE = '#6f8bb8';
 const STONE = '#3a4470';
 const STONE_DARK = '#2a3358';
 
+// A flame is a small near-white core wrapped in additive falloff, not a
+// flat emissive disc -- a solid sphere at this scale reads as a UI artifact.
 function Torch({ position, color = EMBER, intensity = 3.5 }) {
   const light = useRef(null);
+  const halo = useRef(null);
+  const core = useRef(null);
   const seed = useRef(Math.random() * 10);
+  const glowTex = useGlowTexture();
+
   useFrame(({ clock }) => {
-    if (!light.current) return;
     const t = clock.getElapsedTime() + seed.current;
-    light.current.intensity = intensity + Math.sin(t * 9) * 0.35 + Math.sin(t * 3.1) * 0.2;
+    const flicker = Math.sin(t * 9) * 0.35 + Math.sin(t * 3.1) * 0.2;
+    if (light.current) light.current.intensity = intensity + flicker;
+    if (halo.current) halo.current.scale.setScalar(1.5 + flicker * 0.18);
+    if (core.current) core.current.scale.setScalar(1 + flicker * 0.06);
   });
+
   return (
     <group position={position}>
       <mesh position={[0, 0, 0]}>
         <cylinderGeometry args={[0.05, 0.07, 1.4, 6]} />
         <meshStandardMaterial color={STONE_DARK} roughness={0.9} />
       </mesh>
-      <mesh position={[0, 0.78, 0]}>
-        <sphereGeometry args={[0.14, 8, 8]} />
-        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={2.2} toneMapped={false} />
+
+      {/* soft additive glow -- gradient sprite, so it falls off instead of
+          ending on a hard circular edge */}
+      {glowTex && (
+        <sprite ref={halo} position={[0, 0.8, 0]} scale={[1.5, 1.5, 1.5]}>
+          <spriteMaterial
+            map={glowTex}
+            color={color}
+            transparent
+            opacity={0.85}
+            blending={AdditiveBlending}
+            depthWrite={false}
+            toneMapped={false}
+          />
+        </sprite>
+      )}
+
+      {/* small hot core */}
+      <mesh ref={core} position={[0, 0.8, 0]}>
+        <sphereGeometry args={[0.05, 10, 10]} />
+        <meshBasicMaterial color={color} transparent opacity={0.95} toneMapped={false} />
       </mesh>
+
       <pointLight ref={light} position={[0, 0.85, 0]} color={color} intensity={intensity} distance={9} decay={2} />
     </group>
   );

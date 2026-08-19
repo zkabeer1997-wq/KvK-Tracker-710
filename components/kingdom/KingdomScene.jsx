@@ -6,7 +6,6 @@ import KingdomGate from './KingdomGate';
 import KingdomTraveler from './KingdomTraveler';
 
 const GOLD = '#d9a94e';
-const BLUE = '#5c86c9';
 const NAVY = '#0b0e1e';
 
 function CameraRig({ hoveredRoad, phase, selectedRoad, elapsedSinceSelect }) {
@@ -54,8 +53,6 @@ function SceneContents({ hoveredRoad, phase, selectedRoad, elapsedSinceSelect })
     }
   });
 
-  const accentColor = hoveredRoad === 'right' ? BLUE : GOLD;
-
   return (
     <>
       <color attach="background" args={[NAVY]} />
@@ -63,7 +60,7 @@ function SceneContents({ hoveredRoad, phase, selectedRoad, elapsedSinceSelect })
       <ambientLight intensity={0.85} color="#4a5488" />
       <directionalLight position={[-6, 10, 6]} intensity={1.1} color="#8f9bd4" />
       <hemisphereLight args={['#4a5590', '#0a0d1c', 0.9]} />
-      <pointLight position={[0, 5, 4]} color="#d9a94e" intensity={1.4} distance={20} decay={2} />
+      <pointLight position={[0, 5, 4]} color={GOLD} intensity={1.4} distance={20} decay={2} />
 
       <KingdomGate />
       <group ref={travelerRef} position={[0, 0, 3.4]}>
