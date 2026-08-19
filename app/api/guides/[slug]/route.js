@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { isAdminRequest } from '../../../../lib/adminAuth';
 import { createAdminSupabaseClient } from '../../../../lib/adminSupabase';
 
@@ -28,7 +29,10 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: 'Guide not found.' }, { status: 404 });
     }
 
-    return NextResponse.json({ guide: data, isAdmin: admin });
+    return NextResponse.json(
+      { guide: data, isAdmin: admin },
+      { headers: { 'Cache-Control': 'no-store, max-age=0' } },
+    );
   } catch (error) {
     console.error('guide GET failed', error);
     return NextResponse.json({ error: 'Unable to load this guide.' }, { status: 500 });
@@ -58,7 +62,7 @@ export async function PUT(request, { params }) {
   if (!title) {
     return NextResponse.json({ error: 'Guide title is required.' }, { status: 400 });
   }
-  if (title.length > 160) {
+  if (title.length > 180) {
     return NextResponse.json({ error: 'Guide title is too long.' }, { status: 413 });
   }
   if (typeof body !== 'string') {
@@ -78,7 +82,14 @@ export async function PUT(request, { params }) {
       .single();
 
     if (error) throw error;
-    return NextResponse.json({ guide: data });
+
+    revalidatePath('/guides');
+    revalidatePath(`/guides/${slug}`);
+
+    return NextResponse.json(
+      { guide: data },
+      { headers: { 'Cache-Control': 'no-store, max-age=0' } },
+    );
   } catch (error) {
     console.error('guide PUT failed', error);
     return NextResponse.json({ error: 'Unable to save this guide.' }, { status: 500 });
