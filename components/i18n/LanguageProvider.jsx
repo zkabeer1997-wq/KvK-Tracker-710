@@ -12,7 +12,7 @@ import {
 import { usePathname } from 'next/navigation';
 
 const STORAGE_KEY = 'k710-language-v1';
-const CACHE_PREFIX = 'k710-ui-translations-v2:';
+const CACHE_PREFIX = 'k710-ui-translations-v3:';
 const BATCH_SIZE = 40;
 
 const LanguageContext = createContext({
@@ -21,6 +21,8 @@ const LanguageContext = createContext({
   openLanguageChooser: () => {},
 });
 
+// Chrome's stable on-device Translator API currently supports these language
+// families. These cover the principal K710 languages without any cloud API.
 const SUGGESTED_LANGUAGES = [
   ['English', 'English'],
   ['Arabic', 'العربية'],
@@ -47,37 +49,80 @@ const SUGGESTED_LANGUAGES = [
   ['Chinese (Traditional)', '繁體中文'],
   ['Japanese', '日本語'],
   ['Hindi', 'हिन्दी'],
-  ['Urdu', 'اردو'],
   ['Bengali', 'বাংলা'],
   ['Thai', 'ไทย'],
   ['Vietnamese', 'Tiếng Việt'],
   ['Indonesian', 'Bahasa Indonesia'],
-  ['Malay', 'Bahasa Melayu'],
-  ['Filipino', 'Filipino'],
-  ['Persian', 'فارسی'],
   ['Hebrew', 'עברית'],
-  ['Albanian', 'Shqip'],
-  ['Azerbaijani', 'Azərbaycanca'],
-  ['Basque', 'Euskara'],
   ['Bulgarian', 'Български'],
-  ['Catalan', 'Català'],
-  ['Esperanto', 'Esperanto'],
-  ['Estonian', 'Eesti'],
-  ['Galician', 'Galego'],
-  ['Irish', 'Gaeilge'],
-  ['Kyrgyz', 'Кыргызча'],
-  ['Latvian', 'Latviešu'],
+  ['Croatian', 'Hrvatski'],
+  ['Kannada', 'ಕನ್ನಡ'],
   ['Lithuanian', 'Lietuvių'],
+  ['Marathi', 'मराठी'],
   ['Slovak', 'Slovenčina'],
   ['Slovenian', 'Slovenščina'],
-  ['Tagalog', 'Tagalog'],
+  ['Tamil', 'தமிழ்'],
+  ['Telugu', 'తెలుగు'],
 ];
+
+const BROWSER_LANGUAGE_CODES = new Map([
+  ['english', 'en'], ['en', 'en'],
+  ['arabic', 'ar'], ['العربية', 'ar'], ['ar', 'ar'],
+  ['bulgarian', 'bg'], ['български', 'bg'], ['bg', 'bg'],
+  ['bengali', 'bn'], ['বাংলা', 'bn'], ['bn', 'bn'],
+  ['czech', 'cs'], ['čeština', 'cs'], ['cs', 'cs'],
+  ['danish', 'da'], ['dansk', 'da'], ['da', 'da'],
+  ['german', 'de'], ['deutsch', 'de'], ['de', 'de'],
+  ['greek', 'el'], ['ελληνικά', 'el'], ['el', 'el'],
+  ['spanish', 'es'], ['español', 'es'], ['espanol', 'es'], ['es', 'es'],
+  ['finnish', 'fi'], ['suomi', 'fi'], ['fi', 'fi'],
+  ['french', 'fr'], ['français', 'fr'], ['francais', 'fr'], ['fr', 'fr'],
+  ['hebrew', 'he'], ['עברית', 'he'], ['he', 'he'],
+  ['hindi', 'hi'], ['हिन्दी', 'hi'], ['हिंदी', 'hi'], ['hi', 'hi'],
+  ['croatian', 'hr'], ['hrvatski', 'hr'], ['hr', 'hr'],
+  ['hungarian', 'hu'], ['magyar', 'hu'], ['hu', 'hu'],
+  ['indonesian', 'id'], ['bahasa indonesia', 'id'], ['id', 'id'],
+  ['italian', 'it'], ['italiano', 'it'], ['it', 'it'],
+  ['japanese', 'ja'], ['日本語', 'ja'], ['ja', 'ja'],
+  ['kannada', 'kn'], ['ಕನ್ನಡ', 'kn'], ['kn', 'kn'],
+  ['korean', 'ko'], ['한국어', 'ko'], ['ko', 'ko'],
+  ['lithuanian', 'lt'], ['lietuvių', 'lt'], ['lt', 'lt'],
+  ['marathi', 'mr'], ['मराठी', 'mr'], ['mr', 'mr'],
+  ['dutch', 'nl'], ['nederlands', 'nl'], ['nl', 'nl'],
+  ['norwegian', 'no'], ['norsk', 'no'], ['no', 'no'], ['nb', 'no'],
+  ['polish', 'pl'], ['polski', 'pl'], ['pl', 'pl'],
+  ['portuguese', 'pt'], ['português', 'pt'], ['portugues', 'pt'], ['pt', 'pt'],
+  ['romanian', 'ro'], ['română', 'ro'], ['romana', 'ro'], ['ro', 'ro'],
+  ['russian', 'ru'], ['русский', 'ru'], ['ru', 'ru'],
+  ['slovak', 'sk'], ['slovenčina', 'sk'], ['sk', 'sk'],
+  ['slovenian', 'sl'], ['slovenščina', 'sl'], ['sl', 'sl'],
+  ['swedish', 'sv'], ['svenska', 'sv'], ['sv', 'sv'],
+  ['tamil', 'ta'], ['தமிழ்', 'ta'], ['ta', 'ta'],
+  ['telugu', 'te'], ['తెలుగు', 'te'], ['te', 'te'],
+  ['thai', 'th'], ['ไทย', 'th'], ['th', 'th'],
+  ['turkish', 'tr'], ['türkçe', 'tr'], ['turkce', 'tr'], ['tr', 'tr'],
+  ['ukrainian', 'uk'], ['українська', 'uk'], ['uk', 'uk'],
+  ['vietnamese', 'vi'], ['tiếng việt', 'vi'], ['tieng viet', 'vi'], ['vi', 'vi'],
+  ['chinese', 'zh'], ['chinese simplified', 'zh'], ['chinese (simplified)', 'zh'], ['简体中文', 'zh'], ['zh', 'zh'],
+  ['chinese traditional', 'zh-Hant'], ['chinese (traditional)', 'zh-Hant'], ['繁體中文', 'zh-Hant'], ['zh-hant', 'zh-Hant'],
+]);
 
 const RTL_LANGUAGE_RE = /\b(arabic|hebrew|persian|farsi|urdu|pashto|sorani|kurdish|yiddish|uyghur)\b/i;
 const BLOCKED_TAGS = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'CODE', 'PRE']);
 
 function normalize(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+function normalizeLanguage(value) {
+  return normalize(value).toLocaleLowerCase('en-US').replace(/[._-]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function resolveBrowserLanguageCode(value) {
+  const raw = normalize(value);
+  const exact = BROWSER_LANGUAGE_CODES.get(raw.toLocaleLowerCase('en-US'));
+  if (exact) return exact;
+  return BROWSER_LANGUAGE_CODES.get(normalizeLanguage(value)) || null;
 }
 
 function preserveWhitespace(raw, translated) {
@@ -87,7 +132,7 @@ function preserveWhitespace(raw, translated) {
 }
 
 function isEnglish(language) {
-  return /^english(?:\s*\(.*\))?$/i.test(normalize(language));
+  return /^english(?:\s*\(.*\))?$/i.test(normalize(language)) || normalizeLanguage(language) === 'en';
 }
 
 function shouldSkipElement(element) {
@@ -129,6 +174,7 @@ export default function LanguageProvider({ children }) {
   const [manifest, setManifest] = useState(null);
   const [translationStatus, setTranslationStatus] = useState('idle');
   const [languageError, setLanguageError] = useState('');
+  const [downloadProgress, setDownloadProgress] = useState(null);
 
   const languageRef = useRef('English');
   const cacheRef = useRef(new Map());
@@ -141,6 +187,63 @@ export default function LanguageProvider({ children }) {
   const processingRef = useRef(false);
   const queuedRef = useRef(false);
   const failureUntilRef = useRef(0);
+  const browserTranslatorRef = useRef(null);
+  const browserTranslatorPromiseRef = useRef(null);
+
+  const destroyBrowserTranslator = useCallback(() => {
+    try {
+      browserTranslatorRef.current?.translator?.destroy?.();
+    } catch {
+      // Best-effort cleanup.
+    }
+    browserTranslatorRef.current = null;
+    browserTranslatorPromiseRef.current = null;
+  }, []);
+
+  const startBrowserTranslator = useCallback((targetLanguage) => {
+    if (typeof window === 'undefined' || !('Translator' in window)) return null;
+    const targetCode = resolveBrowserLanguageCode(targetLanguage);
+    if (!targetCode || targetCode === 'en') return null;
+
+    const current = browserTranslatorRef.current;
+    if (current?.language === targetLanguage && current?.translator) {
+      return Promise.resolve(current.translator);
+    }
+
+    const pending = browserTranslatorPromiseRef.current;
+    if (pending?.language === targetLanguage && pending?.promise) return pending.promise;
+
+    destroyBrowserTranslator();
+    setDownloadProgress(null);
+    setTranslationStatus('translating');
+
+    // create() is intentionally called directly from the user's language-selection
+    // click whenever possible because Chrome requires user activation when a language
+    // pack needs to be created/downloaded.
+    const promise = window.Translator.create({
+      sourceLanguage: 'en',
+      targetLanguage: targetCode,
+      monitor(monitor) {
+        monitor.addEventListener('downloadprogress', (event) => {
+          const value = Math.max(0, Math.min(100, Math.round((event.loaded || 0) * 100)));
+          setDownloadProgress(value);
+        });
+      },
+    })
+      .then((translator) => {
+        browserTranslatorRef.current = { language: targetLanguage, translator };
+        setDownloadProgress(100);
+        return translator;
+      })
+      .catch((error) => {
+        console.warn('K710 browser Translator API unavailable', error);
+        browserTranslatorPromiseRef.current = null;
+        return null;
+      });
+
+    browserTranslatorPromiseRef.current = { language: targetLanguage, promise };
+    return promise;
+  }, [destroyBrowserTranslator]);
 
   useEffect(() => {
     let saved = null;
@@ -156,11 +259,22 @@ export default function LanguageProvider({ children }) {
       languageRef.current = saved;
       cacheRef.current = readCache(saved);
       setHasChosenLanguage(true);
+
+      // A previously downloaded Chrome language pack may be reusable without a
+      // visible download. Try it; if Chrome requires fresh user activation, the
+      // server fallback remains available and the globe control can re-arm it.
+      if (!isEnglish(saved)) {
+        try {
+          startBrowserTranslator(saved);
+        } catch {
+          // Non-fatal; requestTranslations will use the server fallback.
+        }
+      }
     } else {
       setChooserOpen(true);
       setHasChosenLanguage(false);
     }
-  }, []);
+  }, [startBrowserTranslator]);
 
   useEffect(() => {
     let active = true;
@@ -177,6 +291,8 @@ export default function LanguageProvider({ children }) {
       active = false;
     };
   }, []);
+
+  useEffect(() => () => destroyBrowserTranslator(), [destroyBrowserTranslator]);
 
   const restoreTracked = useCallback(() => {
     for (const node of [...trackedTextNodesRef.current]) {
@@ -203,7 +319,7 @@ export default function LanguageProvider({ children }) {
     }
   }, []);
 
-  const requestTranslations = useCallback(async (items, targetLanguage) => {
+  const requestServerTranslations = useCallback(async (items, targetLanguage) => {
     const results = new Map();
     for (let i = 0; i < items.length; i += BATCH_SIZE) {
       const batch = items.slice(i, i + BATCH_SIZE);
@@ -232,6 +348,33 @@ export default function LanguageProvider({ children }) {
     return results;
   }, []);
 
+  const requestTranslations = useCallback(async (items, targetLanguage) => {
+    // Fast/default path on supported desktop Chrome: translation stays entirely
+    // on-device and does not require Vercel billing or a third-party API.
+    const browserCode = resolveBrowserLanguageCode(targetLanguage);
+    if (browserCode && typeof window !== 'undefined' && 'Translator' in window) {
+      let translator = browserTranslatorRef.current?.language === targetLanguage
+        ? browserTranslatorRef.current.translator
+        : null;
+
+      if (!translator) {
+        const pending = browserTranslatorPromiseRef.current;
+        if (pending?.language === targetLanguage) translator = await pending.promise;
+      }
+
+      if (!translator) translator = await startBrowserTranslator(targetLanguage);
+
+      if (translator) {
+        const values = await Promise.all(items.map((source) => translator.translate(source)));
+        const results = new Map();
+        items.forEach((source, index) => results.set(source, values[index]));
+        return results;
+      }
+    }
+
+    return requestServerTranslations(items, targetLanguage);
+  }, [requestServerTranslations, startBrowserTranslator]);
+
   const processDocument = useCallback(async () => {
     if (Date.now() < failureUntilRef.current) return;
     if (!manifest || processingRef.current || typeof document === 'undefined') {
@@ -253,7 +396,8 @@ export default function LanguageProvider({ children }) {
         return;
       }
 
-      document.documentElement.lang = 'und';
+      const browserCode = resolveBrowserLanguageCode(targetLanguage);
+      document.documentElement.lang = browserCode || 'und';
       document.documentElement.dir = RTL_LANGUAGE_RE.test(targetLanguage) ? 'rtl' : 'ltr';
 
       const needed = new Set();
@@ -337,6 +481,7 @@ export default function LanguageProvider({ children }) {
 
       failureUntilRef.current = 0;
       setTranslationStatus('ready');
+      setDownloadProgress(null);
       setLanguageError('');
     } catch (error) {
       console.error('K710 UI translation failed', error);
@@ -345,12 +490,12 @@ export default function LanguageProvider({ children }) {
 
       if (error?.code === 'UNSUPPORTED_LANGUAGE') {
         failureUntilRef.current = Number.MAX_SAFE_INTEGER;
-        setLanguageError(error.message || 'That language is not supported by the current translation engine.');
+        setLanguageError(error.message || 'That language is not supported by this browser or the fallback engine.');
         setChooserOpen(true);
       } else {
         const retryAfter = Math.max(30, Math.min(Number(error?.retryAfter || 60), 300));
         failureUntilRef.current = Date.now() + retryAfter * 1000;
-        setLanguageError('Translation is temporarily unavailable. The site will stay in English instead of repeatedly retrying.');
+        setLanguageError('Translation could not start in this browser. Choose another language or click the globe to retry.');
       }
     } finally {
       processingRef.current = false;
@@ -410,6 +555,19 @@ export default function LanguageProvider({ children }) {
       failureUntilRef.current = 0;
       setTranslationStatus('idle');
       setLanguageError('');
+      setDownloadProgress(null);
+
+      // Start Chrome's translator while this click still carries user activation.
+      if (!isEnglish(clean)) {
+        try {
+          startBrowserTranslator(clean);
+        } catch (error) {
+          console.warn('K710 could not pre-arm browser translator', error);
+        }
+      } else {
+        destroyBrowserTranslator();
+      }
+
       setLanguage(clean);
       setInputLanguage(clean);
       languageRef.current = clean;
@@ -423,7 +581,7 @@ export default function LanguageProvider({ children }) {
       }
       window.setTimeout(() => scheduleTranslation(), 0);
     },
-    [restoreTracked, scheduleTranslation],
+    [destroyBrowserTranslator, restoreTracked, scheduleTranslation, startBrowserTranslator],
   );
 
   const openLanguageChooser = useCallback(() => {
@@ -452,7 +610,7 @@ export default function LanguageProvider({ children }) {
               اختر لغتك · Choisissez votre langue · Dilinizi seçin · 언어 선택 · Elige tu idioma
             </p>
             <p className="k710-language-copy">
-              The hub will translate its interface into your chosen language. You can change this at any time.
+              On supported desktop browsers, translation runs on your device. Your player-entered information is not sent for translation.
             </p>
 
             <label className="k710-language-label" htmlFor="k710-language-input">Language</label>
@@ -482,7 +640,7 @@ export default function LanguageProvider({ children }) {
             <button type="button" className="k710-language-enter" onClick={() => applyLanguage(inputLanguage)}>
               Enter the Kingdom
             </button>
-            <p className="k710-language-footnote">The free translation engine currently covers 45+ major languages.</p>
+            <p className="k710-language-footnote">Chrome 138+ desktop supports 38 on-device translation languages.</p>
           </div>
         </div>
       )}
@@ -498,7 +656,14 @@ export default function LanguageProvider({ children }) {
         >
           <span aria-hidden="true">🌐</span>
           <span>{language}</span>
-          {translationStatus === 'translating' && <span className="k710-language-spinner" aria-hidden="true" />}
+          {translationStatus === 'translating' && (
+            <>
+              <span className="k710-language-spinner" aria-hidden="true" />
+              {Number.isFinite(downloadProgress) && downloadProgress < 100 && (
+                <span className="k710-language-progress">{downloadProgress}%</span>
+              )}
+            </>
+          )}
           {translationStatus === 'error' && <span aria-hidden="true">!</span>}
         </button>
       )}
