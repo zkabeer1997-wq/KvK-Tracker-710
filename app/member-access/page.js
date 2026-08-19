@@ -10,6 +10,6 @@ export const dynamic = 'force-dynamic';
 export default function MemberAccessPage({ searchParams }) {
   const returnTo = typeof searchParams?.returnTo === 'string' && searchParams.returnTo.startsWith('/')
     ? searchParams.returnTo
-    : '/guides';
+    : '/secure-hub';
   return <MemberAccessGate returnTo={returnTo} />;
 }
