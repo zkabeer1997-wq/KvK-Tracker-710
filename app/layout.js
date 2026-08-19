@@ -2,6 +2,7 @@ import './globals.css';
 import './kingdom-theme.css';
 import './realm-stage.css';
 import './realm-motion.css';
+import './realm-surfaces.css';
 import { Cinzel, Inter, JetBrains_Mono } from 'next/font/google';
 import SiteHeader from '../components/SiteHeader';
 import SiteFooter from '../components/SiteFooter';
