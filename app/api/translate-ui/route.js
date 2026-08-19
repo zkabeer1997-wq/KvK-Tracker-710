@@ -1,12 +1,15 @@
+import { getVercelOidcToken } from '@vercel/oidc';
 import uiStrings from '../../../public/ui-strings.json';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
 
 const ALLOWED = new Set(uiStrings.map((value) => normalize(value)));
 const MAX_STRINGS = 64;
 const MAX_STRING_LENGTH = 320;
 const DEFAULT_MODEL = 'google/gemini-3.5-flash-lite';
+const FALLBACK_MODELS = ['google/gemini-3.6-flash'];
 
 function normalize(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
@@ -27,6 +30,17 @@ function cleanJson(text) {
   const trimmed = String(text || '').trim();
   const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
   return fenced ? fenced[1].trim() : trimmed;
+}
+
+async function getGatewayToken() {
+  if (process.env.AI_GATEWAY_API_KEY) return process.env.AI_GATEWAY_API_KEY;
+
+  try {
+    return await getVercelOidcToken({ expirationBufferMs: 60_000 });
+  } catch (error) {
+    console.error('K710 translation OIDC token error', error?.message || error);
+    return null;
+  }
 }
 
 export async function POST(request) {
@@ -60,7 +74,7 @@ export async function POST(request) {
     return Response.json({ translated: strings });
   }
 
-  const token = process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN;
+  const token = await getGatewayToken();
   if (!token) {
     return Response.json(
       { error: 'Translation service authentication is unavailable.' },
@@ -88,6 +102,7 @@ export async function POST(request) {
       },
       body: JSON.stringify({
         model,
+        models: FALLBACK_MODELS,
         temperature: 0,
         messages: [
           { role: 'system', content: system },
@@ -95,8 +110,10 @@ export async function POST(request) {
         ],
       }),
       cache: 'no-store',
+      signal: AbortSignal.timeout(20_000),
     });
-  } catch {
+  } catch (error) {
+    console.error('K710 translation gateway fetch error', error?.message || error);
     return Response.json({ error: 'Translation service could not be reached.' }, { status: 502 });
   }
 
