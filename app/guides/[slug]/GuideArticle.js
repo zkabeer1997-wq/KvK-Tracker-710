@@ -2,51 +2,18 @@
 
 import { useEffect, useState } from 'react';
 
-export default function GuideArticle({ slug, memberId }) {
-  const [guide, setGuide] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+export default function GuideArticle({ slug, memberId, initialGuide, initialIsAdmin = false, initialError = '' }) {
+  const [guide, setGuide] = useState(initialGuide || null);
+  const [isAdmin] = useState(Boolean(initialIsAdmin));
+  const [error, setError] = useState(initialError || '');
   const [editing, setEditing] = useState(false);
-  const [draftTitle, setDraftTitle] = useState('');
-  const [draft, setDraft] = useState('');
+  const [draftTitle, setDraftTitle] = useState(initialGuide?.title || '');
+  const [draft, setDraft] = useState(initialGuide?.body || '');
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState('');
 
   const query = memberId ? `?member_id=${encodeURIComponent(memberId)}` : '';
   const guidesHref = `/guides${query}`;
-
-  async function fetchGuide() {
-    const response = await fetch(`/api/guides/${encodeURIComponent(slug)}?t=${Date.now()}`, {
-      cache: 'no-store',
-      headers: { 'Cache-Control': 'no-cache, no-store, max-age=0' },
-    });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Unable to load this guide.');
-    return result;
-  }
-
-  useEffect(() => {
-    let cancelled = false;
-    async function loadGuide() {
-      setLoading(true);
-      setError('');
-      try {
-        const result = await fetchGuide();
-        if (cancelled) return;
-        setGuide(result.guide);
-        setDraftTitle(result.guide?.title || '');
-        setDraft(result.guide?.body || '');
-        setIsAdmin(Boolean(result.isAdmin));
-      } catch (err) {
-        if (!cancelled) setError(err.message || 'Unable to load this guide.');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    loadGuide();
-    return () => { cancelled = true; };
-  }, [slug]);
 
   useEffect(() => {
     if (guide?.title) document.title = `${guide.title} | K710`;
@@ -65,7 +32,7 @@ export default function GuideArticle({ slug, memberId }) {
     setError('');
 
     try {
-      const response = await fetch(`/api/guides/${encodeURIComponent(slug)}?t=${Date.now()}`, {
+      const response = await fetch(`/api/guides/${encodeURIComponent(slug)}`, {
         method: 'PUT',
         cache: 'no-store',
         headers: {
@@ -74,29 +41,23 @@ export default function GuideArticle({ slug, memberId }) {
         },
         body: JSON.stringify({ title: nextTitle, body: draft }),
       });
+
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Unable to save this guide.');
-      if (!result.guide) throw new Error('The save completed but no guide was returned.');
+      if (!result.guide) throw new Error('The saved guide was not returned by the server.');
 
-      // The UPDATE ... SELECT response is the persisted database row. Use it immediately
-      // so the individual guide title/body cannot remain stuck on pre-save client state.
+      // Immediately adopt the exact row returned by Supabase.
       setGuide(result.guide);
       setDraftTitle(result.guide.title || '');
       setDraft(result.guide.body || '');
       setEditing(false);
       setStatus('Saved. Reloading the persisted guide…');
 
-      // Read the row back once from the database and display whatever Supabase persisted.
-      // Do not compare raw textarea strings byte-for-byte because browsers normalize line endings.
-      const confirmed = await fetchGuide();
-      setGuide(confirmed.guide);
-      setDraftTitle(confirmed.guide?.title || '');
-      setDraft(confirmed.guide?.body || '');
-      setIsAdmin(Boolean(confirmed.isAdmin));
-      setStatus('Guide saved. The title and text are persisted on this page and in the Guides directory.');
+      // Full document reload: bypasses Next client router/cache completely.
+      // The server-rendered page then reads the row directly from Supabase.
+      window.location.replace(`${window.location.pathname}${window.location.search}${window.location.search ? '&' : '?'}saved=${Date.now()}`);
     } catch (err) {
       setError(err.message || 'Unable to save this guide.');
-    } finally {
       setSaving(false);
     }
   }
@@ -109,17 +70,6 @@ export default function GuideArticle({ slug, memberId }) {
     setError('');
   }
 
-  if (loading) {
-    return (
-      <main className="armory guide-page">
-        <div className="armory-atmos" aria-hidden="true" />
-        <div className="armory-inner guide-inner">
-          <p className="k-narrative guide-loading">Opening the library volume…</p>
-        </div>
-      </main>
-    );
-  }
-
   if (!guide) {
     return (
       <main className="armory guide-page">
@@ -128,6 +78,7 @@ export default function GuideArticle({ slug, memberId }) {
           <a href={guidesHref} className="guide-back">← Guides</a>
           <div className="guide-error k-narrative">{error || 'Guide not found.'}</div>
         </div>
+        <style jsx>{`.guide-inner{width:min(940px,100%);padding-top:clamp(82px,10vh,118px)}.guide-back{color:var(--brass);text-decoration:none}.guide-error{margin-top:40px;color:var(--parchment-dim)}`}</style>
       </main>
     );
   }
@@ -244,7 +195,6 @@ export default function GuideArticle({ slug, memberId }) {
         .guide-message.error{color:#ffc1ad;border-color:rgba(255,125,91,.27);background:rgba(255,94,52,.06)}
         .guide-message.success{color:#c9edcf;border-color:rgba(120,205,137,.25);background:rgba(88,180,106,.06)}
         .guide-footer{display:flex;justify-content:space-between;gap:20px;margin-top:24px;padding-top:15px;border-top:1px solid rgba(201,164,78,.13);color:var(--t-muted);font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase}
-        .guide-loading,.guide-error{margin-top:80px;color:var(--parchment-dim)}
         @media(max-width:620px){.guide-inner{padding-top:72px}.guide-topbar{align-items:flex-start;flex-direction:column}.guide-header h1{font-size:34px}.guide-title-editor input{font-size:28px}.guide-header p,.guide-body{font-size:15px}.guide-volume{padding:26px 20px 30px 28px;min-height:360px}.guide-editor textarea{min-height:440px}.guide-footer{flex-direction:column}.guide-admin-actions{align-items:stretch;flex-direction:column}.guide-edit,.guide-save,.guide-cancel{width:100%}}
       `}</style>
     </main>
