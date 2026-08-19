@@ -177,10 +177,16 @@ function TravelerRig({ phase, selectedRoad, active }) {
     group.current.rotation.y *= Math.exp(-delta * 8);
   });
 
+  const movement = active && phase === 'transitioning'
+    ? 'run'
+    : active && phase === 'approach'
+      ? 'walk'
+      : 'idle';
+
   return (
     <group ref={group} position={[0, 0, 7.7]}>
       <Suspense fallback={null}>
-        <AnimatedKnightTraveler walking={active && (phase === 'approach' || phase === 'transitioning')} />
+        <AnimatedKnightTraveler movement={movement} />
       </Suspense>
     </group>
   );
