@@ -150,6 +150,7 @@ export default function RouteRealmStage() {
   }, []);
 
   useEffect(() => {
+    setActive(true);
     const node = stageRef.current;
     if (!node || typeof IntersectionObserver === 'undefined') return undefined;
     const observer = new IntersectionObserver(
@@ -169,7 +170,7 @@ export default function RouteRealmStage() {
       aria-labelledby="route-realm-title"
       data-active={active ? 'true' : 'false'}
     >
-      <div className="route-realm-canvas" aria-hidden="true">
+      <div key={`scene-${pathname}`} className="route-realm-canvas route-realm-reveal" aria-hidden="true">
         <RouteRealmCanvas
           realm={realm.id}
           accent={realm.accent}
@@ -179,7 +180,7 @@ export default function RouteRealmStage() {
         />
       </div>
       <div className="route-realm-vignette" aria-hidden="true" />
-      <div className="route-realm-copy">
+      <div key={`copy-${pathname}`} className="route-realm-copy route-realm-copy-reveal">
         <span className="route-realm-district">{realm.district}</span>
         <h2 id="route-realm-title">{realm.title}</h2>
         <p>{realm.description}</p>
