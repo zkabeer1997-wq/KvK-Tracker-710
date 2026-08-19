@@ -12,8 +12,8 @@ import {
 import { usePathname } from 'next/navigation';
 
 const STORAGE_KEY = 'k710-language-v1';
-const CACHE_PREFIX = 'k710-ui-translations-v1:';
-const BATCH_SIZE = 48;
+const CACHE_PREFIX = 'k710-ui-translations-v2:';
+const BATCH_SIZE = 40;
 
 const LanguageContext = createContext({
   language: 'English',
@@ -49,12 +49,6 @@ const SUGGESTED_LANGUAGES = [
   ['Hindi', 'हिन्दी'],
   ['Urdu', 'اردو'],
   ['Bengali', 'বাংলা'],
-  ['Punjabi', 'ਪੰਜਾਬੀ'],
-  ['Gujarati', 'ગુજરાતી'],
-  ['Marathi', 'मराठी'],
-  ['Tamil', 'தமிழ்'],
-  ['Telugu', 'తెలుగు'],
-  ['Malayalam', 'മലയാളം'],
   ['Thai', 'ไทย'],
   ['Vietnamese', 'Tiếng Việt'],
   ['Indonesian', 'Bahasa Indonesia'],
@@ -62,8 +56,21 @@ const SUGGESTED_LANGUAGES = [
   ['Filipino', 'Filipino'],
   ['Persian', 'فارسی'],
   ['Hebrew', 'עברית'],
-  ['Swahili', 'Kiswahili'],
-  ['Afrikaans', 'Afrikaans'],
+  ['Albanian', 'Shqip'],
+  ['Azerbaijani', 'Azərbaycanca'],
+  ['Basque', 'Euskara'],
+  ['Bulgarian', 'Български'],
+  ['Catalan', 'Català'],
+  ['Esperanto', 'Esperanto'],
+  ['Estonian', 'Eesti'],
+  ['Galician', 'Galego'],
+  ['Irish', 'Gaeilge'],
+  ['Kyrgyz', 'Кыргызча'],
+  ['Latvian', 'Latviešu'],
+  ['Lithuanian', 'Lietuvių'],
+  ['Slovak', 'Slovenčina'],
+  ['Slovenian', 'Slovenščina'],
+  ['Tagalog', 'Tagalog'],
 ];
 
 const RTL_LANGUAGE_RE = /\b(arabic|hebrew|persian|farsi|urdu|pashto|sorani|kurdish|yiddish|uyghur)\b/i;
@@ -102,7 +109,7 @@ function readCache(language) {
 
 function writeCache(language, cache) {
   try {
-    const entries = [...cache.entries()].slice(-1800);
+    const entries = [...cache.entries()].slice(-2200);
     localStorage.setItem(`${CACHE_PREFIX}${language}`, JSON.stringify(Object.fromEntries(entries)));
   } catch {
     // Storage limits/private browsing are non-fatal.
@@ -121,6 +128,7 @@ export default function LanguageProvider({ children }) {
   const [inputLanguage, setInputLanguage] = useState('English');
   const [manifest, setManifest] = useState(null);
   const [translationStatus, setTranslationStatus] = useState('idle');
+  const [languageError, setLanguageError] = useState('');
 
   const languageRef = useRef('English');
   const cacheRef = useRef(new Map());
@@ -132,6 +140,7 @@ export default function LanguageProvider({ children }) {
   const scheduleRef = useRef(null);
   const processingRef = useRef(false);
   const queuedRef = useRef(false);
+  const failureUntilRef = useRef(0);
 
   useEffect(() => {
     let saved = null;
@@ -203,10 +212,20 @@ export default function LanguageProvider({ children }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ language: targetLanguage, strings: batch }),
       });
-      if (!response.ok) throw new Error(`Translation failed (${response.status})`);
-      const data = await response.json();
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const error = new Error(data?.error || `Translation failed (${response.status})`);
+        error.code = data?.code || 'TRANSLATION_FAILED';
+        error.retryAfter = Number(data?.retryAfter || response.headers.get('Retry-After') || 60);
+        throw error;
+      }
+
       if (!Array.isArray(data?.translated) || data.translated.length !== batch.length) {
-        throw new Error('Translation response shape mismatch');
+        const error = new Error('Translation response shape mismatch');
+        error.code = 'BAD_TRANSLATION_RESPONSE';
+        error.retryAfter = 60;
+        throw error;
       }
       batch.forEach((source, index) => results.set(source, data.translated[index]));
     }
@@ -214,6 +233,7 @@ export default function LanguageProvider({ children }) {
   }, []);
 
   const processDocument = useCallback(async () => {
+    if (Date.now() < failureUntilRef.current) return;
     if (!manifest || processingRef.current || typeof document === 'undefined') {
       queuedRef.current = true;
       return;
@@ -229,6 +249,7 @@ export default function LanguageProvider({ children }) {
         document.documentElement.lang = 'en';
         document.documentElement.dir = 'ltr';
         setTranslationStatus('idle');
+        setLanguageError('');
         return;
       }
 
@@ -289,6 +310,7 @@ export default function LanguageProvider({ children }) {
 
       if (needed.size) {
         setTranslationStatus('translating');
+        setLanguageError('');
         const translated = await requestTranslations([...needed], targetLanguage);
         if (languageRef.current !== targetLanguage) return;
         for (const [source, value] of translated.entries()) cacheRef.current.set(source, value);
@@ -313,23 +335,38 @@ export default function LanguageProvider({ children }) {
         if (element.getAttribute(name) !== nextValue) element.setAttribute(name, nextValue);
       }
 
+      failureUntilRef.current = 0;
       setTranslationStatus('ready');
+      setLanguageError('');
     } catch (error) {
       console.error('K710 UI translation failed', error);
+      restoreTracked();
       setTranslationStatus('error');
+
+      if (error?.code === 'UNSUPPORTED_LANGUAGE') {
+        failureUntilRef.current = Number.MAX_SAFE_INTEGER;
+        setLanguageError(error.message || 'That language is not supported by the current translation engine.');
+        setChooserOpen(true);
+      } else {
+        const retryAfter = Math.max(30, Math.min(Number(error?.retryAfter || 60), 300));
+        failureUntilRef.current = Date.now() + retryAfter * 1000;
+        setLanguageError('Translation is temporarily unavailable. The site will stay in English instead of repeatedly retrying.');
+      }
     } finally {
       processingRef.current = false;
-      if (queuedRef.current) {
+      if (queuedRef.current && Date.now() >= failureUntilRef.current) {
         queuedRef.current = false;
-        window.setTimeout(() => processDocument(), 80);
+        window.setTimeout(() => processDocument(), 120);
+      } else {
+        queuedRef.current = false;
       }
     }
   }, [manifest, requestTranslations, restoreTracked]);
 
   const scheduleTranslation = useCallback(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || Date.now() < failureUntilRef.current) return;
     if (scheduleRef.current) window.clearTimeout(scheduleRef.current);
-    scheduleRef.current = window.setTimeout(() => processDocument(), 120);
+    scheduleRef.current = window.setTimeout(() => processDocument(), 140);
   }, [processDocument]);
 
   useEffect(() => {
@@ -337,7 +374,16 @@ export default function LanguageProvider({ children }) {
 
     scheduleTranslation();
     observerRef.current?.disconnect();
-    observerRef.current = new MutationObserver(() => scheduleTranslation());
+    observerRef.current = new MutationObserver((mutations) => {
+      if (Date.now() < failureUntilRef.current) return;
+      const relevant = mutations.some((mutation) => {
+        const target = mutation.target?.nodeType === Node.TEXT_NODE
+          ? mutation.target.parentElement
+          : mutation.target;
+        return !shouldSkipElement(target);
+      });
+      if (relevant) scheduleTranslation();
+    });
     observerRef.current.observe(document.body, {
       childList: true,
       subtree: true,
@@ -354,13 +400,16 @@ export default function LanguageProvider({ children }) {
 
   useEffect(() => {
     if (!manifest || !hasChosenLanguage) return;
-    window.setTimeout(() => scheduleTranslation(), 60);
+    window.setTimeout(() => scheduleTranslation(), 80);
   }, [pathname, manifest, hasChosenLanguage, scheduleTranslation]);
 
   const applyLanguage = useCallback(
     (nextLanguage) => {
       const clean = normalize(nextLanguage) || 'English';
       restoreTracked();
+      failureUntilRef.current = 0;
+      setTranslationStatus('idle');
+      setLanguageError('');
       setLanguage(clean);
       setInputLanguage(clean);
       languageRef.current = clean;
@@ -379,6 +428,8 @@ export default function LanguageProvider({ children }) {
 
   const openLanguageChooser = useCallback(() => {
     setInputLanguage(languageRef.current || 'English');
+    setLanguageError('');
+    failureUntilRef.current = 0;
     setChooserOpen(true);
   }, []);
 
@@ -414,7 +465,7 @@ export default function LanguageProvider({ children }) {
               onKeyDown={(event) => {
                 if (event.key === 'Enter') applyLanguage(inputLanguage);
               }}
-              placeholder="Search or type any language"
+              placeholder="Search or type a language"
               autoComplete="off"
               autoFocus
             />
@@ -424,10 +475,14 @@ export default function LanguageProvider({ children }) {
               ))}
             </datalist>
 
+            {languageError && (
+              <p className="k710-language-error" role="alert">{languageError}</p>
+            )}
+
             <button type="button" className="k710-language-enter" onClick={() => applyLanguage(inputLanguage)}>
               Enter the Kingdom
             </button>
-            <p className="k710-language-footnote">Any language name is accepted — the list above is only a shortcut.</p>
+            <p className="k710-language-footnote">The free translation engine currently covers 45+ major languages.</p>
           </div>
         </div>
       )}
@@ -439,11 +494,12 @@ export default function LanguageProvider({ children }) {
           onClick={openLanguageChooser}
           data-k710-no-translate
           aria-label={`Change language. Current language: ${language}`}
-          title="Change language"
+          title={languageError || 'Change language'}
         >
           <span aria-hidden="true">🌐</span>
           <span>{language}</span>
           {translationStatus === 'translating' && <span className="k710-language-spinner" aria-hidden="true" />}
+          {translationStatus === 'error' && <span aria-hidden="true">!</span>}
         </button>
       )}
     </LanguageContext.Provider>
