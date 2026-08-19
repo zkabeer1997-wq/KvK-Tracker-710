@@ -52,7 +52,15 @@ export async function PUT(request, { params }) {
     return NextResponse.json({ error: 'Invalid request.' }, { status: 400 });
   }
 
+  const title = typeof payload?.title === 'string' ? payload.title.trim() : '';
   const body = payload?.body;
+
+  if (!title) {
+    return NextResponse.json({ error: 'Guide title is required.' }, { status: 400 });
+  }
+  if (title.length > 160) {
+    return NextResponse.json({ error: 'Guide title is too long.' }, { status: 413 });
+  }
   if (typeof body !== 'string') {
     return NextResponse.json({ error: 'Guide text is required.' }, { status: 400 });
   }
@@ -64,7 +72,7 @@ export async function PUT(request, { params }) {
     const supabase = createAdminSupabaseClient();
     const { data, error } = await supabase
       .from('kingdom_guides')
-      .update({ body, updated_at: new Date().toISOString() })
+      .update({ title, body, updated_at: new Date().toISOString() })
       .eq('slug', slug)
       .select('slug, title, category, description, body, position, is_published, updated_at')
       .single();
