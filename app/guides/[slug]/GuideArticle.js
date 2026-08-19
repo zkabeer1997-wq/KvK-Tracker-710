@@ -9,6 +9,7 @@ export default function GuideArticle({ slug, memberId }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editing, setEditing] = useState(false);
+  const [draftTitle, setDraftTitle] = useState('');
   const [draft, setDraft] = useState('');
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState('');
@@ -26,6 +27,7 @@ export default function GuideArticle({ slug, memberId }) {
         if (!response.ok) throw new Error(result.error || 'Unable to load this guide.');
         if (cancelled) return;
         setGuide(result.guide);
+        setDraftTitle(result.guide?.title || '');
         setDraft(result.guide?.body || '');
         setIsAdmin(Boolean(result.isAdmin));
       } catch (err) {
@@ -39,6 +41,12 @@ export default function GuideArticle({ slug, memberId }) {
   }, [slug]);
 
   async function saveGuide() {
+    const nextTitle = draftTitle.trim();
+    if (!nextTitle) {
+      setError('Guide title cannot be blank.');
+      return;
+    }
+
     setSaving(true);
     setStatus('');
     setError('');
@@ -46,14 +54,15 @@ export default function GuideArticle({ slug, memberId }) {
       const response = await fetch(`/api/guides/${encodeURIComponent(slug)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body: draft }),
+        body: JSON.stringify({ title: nextTitle, body: draft }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Unable to save this guide.');
       setGuide(result.guide);
+      setDraftTitle(result.guide?.title || '');
       setDraft(result.guide?.body || '');
       setEditing(false);
-      setStatus('Guide saved. Changes are live immediately.');
+      setStatus('Guide title and text saved. Changes are live immediately.');
     } catch (err) {
       setError(err.message || 'Unable to save this guide.');
     } finally {
@@ -62,9 +71,11 @@ export default function GuideArticle({ slug, memberId }) {
   }
 
   function cancelEdit() {
+    setDraftTitle(guide?.title || '');
     setDraft(guide?.body || '');
     setEditing(false);
     setStatus('');
+    setError('');
   }
 
   if (loading) {
@@ -106,7 +117,21 @@ export default function GuideArticle({ slug, memberId }) {
 
         <header className="guide-header">
           <span className="k-mark">{guide.category}</span>
-          <h1 className="k-display">{guide.title}</h1>
+          {!editing ? (
+            <h1 className="k-display">{guide.title}</h1>
+          ) : (
+            <div className="guide-title-editor">
+              <label htmlFor="guide-title">Guide title</label>
+              <input
+                id="guide-title"
+                type="text"
+                value={draftTitle}
+                onChange={(event) => setDraftTitle(event.target.value)}
+                maxLength={160}
+                autoFocus
+              />
+            </div>
+          )}
           <p className="k-narrative">{guide.description}</p>
           <div className="guide-rule" aria-hidden="true" />
         </header>
@@ -123,7 +148,6 @@ export default function GuideArticle({ slug, memberId }) {
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
                 spellCheck="true"
-                autoFocus
               />
               <p>Plain text is preserved exactly, including paragraph breaks and lists.</p>
             </div>
@@ -136,7 +160,7 @@ export default function GuideArticle({ slug, memberId }) {
         {isAdmin && (
           <div className="guide-admin-actions">
             {!editing ? (
-              <button type="button" className="k-btn guide-edit" onClick={() => { setEditing(true); setStatus(''); }}>
+              <button type="button" className="k-btn guide-edit" onClick={() => { setEditing(true); setStatus(''); setError(''); }}>
                 Edit Guide
               </button>
             ) : (
@@ -168,6 +192,10 @@ export default function GuideArticle({ slug, memberId }) {
         .guide-header{max-width:780px;margin-bottom:30px}
         .guide-header h1{margin:9px 0 10px;font-size:clamp(32px,5.4vw,58px);line-height:1.02;letter-spacing:.055em;color:var(--parchment)}
         .guide-header p{margin:0;color:var(--parchment-dim);font-size:17px;line-height:1.65;max-width:65ch}
+        .guide-title-editor{margin:12px 0 14px}
+        .guide-title-editor label{display:block;margin-bottom:8px;font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--brass)}
+        .guide-title-editor input{display:block;width:100%;border:1px solid rgba(201,164,78,.38);background:#100f0d;color:var(--parchment);padding:14px 16px;font-family:var(--font-display);font-size:clamp(24px,4vw,42px);letter-spacing:.045em;outline:none}
+        .guide-title-editor input:focus{border-color:rgba(233,193,98,.78);box-shadow:0 0 0 2px rgba(201,164,78,.09)}
         .guide-rule{width:120px;height:1px;margin-top:24px;background:linear-gradient(90deg,var(--gold),transparent)}
         .guide-volume{position:relative;min-height:420px;padding:clamp(28px,4vw,48px) clamp(24px,5vw,58px);background:linear-gradient(135deg,rgba(45,35,24,.95),rgba(25,21,17,.98));border:1px solid rgba(201,164,78,.27);box-shadow:0 28px 70px rgba(0,0,0,.38),inset 0 1px rgba(255,255,255,.025)}
         .guide-volume:before{content:'';position:absolute;inset:10px;border:1px solid rgba(201,164,78,.11);pointer-events:none}
@@ -188,7 +216,7 @@ export default function GuideArticle({ slug, memberId }) {
         .guide-message.success{color:#c9edcf;border-color:rgba(120,205,137,.25);background:rgba(88,180,106,.06)}
         .guide-footer{display:flex;justify-content:space-between;gap:20px;margin-top:24px;padding-top:15px;border-top:1px solid rgba(201,164,78,.13);color:var(--t-muted);font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase}
         .guide-loading,.guide-error{margin-top:80px;color:var(--parchment-dim)}
-        @media(max-width:620px){.guide-inner{padding-top:72px}.guide-topbar{align-items:flex-start;flex-direction:column}.guide-header h1{font-size:34px}.guide-header p,.guide-body{font-size:15px}.guide-volume{padding:26px 20px 30px 28px;min-height:360px}.guide-editor textarea{min-height:440px}.guide-footer{flex-direction:column}.guide-admin-actions{align-items:stretch;flex-direction:column}.guide-edit,.guide-save,.guide-cancel{width:100%}}
+        @media(max-width:620px){.guide-inner{padding-top:72px}.guide-topbar{align-items:flex-start;flex-direction:column}.guide-header h1{font-size:34px}.guide-title-editor input{font-size:28px}.guide-header p,.guide-body{font-size:15px}.guide-volume{padding:26px 20px 30px 28px;min-height:360px}.guide-editor textarea{min-height:440px}.guide-footer{flex-direction:column}.guide-admin-actions{align-items:stretch;flex-direction:column}.guide-edit,.guide-save,.guide-cancel{width:100%}}
       `}</style>
     </main>
   );
