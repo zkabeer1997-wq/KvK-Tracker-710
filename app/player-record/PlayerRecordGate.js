@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { supabase } from '../../lib/supabaseClient';
 import MemberHub from '../../components/kingdom/world/MemberHub';
 
 export default function PlayerRecordGate({ banner }) {
@@ -21,7 +20,6 @@ export default function PlayerRecordGate({ banner }) {
     setReduced(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   }, []);
 
-  // Auth path is unchanged: same RPC, same arguments, same failure copy.
   async function handleUnlock(e) {
     e.preventDefault();
     setStatus('');
@@ -31,19 +29,22 @@ export default function PlayerRecordGate({ banner }) {
       setStatus('Please enter your Member ID.');
       return;
     }
+
     setLoading(true);
-    const { data, error } = await supabase.rpc('verify_page_pin', {
-      p_member_id: memberId,
-      p_pin: pin,
-    });
-    setLoading(false);
-    if (error) {
-      setIsError(true);
-      setStatus('Something went wrong: ' + error.message);
-      return;
-    }
-    if (data === true) {
-      setVerifiedMemberId(memberId);
+    try {
+      const response = await fetch('/api/member-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberId, pin }),
+      });
+      const data = await response.json();
+      if (!response.ok || data?.ok !== true) {
+        setIsError(true);
+        setStatus(data?.error || 'Unable to verify member access.');
+        return;
+      }
+
+      setVerifiedMemberId(data.memberId || memberId);
       if (reduced) {
         setUnlocked(true);
       } else {
@@ -53,9 +54,11 @@ export default function PlayerRecordGate({ banner }) {
           setOpening(false);
         }, 1500);
       }
-    } else {
+    } catch {
       setIsError(true);
-      setStatus('Incorrect PIN for this Member ID.');
+      setStatus('Unable to verify member access.');
+    } finally {
+      setLoading(false);
     }
   }
 
