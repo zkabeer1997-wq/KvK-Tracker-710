@@ -196,22 +196,6 @@ export default async function HomePage() {
           </div>
         </div>
       </div>
-
-      {/* FOOTER */}
-      <div className="wrap">
-        <div className="home-footer">
-          <div className="fmark">
-            <svg viewBox="0 0 40 40" fill="none"><path d="M20 3 L35 8 V19 C35 28 29 34 20 37 C11 34 5 28 5 19 V8 Z" stroke="#7c85a8" strokeWidth="1.6" /></svg>
-            <span className="fname">K710 Alliance &middot; Kingshot KvK Tracker</span>
-          </div>
-          <div className="flinks">
-            <Link href="/">Home</Link>
-            <Link href="/player-record">Rallies</Link>
-            <Link href="/interest">Interest</Link>
-            <Link href="/power-profile">Power Profile</Link>
-          </div>
-        </div>
-      </div>
     </main>
   );
 }
