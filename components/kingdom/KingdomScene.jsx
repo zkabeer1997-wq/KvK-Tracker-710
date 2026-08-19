@@ -2,10 +2,12 @@
 
 import { useEffect, useMemo, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { ACESFilmicToneMapping, PCFSoftShadowMap, SRGBColorSpace } from 'three';
+import KingdomAtmosphere from './KingdomAtmosphere';
 import KingdomGate from './KingdomGate';
 import KingdomTraveler from './KingdomTraveler';
 
-const NIGHT = '#070a16';
+const NIGHT = '#050812';
 
 function CameraRig({ hoveredRoad, phase, selectedRoad, active }) {
   const { camera } = useThree();
@@ -21,43 +23,52 @@ function CameraRig({ hoveredRoad, phase, selectedRoad, active }) {
     }
   }, [phase]);
 
-  useFrame(({ pointer }, delta) => {
+  useFrame(({ pointer, clock }, delta) => {
     if (active && phase === 'approach') approachElapsed.current += delta;
     if (phase === 'transitioning') transitionElapsed.current += delta;
 
-    const approachT = active ? Math.min(approachElapsed.current / 2.2, 1) : 0;
+    const approachT = active ? Math.min(approachElapsed.current / 2.55, 1) : 0;
+    const approachEase = 1 - Math.pow(1 - approachT, 4);
     const hoverDirection = hoveredRoad === 'left' ? -1 : hoveredRoad === 'right' ? 1 : 0;
+    const idleDrift = phase === 'idle' ? Math.sin(clock.getElapsedTime() * 0.25) * 0.05 : 0;
 
-    let goalX = pointer.x * 0.18 + hoverDirection * 0.46;
-    let goalY = 2.72 + pointer.y * 0.08;
-    let goalZ = 10.8 - approachT * 2.1;
-    let lookX = hoverDirection * 1.9;
-    let lookY = 1.65;
-    let lookZ = -3.4;
+    let goalX = pointer.x * 0.22 + hoverDirection * 0.58 + idleDrift;
+    let goalY = 3.25 - approachEase * 0.5 + pointer.y * 0.09;
+    let goalZ = 13.2 - approachEase * 3.55 - Math.abs(hoverDirection) * 0.22;
+    let lookX = hoverDirection * 2.35;
+    let lookY = 1.72;
+    let lookZ = -2.2 - approachEase * 2.15;
+    let goalFov = 48 - approachEase * 5.2;
+    let goalRoll = hoverDirection * -0.008;
 
     if (phase === 'transitioning') {
       const direction = selectedRoad === 'left' ? -1 : 1;
-      const t = Math.min(transitionElapsed.current / 1.25, 1);
-      const eased = 1 - Math.pow(1 - t, 3);
-      goalX = direction * (0.65 + eased * 3.0);
-      goalY = 2.55 - eased * 0.34;
-      goalZ = 8.65 - eased * 5.25;
-      lookX = direction * (2.2 + eased * 2.1);
-      lookY = 1.45;
-      lookZ = -5.2 - eased * 2.4;
+      const t = Math.min(transitionElapsed.current / 1.4, 1);
+      const eased = 1 - Math.pow(1 - t, 4);
+      goalX = direction * (0.7 + eased * 3.8);
+      goalY = 2.7 - eased * 0.52;
+      goalZ = 9.35 - eased * 8.0;
+      lookX = direction * (2.3 + eased * 2.25);
+      lookY = 1.46 - eased * 0.08;
+      lookZ = -5.0 - eased * 5.8;
+      goalFov = 42.8 + eased * 7.5;
+      goalRoll = direction * -0.022 * eased;
     }
 
-    const smoothing = 1 - Math.exp(-delta * (phase === 'transitioning' ? 3.8 : 2.5));
+    const smoothing = 1 - Math.exp(-delta * (phase === 'transitioning' ? 4.2 : 2.35));
     camera.position.x += (goalX - camera.position.x) * smoothing;
     camera.position.y += (goalY - camera.position.y) * smoothing;
     camera.position.z += (goalZ - camera.position.z) * smoothing;
+    camera.fov += (goalFov - camera.fov) * smoothing;
+    camera.updateProjectionMatrix();
 
-    const lookTarget = camera.userData.lookTarget || { x: 0, y: 1.65, z: -3.4 };
+    const lookTarget = camera.userData.lookTarget || { x: 0, y: 1.72, z: -2.2 };
     lookTarget.x += (lookX - lookTarget.x) * smoothing;
     lookTarget.y += (lookY - lookTarget.y) * smoothing;
     lookTarget.z += (lookZ - lookTarget.z) * smoothing;
     camera.userData.lookTarget = lookTarget;
     camera.lookAt(lookTarget.x, lookTarget.y, lookTarget.z);
+    camera.rotation.z += (goalRoll - camera.rotation.z) * smoothing;
   });
 
   return null;
@@ -82,52 +93,69 @@ function TravelerRig({ phase, selectedRoad, active }) {
 
     if (active && phase === 'approach') {
       approachElapsed.current += delta;
-      const t = Math.min(approachElapsed.current / 2.2, 1);
-      const eased = 1 - Math.pow(1 - t, 3);
-      group.current.position.z = 6.2 - eased * 2.75;
-      group.current.position.x = Math.sin(t * Math.PI) * 0.08;
-      group.current.rotation.y = Math.sin(t * Math.PI) * -0.03;
+      const t = Math.min(approachElapsed.current / 2.55, 1);
+      const eased = 1 - Math.pow(1 - t, 4);
+      group.current.position.z = 7.55 - eased * 3.82;
+      group.current.position.x = Math.sin(t * Math.PI) * 0.07;
+      group.current.rotation.y = Math.sin(t * Math.PI) * -0.025;
       return;
     }
 
     if (phase === 'transitioning') {
       transitionElapsed.current += delta;
       const direction = selectedRoad === 'left' ? -1 : 1;
-      const t = Math.min(transitionElapsed.current / 1.25, 1);
-      const eased = 1 - Math.pow(1 - t, 3);
-      group.current.position.x = direction * (0.08 + eased * 3.25);
-      group.current.position.z = 3.45 - eased * 8.15;
-      group.current.rotation.y = direction * eased * 0.36;
+      const t = Math.min(transitionElapsed.current / 1.4, 1);
+      const eased = 1 - Math.pow(1 - t, 4);
+      group.current.position.x = direction * (0.06 + eased * 4.2);
+      group.current.position.z = 3.73 - eased * 11.6;
+      group.current.rotation.y = direction * eased * 0.42;
       return;
     }
 
-    group.current.position.z += (3.45 - group.current.position.z) * Math.min(delta * 4, 1);
+    group.current.position.z += (3.73 - group.current.position.z) * Math.min(delta * 4, 1);
     group.current.position.x += (0 - group.current.position.x) * Math.min(delta * 4, 1);
     group.current.rotation.y += (0 - group.current.rotation.y) * Math.min(delta * 4, 1);
   });
 
   return (
-    <group ref={group} position={[0, 0, 6.2]}>
+    <group ref={group} position={[0, 0, 7.55]}>
       <KingdomTraveler walking={active && (phase === 'approach' || phase === 'transitioning')} />
     </group>
   );
 }
 
-function SceneContents({ hoveredRoad, phase, selectedRoad, active }) {
+function SceneContents({ hoveredRoad, phase, selectedRoad, active, mobile }) {
   const leftActive = hoveredRoad === 'left' || selectedRoad === 'left';
   const rightActive = hoveredRoad === 'right' || selectedRoad === 'right';
+  const activeRoad = selectedRoad || hoveredRoad;
 
   return (
     <>
       <color attach="background" args={[NIGHT]} />
-      <fog attach="fog" args={[NIGHT, 10, phase === 'transitioning' ? 24 : 34]} />
+      <fog attach="fog" args={[NIGHT, phase === 'transitioning' ? 7.5 : 12, phase === 'transitioning' ? 27 : 39]} />
 
-      <ambientLight intensity={0.44} color="#53618f" />
-      <hemisphereLight args={['#40507f', '#050711', 0.7]} />
-      <directionalLight position={[-8, 11, 8]} intensity={0.95} color="#8191c2" />
-      <pointLight position={[-4, 3.1, -4.5]} color="#d9a94e" intensity={leftActive ? 3.1 : 1.35} distance={17} decay={2} />
-      <pointLight position={[4, 3.1, -4.5]} color="#7594c8" intensity={rightActive ? 3.1 : 1.25} distance={17} decay={2} />
+      <ambientLight intensity={0.24} color="#53618f" />
+      <hemisphereLight args={['#556895', '#03050c', 0.58]} />
+      <directionalLight
+        position={[-10, 13, 8]}
+        intensity={1.32}
+        color="#91a2cf"
+        castShadow={!mobile}
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+        shadow-camera-left={-15}
+        shadow-camera-right={15}
+        shadow-camera-top={14}
+        shadow-camera-bottom={-8}
+        shadow-camera-near={1}
+        shadow-camera-far={40}
+        shadow-bias={-0.0006}
+      />
+      <pointLight position={[0, 6.5, 5.5]} color="#8c72a4" intensity={0.58} distance={24} decay={2} />
+      <pointLight position={[-4.2, 3.2, -4.6]} color="#d9a94e" intensity={leftActive ? 4.3 : 1.18} distance={19} decay={2} />
+      <pointLight position={[4.2, 3.2, -4.6]} color="#7594c8" intensity={rightActive ? 4.1 : 1.08} distance={19} decay={2} />
 
+      <KingdomAtmosphere activeRoad={activeRoad} />
       <KingdomGate hoveredRoad={hoveredRoad} selectedRoad={selectedRoad} />
       <TravelerRig phase={phase} selectedRoad={selectedRoad} active={active} />
       <CameraRig hoveredRoad={hoveredRoad} phase={phase} selectedRoad={selectedRoad} active={active} />
@@ -136,19 +164,33 @@ function SceneContents({ hoveredRoad, phase, selectedRoad, active }) {
 }
 
 export default function KingdomScene({ hoveredRoad, phase, selectedRoad, active }) {
+  const mobile = useMemo(() => typeof window !== 'undefined' && window.innerWidth < 760, []);
   const dpr = useMemo(
-    () => (typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, window.innerWidth < 700 ? 1.25 : 1.55) : 1),
-    []
+    () => (typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, mobile ? 1.22 : 1.58) : 1),
+    [mobile]
   );
 
   return (
     <Canvas
       dpr={dpr}
-      gl={{ antialias: true, powerPreference: 'high-performance', alpha: false }}
-      camera={{ fov: 44, near: 0.1, far: 90, position: [0, 2.72, 10.8] }}
-      shadows={false}
+      shadows={!mobile}
+      gl={{ antialias: !mobile, powerPreference: 'high-performance', alpha: false }}
+      camera={{ fov: 48, near: 0.1, far: 100, position: [0, 3.25, 13.2] }}
+      performance={{ min: 0.65 }}
+      onCreated={({ gl }) => {
+        gl.toneMapping = ACESFilmicToneMapping;
+        gl.toneMappingExposure = mobile ? 1.08 : 1.15;
+        gl.outputColorSpace = SRGBColorSpace;
+        if (!mobile) gl.shadowMap.type = PCFSoftShadowMap;
+      }}
     >
-      <SceneContents hoveredRoad={hoveredRoad} phase={phase} selectedRoad={selectedRoad} active={active} />
+      <SceneContents
+        hoveredRoad={hoveredRoad}
+        phase={phase}
+        selectedRoad={selectedRoad}
+        active={active}
+        mobile={mobile}
+      />
     </Canvas>
   );
 }
