@@ -1,0 +1,287 @@
+/* Route-aware 3D district stage. This is the cinematic bridge between the homepage world and task UI. */
+.route-realm-stage {
+  position: relative;
+  isolation: isolate;
+  height: clamp(300px, 34vw, 390px);
+  min-height: 300px;
+  overflow: hidden;
+  background: #132142;
+  border-bottom: 1px solid rgba(226, 183, 92, 0.22);
+  color: var(--parchment);
+}
+
+.route-realm-stage.route-realm-compact {
+  height: clamp(190px, 22vw, 235px);
+  min-height: 190px;
+}
+
+.route-realm-canvas,
+.route-realm-canvas > div,
+.route-realm-canvas canvas,
+.route-realm-loading,
+.route-realm-vignette {
+  position: absolute !important;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.route-realm-canvas canvas {
+  display: block;
+  cursor: crosshair;
+  touch-action: pan-y;
+}
+
+.route-realm-loading {
+  background:
+    radial-gradient(circle at 72% 42%, rgba(143, 185, 238, 0.16), transparent 32%),
+    radial-gradient(circle at 28% 58%, rgba(226, 183, 92, 0.12), transparent 34%),
+    #132142;
+}
+
+.route-realm-vignette {
+  z-index: 2;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(8, 16, 35, 0.92) 0%, rgba(8, 16, 35, 0.72) 28%, rgba(8, 16, 35, 0.2) 56%, rgba(8, 16, 35, 0.08) 100%),
+    linear-gradient(180deg, rgba(7, 14, 31, 0.08) 44%, rgba(7, 14, 31, 0.76) 100%);
+}
+
+.route-realm-dragon-forge .route-realm-vignette {
+  background:
+    linear-gradient(90deg, rgba(25, 13, 22, 0.93) 0%, rgba(25, 13, 22, 0.7) 30%, rgba(25, 13, 22, 0.16) 62%, rgba(25, 13, 22, 0.05) 100%),
+    linear-gradient(180deg, rgba(18, 10, 18, 0.02) 46%, rgba(18, 10, 18, 0.78) 100%);
+}
+
+.route-realm-copy {
+  position: relative;
+  z-index: 3;
+  width: min(1180px, calc(100% - 48px));
+  height: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 18px 0 24px;
+  pointer-events: none;
+}
+
+.route-realm-copy > * {
+  max-width: 560px;
+}
+
+.route-realm-district {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  color: var(--gold-bright);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.route-realm-district::before {
+  content: '';
+  width: 30px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.8;
+}
+
+.route-realm-copy h2 {
+  margin: 0;
+  color: #fff8e8;
+  font-family: var(--font-display);
+  font-size: clamp(31px, 4.7vw, 58px);
+  font-weight: 900;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  text-wrap: balance;
+  text-shadow: 0 3px 8px rgba(4, 9, 23, 0.34);
+}
+
+.route-realm-copy p {
+  max-width: 55ch;
+  margin: 13px 0 0;
+  color: #d2dbed;
+  font-size: 14.5px;
+  line-height: 1.62;
+  text-wrap: pretty;
+}
+
+.route-realm-hint {
+  margin-top: 22px;
+  color: rgba(207, 219, 240, 0.72);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.route-realm-seal {
+  position: absolute;
+  z-index: 3;
+  right: clamp(22px, 4vw, 54px);
+  bottom: clamp(18px, 3vw, 34px);
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(244, 207, 122, 0.46);
+  transform: rotate(45deg);
+  color: var(--gold-bright);
+  background: rgba(12, 25, 53, 0.56);
+  box-shadow: inset 0 0 0 5px rgba(12, 25, 53, 0.5);
+  pointer-events: none;
+}
+
+.route-realm-seal::before,
+.route-realm-seal::after {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border: 1px solid rgba(244, 207, 122, 0.18);
+}
+
+.route-realm-seal::after {
+  inset: 14px;
+  border-color: rgba(143, 185, 238, 0.16);
+}
+
+.route-realm-seal span {
+  transform: rotate(-45deg);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.route-realm-compact .route-realm-copy h2 {
+  font-size: clamp(27px, 3.6vw, 42px);
+}
+
+.route-realm-compact .route-realm-copy p {
+  margin-top: 8px;
+  font-size: 13.5px;
+}
+
+.route-realm-compact .route-realm-hint {
+  display: none;
+}
+
+.route-realm-compact .route-realm-seal {
+  width: 52px;
+  height: 52px;
+}
+
+/* Let task surfaces feel like rooms connected to the stage, not separate dark pages. */
+.route-realm-stage + .page.public-page,
+.route-realm-stage + .inner-gate-page,
+.route-realm-stage + .command-deck-page,
+.route-realm-stage + .command-hall-page,
+.route-realm-stage + .admin-shell {
+  border-top: 0;
+}
+
+.route-realm-stage + .page.public-page {
+  background:
+    radial-gradient(circle at 76% 0%, rgba(143, 185, 238, 0.10), transparent 31%),
+    linear-gradient(180deg, #101d3b 0%, #132142 28%, #0e1935 100%);
+}
+
+.route-realm-stage + .inner-gate-page,
+.route-realm-stage + .command-deck-page,
+.route-realm-stage + .command-hall-page {
+  min-height: calc(100vh - 260px);
+}
+
+.route-realm-stage + .admin-shell {
+  min-height: calc(100vh - 230px);
+}
+
+.route-realm-stage[data-active='false'] .route-realm-canvas {
+  opacity: 0.94;
+}
+
+@media (max-width: 760px) {
+  .route-realm-stage {
+    height: 300px;
+    min-height: 300px;
+  }
+
+  .route-realm-stage.route-realm-compact {
+    height: 190px;
+    min-height: 190px;
+  }
+
+  .route-realm-vignette,
+  .route-realm-dragon-forge .route-realm-vignette {
+    background:
+      linear-gradient(90deg, rgba(8, 16, 35, 0.88) 0%, rgba(8, 16, 35, 0.58) 58%, rgba(8, 16, 35, 0.18) 100%),
+      linear-gradient(180deg, rgba(7, 14, 31, 0.08) 38%, rgba(7, 14, 31, 0.86) 100%);
+  }
+
+  .route-realm-copy {
+    width: calc(100% - 32px);
+    justify-content: flex-end;
+    padding-bottom: 30px;
+  }
+
+  .route-realm-copy > * {
+    max-width: calc(100% - 18px);
+  }
+
+  .route-realm-copy h2 {
+    font-size: clamp(28px, 9vw, 42px);
+  }
+
+  .route-realm-copy p {
+    max-width: 44ch;
+    font-size: 13px;
+    line-height: 1.52;
+  }
+
+  .route-realm-hint {
+    display: none;
+  }
+
+  .route-realm-seal {
+    top: 18px;
+    right: 18px;
+    bottom: auto;
+    width: 48px;
+    height: 48px;
+  }
+
+  .route-realm-seal::after {
+    display: none;
+  }
+
+  .route-realm-compact .route-realm-copy {
+    justify-content: center;
+    padding: 14px 70px 14px 0;
+  }
+
+  .route-realm-compact .route-realm-copy h2 {
+    font-size: 27px;
+  }
+
+  .route-realm-compact .route-realm-copy p {
+    display: none;
+  }
+
+  .route-realm-stage + .inner-gate-page,
+  .route-realm-stage + .command-deck-page,
+  .route-realm-stage + .command-hall-page {
+    min-height: calc(100vh - 190px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-realm-canvas canvas {
+    cursor: default;
+  }
+}
