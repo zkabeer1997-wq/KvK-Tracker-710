@@ -5,13 +5,12 @@ import { useLoader } from '@react-three/fiber';
 import { Box3, Color, MeshStandardMaterial, Vector3 } from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 
-const BASE = 'https://raw.githubusercontent.com/ETdoFresh/kenney.nl/master/castle-kit-1.0/Models';
 const ASSETS = {
-  gatehouse: `${BASE}/wallNarrowGate.obj`,
-  wall: `${BASE}/wallNarrow.obj`,
-  trebuchet: `${BASE}/siegeTrebuchet.obj`,
-  sword: `${BASE}/sword.obj`,
-  sentry: `${BASE}/knightBlue.obj`,
+  gatehouse: '/api/kingdom-assets/gatehouse',
+  wall: '/api/kingdom-assets/wall',
+  trebuchet: '/api/kingdom-assets/trebuchet',
+  sword: '/api/kingdom-assets/sword',
+  sentry: '/api/kingdom-assets/sentry',
 };
 
 function materialVariant(baseHex, sourceName, options) {
