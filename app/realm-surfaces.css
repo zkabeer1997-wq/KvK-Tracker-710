@@ -1,0 +1,115 @@
+body[data-realm='outer-gate'] { --realm-accent: #e2b75c; --realm-accent-rgb: 226, 183, 92; }
+body[data-realm='inner-keep'] { --realm-accent: #8fb9ee; --realm-accent-rgb: 143, 185, 238; }
+body[data-realm='training-yard'] { --realm-accent: #9aba87; --realm-accent-rgb: 154, 186, 135; }
+body[data-realm='armory'] { --realm-accent: #e2b75c; --realm-accent-rgb: 226, 183, 92; }
+body[data-realm='ministers-hall'] { --realm-accent: #c5a0ef; --realm-accent-rgb: 197, 160, 239; }
+body[data-realm='dragon-forge'] { --realm-accent: #f08b58; --realm-accent-rgb: 240, 139, 88; }
+body[data-realm='war-room'] { --realm-accent: #e2b75c; --realm-accent-rgb: 226, 183, 92; }
+body[data-realm='frontier'] { --realm-accent: #8fb9ee; --realm-accent-rgb: 143, 185, 238; }
+
+body[data-realm] .form-section-header > span,
+body[data-realm] .section-title-row > span,
+body[data-realm] .ledger-block-kicker,
+body[data-realm] .public-kicker,
+body[data-realm] .panel-heading > div > span,
+body[data-realm] .rally-sidebar-header span,
+body[data-realm] .minister-day-badge,
+body[data-realm] .interest-chapter-head h3 {
+  color: var(--realm-accent);
+}
+
+body[data-realm] .public-form-card,
+body[data-realm] .public-intro,
+body[data-realm] .public-section,
+body[data-realm] .ledger-block,
+body[data-realm] .form-block,
+body[data-realm] .prep-day-grid > section,
+body[data-realm] .command-deck-tile,
+body[data-realm] .inner-gate-card,
+body[data-realm] .command-hall-card {
+  border-color: rgba(var(--realm-accent-rgb), 0.24);
+}
+
+body[data-realm] .public-section,
+body[data-realm] .ledger-block,
+body[data-realm] .form-block,
+body[data-realm] .prep-day-grid > section {
+  box-shadow: inset 0 1px 0 rgba(var(--realm-accent-rgb), 0.13);
+}
+
+body[data-realm] input:focus,
+body[data-realm] select:focus,
+body[data-realm] textarea:focus,
+body[data-realm] .public-form-card input:focus,
+body[data-realm] .public-form-card select:focus,
+body[data-realm] .ledger-select select:focus,
+body[data-realm] .ledger-select input:focus,
+body[data-realm] .inner-gate-form input:focus,
+body[data-realm] .command-hall-field input:focus {
+  border-color: var(--realm-accent);
+  box-shadow: 0 0 0 3px rgba(var(--realm-accent-rgb), 0.18);
+}
+
+body[data-realm] .hero-chip.selected,
+body[data-realm] .availability-choice.selected,
+body[data-realm] .prep-slot.on {
+  border-color: var(--realm-accent);
+  background: rgba(var(--realm-accent-rgb), 0.18);
+}
+
+body[data-realm] .public-form-card button[type='submit'],
+body[data-realm] .submit-btn,
+body[data-realm] .inner-gate-submit,
+body[data-realm] .command-hall-submit {
+  background: var(--realm-accent);
+  border-color: var(--realm-accent);
+  color: #10182f;
+}
+
+body[data-realm] .public-form-card button[type='submit']:hover,
+body[data-realm] .submit-btn:hover,
+body[data-realm] .inner-gate-submit:hover,
+body[data-realm] .command-hall-submit:hover {
+  filter: brightness(1.09);
+}
+
+body[data-realm] .interest-progress-item:hover,
+body[data-realm] .interest-progress-item:focus-visible,
+body[data-realm] .command-deck-tile:hover,
+body[data-realm] .command-deck-tile:focus-visible {
+  border-color: var(--realm-accent);
+}
+
+body[data-realm] .interest-progress-item span,
+body[data-realm] .interest-chapter-num,
+body[data-realm] .command-deck-tile h2 {
+  color: var(--realm-accent);
+  -webkit-text-stroke-color: var(--realm-accent);
+}
+
+body[data-realm='dragon-forge'] .public-form-card {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(240, 139, 88, 0.08), transparent 30%),
+    #17284b;
+}
+
+body[data-realm='ministers-hall'] .public-form-card {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(197, 160, 239, 0.075), transparent 31%),
+    #17284b;
+}
+
+body[data-realm='training-yard'] .public-form-card {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(154, 186, 135, 0.07), transparent 30%),
+    #17284b;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-realm] .public-form-card button[type='submit']:hover,
+  body[data-realm] .submit-btn:hover,
+  body[data-realm] .inner-gate-submit:hover,
+  body[data-realm] .command-hall-submit:hover {
+    filter: none;
+  }
+}
