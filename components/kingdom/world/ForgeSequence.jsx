@@ -331,7 +331,7 @@ export default function ForgeSequence({ onDone, reducedMotion = false }) {
 
       <div className="forge2-copy">
         <div className="k-mark forge2-kicker">Kingdom 710</div>
-        <div className="k-display forge2-title">Three Warbands. One Unbroken Watch.</div>
+        <div className="k-display forge2-title">Three Alliances. One Kingdom.</div>
       </div>
 
       <button type="button" className="forge2-skip k-ui" onClick={finish}>

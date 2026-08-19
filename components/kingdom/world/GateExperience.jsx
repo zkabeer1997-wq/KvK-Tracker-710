@@ -104,7 +104,7 @@ export default function GateExperience() {
             <span className="k-mark">Kingdom 710</span>
             <h1 className="k-display gate-title">The Gate Stands Open</h1>
             <p className="k-narrative gate-lede">
-              Three warbands. One unbroken watch. Choose the road that brings you in.
+              Three alliances. One kingdom. Choose the road that brings you in.
             </p>
           </header>
           <nav className="gate-roads" aria-label="Choose your road">
@@ -140,7 +140,7 @@ export default function GateExperience() {
       <div className={`k-scene-content gate-content ${phase === 'travelling' ? 'is-travelling' : ''}`}>
         <header className="gate-head">
           <span className="k-mark">Kingdom 710</span>
-          <h1 className="k-display gate-title">Three Warbands. One Unbroken Watch.</h1>
+          <h1 className="k-display gate-title">Three Alliances. One Kingdom.</h1>
         </header>
 
         {/* Environmental signage: anchored low and to the sides so it reads
