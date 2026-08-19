@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">Wavebound sail and charm emblem</title>
+  <desc id="desc">A cream and blue fantasy sail with a jeweled blue charm medallion.</desc>
+  <defs>
+    <linearGradient id="wood" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3d2418"/>
+      <stop offset=".48" stop-color="#8b4e27"/>
+      <stop offset="1" stop-color="#2a1710"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff0a3"/>
+      <stop offset=".2" stop-color="#e5b444"/>
+      <stop offset=".58" stop-color="#9d6419"/>
+      <stop offset="1" stop-color="#f1ca63"/>
+    </linearGradient>
+    <linearGradient id="sail" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff9e8"/>
+      <stop offset=".55" stop-color="#e6dcc1"/>
+      <stop offset="1" stop-color="#b9a98a"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2c78d8"/>
+      <stop offset=".55" stop-color="#12428e"/>
+      <stop offset="1" stop-color="#081e53"/>
+    </linearGradient>
+    <radialGradient id="gem" cx="40%" cy="30%" r="75%">
+      <stop offset="0" stop-color="#d7fbff"/>
+      <stop offset=".22" stop-color="#58d7ff"/>
+      <stop offset=".55" stop-color="#1184df"/>
+      <stop offset="1" stop-color="#062a78"/>
+    </radialGradient>
+    <filter id="shadow" x="-35%" y="-35%" width="170%" height="170%">
+      <feDropShadow dx="0" dy="7" stdDeviation="6" flood-color="#000" flood-opacity=".58"/>
+    </filter>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <path d="M66 23h8v211h-8z" fill="url(#wood)"/>
+    <path d="M59 27l11-18 11 18-11 8z" fill="url(#gold)" stroke="#6b410f" stroke-width="2"/>
+    <path d="M32 43h190v10H32z" rx="5" fill="url(#wood)" stroke="#b17a32" stroke-width="2"/>
+    <path d="M38 47c15 5 31 10 46 12 42 7 86 0 129-8-3 28-3 55 0 82 3 27 10 50 17 69-40 15-78 19-112 15-34-4-61-14-80-23 9-28 13-53 13-76 0-28-5-52-13-71z" fill="url(#sail)" stroke="url(#gold)" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M40 50c14 4 24 7 38 9-5 24-6 49-4 73 2 28 7 52 13 72-19-5-35-11-49-17 8-25 11-49 11-70 0-24-3-46-9-67z" fill="url(#blue)" opacity=".98"/>
+    <path d="M181 55c10-1 20-3 30-5-3 28-3 55 0 82 3 26 8 48 15 67-13 4-25 7-37 10-7-23-11-47-12-73-1-29 1-56 4-81z" fill="url(#blue)" opacity=".98"/>
+    <path d="M80 60c38 6 69 3 101-2M77 95c36 6 70 4 102-1M76 132c35 5 69 5 103 1M80 169c35 6 70 7 104 1" fill="none" stroke="#9f9279" stroke-width="1.6" opacity=".34"/>
+    <path d="M208 21c16 4 28 12 39 24-17-3-31 1-43 9l4-33z" fill="url(#blue)" stroke="url(#gold)" stroke-width="3"/>
+
+    <g transform="translate(126 127)">
+      <path d="M0-54l9 16 19-7-6 19 17 10-17 10 6 19-19-7-9 16-9-16-19 7 6-19-17-10 17-10-6-19 19 7z" fill="url(#gold)" stroke="#69410f" stroke-width="2"/>
+      <circle r="47" fill="#074b75" stroke="url(#gold)" stroke-width="7"/>
+      <circle r="36" fill="#0a759a" stroke="#f0c860" stroke-width="2.5"/>
+      <path d="M0-32l7 20 21-4-16 15 13 17-21-7-4 22-4-22-21 7 13-17-16-15 21 4z" fill="url(#gold)" stroke="#7d4d12" stroke-width="1.8"/>
+      <path d="M0-20l13 12 1 18L0 23-14 10l1-18z" fill="url(#gem)" stroke="#d8f8ff" stroke-width="2" filter="url(#glow)"/>
+      <path d="M0-20L0 23M-13-8L14 10M13-8L-14 10" stroke="#d9fbff" stroke-width="1" opacity=".65"/>
+    </g>
+
+    <path d="M116 58c4-9 9-14 15-14s11 5 15 14l-6 6c-3-7-6-10-9-10s-6 3-9 10z" fill="url(#gold)" stroke="#6e430f" stroke-width="2"/>
+  </g>
+</svg>
