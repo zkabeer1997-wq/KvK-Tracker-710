@@ -932,63 +932,235 @@
 .gatehouse-doors.is-open .gatehouse-door-l { transform: translateX(-100%); }
 .gatehouse-doors.is-open .gatehouse-door-r { transform: translateX(100%); }
 .gatehouse-doors.is-open .gatehouse-doorlight { opacity: 1; }
-
 /* ============================================================
    THE MUSTER HALL
+   A room, not a grid. Stone pilasters frame the chamber, the
+   kingdom crest is cut into the back wall, two standards hang
+   from iron rods, braziers stand deep in the room, and the
+   stations are objects on a receding floor.
    ============================================================ */
-.muster { padding: 104px 20px 80px; }
-.muster-art {
+.muster { padding: 0; display: flex; align-items: stretch; }
+.muster-wall {
   background:
-    radial-gradient(ellipse 60% 40% at 50% 8%, rgba(201,164,78,0.13), transparent 64%),
-    linear-gradient(180deg, #080a12 0%, #12100c 44%, #0a0b12 100%);
+    radial-gradient(ellipse 54% 40% at 50% 2%, rgba(201,164,78,0.16), transparent 66%),
+    linear-gradient(180deg, #05060b 0%, #171208 40%, #0b0a10 100%);
 }
-.muster-art::after {
-  content: ''; position: absolute; inset: 0; opacity: 0.42;
-  background: repeating-linear-gradient(0deg, transparent 0 54px, rgba(255,255,255,0.026) 54px 55px);
-  mask-image: linear-gradient(180deg, #000 0%, transparent 60%);
-  -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 60%);
+/* coursed stone, fading out before the floor line */
+.muster-wall::after {
+  content: ''; position: absolute; inset: 0 0 52% 0; opacity: 0.55;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 46px, rgba(255,255,255,0.035) 46px 47px),
+    repeating-linear-gradient(90deg, transparent 0 92px, rgba(255,255,255,0.025) 92px 93px);
+  mask-image: linear-gradient(180deg, #000 30%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, #000 30%, transparent 100%);
 }
-.muster-fire {
-  position: absolute; top: 12%; width: 240px; height: 240px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(226,105,42,0.26), transparent 68%);
-  animation: torch-breathe 3.8s ease-in-out infinite;
-}
-.muster-fire-l { left: 3%; }
-.muster-fire-r { right: 3%; animation-delay: -1.9s; }
 
-.muster-inner { position: relative; z-index: 6; width: min(1180px, 100%); margin: 0 auto; }
-.muster-head { text-align: center; margin-bottom: clamp(28px, 5vh, 52px); }
-.muster-title { margin: 12px 0 0; font-size: clamp(24px, 3.8vw, 42px); letter-spacing: 0.08em; }
-.muster-lede { margin: 12px 0 0; }
+/* stone pilasters framing the chamber */
+.muster-pillar {
+  position: absolute; top: 0; height: 43%; width: clamp(46px, 5.6vw, 92px); z-index: 2;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,0.62), rgba(120,116,104,0.26) 42%, rgba(150,146,132,0.30) 56%, rgba(0,0,0,0.68)),
+    repeating-linear-gradient(0deg, transparent 0 58px, rgba(0,0,0,0.34) 58px 61px);
+}
+.muster-pillar-l { left: 0; }
+.muster-pillar-r { right: 0; }
+/* capital: the pilaster meets the floor with a flared block */
+.muster-pillar::after {
+  content: ''; position: absolute; left: -12%; right: -12%; bottom: 0; height: 26px;
+  background: linear-gradient(180deg, rgba(150,146,132,0.34), rgba(0,0,0,0.72));
+  box-shadow: 0 10px 26px rgba(0,0,0,0.6);
+}
 
-.stations { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(12px, 1.8vw, 22px); }
-.station {
-  position: relative; display: flex; flex-direction: column; text-decoration: none;
-  padding: 10px 14px 20px;
-  border: 1px solid transparent; border-bottom: 1px solid var(--edge);
-  background: linear-gradient(180deg, transparent, rgba(8,10,17,0.5));
-  transition: transform var(--t-ui) var(--ease-cine), background var(--t-ui), border-color var(--t-ui);
+/* the kingdom crest, cut into the back wall above the hall */
+.muster-crest {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  top: clamp(10px, 1.6vh, 24px); width: clamp(72px, 7.4vw, 108px); height: auto; z-index: 3;
+  opacity: 0.9;
 }
-.station:hover, .station:focus-visible, .station[data-hot='true'] {
-  transform: translateY(-6px);
-  background: linear-gradient(180deg, rgba(201,164,78,0.05), rgba(8,10,17,0.72));
-  border-bottom-color: var(--gold-aged);
+
+/* two standards on iron rods, flanking the centre so the wall reads wide */
+.muster-banner {
+  position: absolute; top: clamp(52px, 8vh, 96px); z-index: 3;
+  width: clamp(46px, 5vw, 76px); height: clamp(180px, 30vh, 290px);
+  clip-path: polygon(0 0, 100% 0, 100% 88%, 50% 100%, 0 88%);
+  box-shadow: 0 26px 60px rgba(0,0,0,0.66);
 }
+.muster-banner-l { left: clamp(78px, 15vw, 250px); }
+.muster-banner-r { right: clamp(78px, 15vw, 250px); }
+/* iron rod the cloth hangs from */
+.muster-banner::before {
+  content: ''; position: absolute; left: -34%; right: -34%; top: -9px; height: 7px; border-radius: 4px;
+  background: linear-gradient(180deg, #8d94ab, #3b4157 55%, #171a26);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.7);
+}
+/* cloth curvature + brass hem */
+.muster-banner::after {
+  content: ''; position: absolute; inset: 0;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,0.5), transparent 26%, rgba(255,255,255,0.11) 48%, transparent 70%, rgba(0,0,0,0.52)),
+    linear-gradient(180deg, transparent 76%, rgba(201,164,78,0.5) 78%, rgba(201,164,78,0.5) 81%, transparent 83%);
+}
+.muster-banner[data-band='710'] { background: linear-gradient(180deg, #c1922f, #4a3712); }
+.muster-banner[data-band='RED'] { background: linear-gradient(180deg, #96263a, #3f0e18); }
+.muster-banner[data-band='SKY'] { background: linear-gradient(180deg, #3a68a8, #142b48); }
+
+/* braziers standing deep in the room, near the back wall */
+.muster-brazier {
+  position: absolute; bottom: 46%; z-index: 4;
+  width: clamp(32px, 3.2vw, 48px); height: clamp(46px, 5.2vh, 68px);
+}
+.muster-brazier-l { left: clamp(70px, 8vw, 140px); }
+.muster-brazier-r { right: clamp(70px, 8vw, 140px); }
+/* iron bowl on a stem, with a rim catching the firelight */
+.muster-brazier::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 14%; height: 52%;
+  clip-path: polygon(38% 100%, 62% 100%, 84% 30%, 100% 0, 0 0, 16% 30%);
+  background:
+    linear-gradient(180deg, #6a5f4c, #2b2620 58%, #131210);
+}
+/* splayed tripod foot planted on the floor */
+.muster-foot {
+  position: absolute; left: 16%; right: 16%; bottom: 0; height: 16%;
+  clip-path: polygon(0 100%, 100% 100%, 68% 0, 32% 0);
+  background: linear-gradient(180deg, #2c2721, #100f0d);
+}
+.muster-foot::after {
+  content: ''; position: absolute; left: -70%; right: -70%; bottom: -7px; height: 14px;
+  background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(0,0,0,0.8), transparent 70%);
+  filter: blur(3px);
+}
+/* light the brazier throws down onto the floor */
+.muster-brazier::before {
+  content: ''; position: absolute; left: -420%; right: -420%; bottom: -190px; height: 300px;
+  background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(226,132,52,0.22), transparent 70%);
+}
+.muster-flame {
+  position: absolute; left: 50%; bottom: 44%; transform: translateX(-50%);
+  width: 230%; height: 230%;
+  background:
+    radial-gradient(ellipse 16% 22% at 50% 66%, rgba(255,246,214,0.95), transparent 70%),
+    radial-gradient(ellipse 32% 42% at 50% 64%, rgba(255,201,116,0.8), rgba(232,118,40,0.45) 40%, rgba(150,48,16,0.14) 60%, transparent 76%);
+  animation: torch-breathe 3.4s ease-in-out infinite;
+}
+.muster-brazier-r .muster-flame { animation-delay: -1.7s; }
+
+/* the floor the objects stand on */
+.muster-floor {
+  position: absolute; left: -30%; right: -30%; bottom: 0; height: 58%;
+  pointer-events: none; z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(46,36,21,0) 0%, rgba(44,34,19,0.9) 12%, rgba(10,9,12,0.99) 74%),
+    repeating-linear-gradient(90deg, transparent 0 72px, rgba(201,164,78,0.06) 72px 74px);
+  transform: perspective(620px) rotateX(61deg);
+  transform-origin: 50% 0;
+}
+/* warm horizon where the wall meets the floor */
+.muster-floor::before {
+  content: ''; position: absolute; left: 0; right: 0; top: -4px; height: 120px;
+  background: linear-gradient(180deg, rgba(214,150,66,0.2), transparent);
+  filter: blur(10px);
+}
+
+.muster-inner {
+  position: relative; z-index: 6;
+  width: min(1400px, 100%); margin: 0 auto;
+  padding: clamp(150px, 20vh, 232px) clamp(16px, 2vw, 30px) clamp(24px, 5vh, 52px);
+  display: flex; flex-direction: column; flex: 1;
+}
+.muster-head { text-align: center; }
+/* quiet header: the room is the subject, not the greeting */
+.muster-title {
+  margin: 10px 0 0; font-size: clamp(17px, 2vw, 26px);
+  letter-spacing: 0.20em; color: var(--parchment-dim); font-weight: 600;
+}
+
+/* objects standing in the room */
+.hall {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: end; gap: clamp(4px, 1vw, 18px);
+  width: min(1340px, 100%); margin: auto auto 0;
+}
+.hall-station {
+  position: relative; display: flex; flex-direction: column; align-items: center;
+  text-decoration: none; padding: 0 4px 8px;
+  /* depth: outer stations stand further back — smaller, higher, dimmer */
+  transform: scale(var(--depth)) translateY(calc((1 - var(--depth)) * -300px));
+  opacity: calc(0.7 + (var(--depth) - 0.9) * 3);
+  transition: transform var(--t-ui) var(--ease-cine), opacity var(--t-ui) ease;
+}
+.hall-station:hover, .hall-station:focus-visible, .hall-station[data-hot='true'] {
+  transform: scale(calc(var(--depth) + 0.045)) translateY(calc((1 - var(--depth)) * -300px - 12px));
+  opacity: 1;
+}
+.hall-object { position: relative; display: block; width: 100%; }
 .station-art { width: 100%; height: auto; display: block; }
-.station-pool { opacity: 0.35; transition: opacity var(--t-ui) ease; }
-.station[data-hot='true'] .station-pool { opacity: 1; }
+/* contact shadow anchors the object to the floor */
+.hall-shadow {
+  position: absolute; left: 14%; right: 14%; bottom: 4px; height: 26px;
+  background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(0,0,0,0.85), transparent 70%);
+  filter: blur(5px);
+}
+.station-pool { opacity: 0.34; transition: opacity var(--t-ui) ease; }
+.hall-station[data-hot='true'] .station-pool { opacity: 1; }
 .station-glint { transition: filter var(--t-ui) ease; }
-.station[data-hot='true'] .station-glint { filter: drop-shadow(0 0 6px currentColor); }
-.station-label { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
-.station-kicker { color: var(--brass); }
-.station-title { font-size: clamp(15px, 1.5vw, 19px); letter-spacing: 0.08em; }
-.station-line { font-size: 13.5px; }
+.hall-station[data-hot='true'] .station-glint { filter: drop-shadow(0 0 7px currentColor); }
 
-@media (max-width: 1000px) { .stations { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 560px) { .stations { grid-template-columns: minmax(0, 1fr); } }
+/* plaque set into the floor in front of each object */
+.hall-plaque {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  margin-top: 16px; text-align: center; min-height: 92px;
+}
+.hall-kicker { color: var(--brass); font-size: 9.5px; }
+.hall-title { font-size: clamp(14px, 1.35vw, 18px); letter-spacing: 0.09em; }
+.hall-line { font-size: 13px; max-width: 22ch; }
+
+/* Below the desktop breakpoint the page scrolls, so `.muster` grows past the
+   viewport. Percentage geometry would then measure against the full scroll
+   height instead of the room, so every envelope offset here is pinned in
+   pixels and the perspective floor becomes a flat one the list stands on. */
+@media (max-width: 1000px) {
+  .hall { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 30px; }
+  .hall-station { transform: none; opacity: 1; }
+  .hall-station:hover, .hall-station:focus-visible, .hall-station[data-hot='true'] { transform: translateY(-8px); }
+  .hall-plaque { min-height: 0; }
+  .hall-object { max-width: 250px; margin: 0 auto; }
+
+  .muster-wall {
+    background-color: #0a0910;
+    background-size: 100% 420px, 100% 620px;
+    background-repeat: no-repeat;
+  }
+  .muster-wall::after { inset: 0 0 auto 0; height: 270px; }
+  .muster-pillar { height: 286px; }
+  .muster-banner { top: 40px; height: 168px; }
+  .muster-brazier { display: none; }
+  .muster-floor {
+    top: 300px; bottom: 0; left: 0; right: 0; height: auto;
+    transform: none;
+    background: linear-gradient(180deg, rgba(52,40,23,0.92), rgba(11,10,14,0.99) 340px);
+  }
+  .muster-floor::before { top: 0; height: 60px; }
+  .muster-inner { padding-top: 116px; }
+}
+@media (max-width: 560px) {
+  .hall { grid-template-columns: minmax(0, 1fr); row-gap: 22px; width: min(330px, 100%); }
+  .hall-object { max-width: 210px; }
+  .muster-banner-l { left: 4%; }
+  .muster-banner-r { right: 4%; }
+  /* the room header compresses to ~210px so the first object still stands
+     on the floor rather than on the wall */
+  .muster-banner { top: 68px; width: 36px; height: 116px; }
+  .muster-banner-l { left: 6%; }
+  .muster-banner-r { right: 6%; }
+  .muster-pillar { width: 22px; height: 198px; }
+  .muster-wall::after { height: 190px; }
+  .muster-floor { top: 210px; background: linear-gradient(180deg, rgba(52,40,23,0.92), rgba(11,10,14,0.99) 280px); }
+  .muster-inner { padding-top: 96px; }
+  .muster-crest { top: 6px; width: 60px; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .gatehouse-torch, .muster-fire { animation: none; }
-  .gatehouse-door, .gatehouse-doorlight, .station { transition: none; }
+  .muster-flame { animation: none; }
+  .hall-station { transition: none; }
 }
 
 /* ============================================================

@@ -147,7 +147,7 @@ export default function Chronometer() {
           const fill =
             h.band === '710' ? '#d9a94e' : h.band === 'RED' ? '#a3283c' : '#3f74bd';
           return (
-            <g key={`${h.band}-${h.utc}`} filter={isNext ? 'url(#chronoGlow)' : undefined}>
+            <g key={`${h.band}-${h.utc}`} className="chrono-hunt" data-band={h.band} filter={isNext ? 'url(#chronoGlow)' : undefined}>
               <circle cx={x} cy={y} r={isNext ? 11 : 7.5} fill="#20180c" stroke="url(#chronoBrass)" strokeWidth="2" />
               <circle cx={x} cy={y} r={isNext ? 6.5 : 4.4} fill={fill} />
               {isNext && <circle cx={x} cy={y} r={15} fill="none" stroke={fill} strokeWidth="1.4" opacity="0.6" />}
