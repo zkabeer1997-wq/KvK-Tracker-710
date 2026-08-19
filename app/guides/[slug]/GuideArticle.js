@@ -1,8 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 export default function GuideArticle({ slug, memberId }) {
   const [guide, setGuide] = useState(null);
@@ -14,9 +12,9 @@ export default function GuideArticle({ slug, memberId }) {
   const [draft, setDraft] = useState('');
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState('');
-  const router = useRouter();
 
   const query = memberId ? `?member_id=${encodeURIComponent(memberId)}` : '';
+  const guidesHref = `/guides${query}`;
 
   useEffect(() => {
     let cancelled = false;
@@ -50,6 +48,38 @@ export default function GuideArticle({ slug, memberId }) {
     return () => { document.title = 'Kingdom Guide | K710'; };
   }, [guide?.title]);
 
+  async function verifySavedGuide(expectedTitle, expectedBody) {
+    const stamp = Date.now();
+    const [guideResponse, directoryResponse] = await Promise.all([
+      fetch(`/api/guides/${encodeURIComponent(slug)}?verify=${stamp}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' },
+      }),
+      fetch(`/api/guides?verify=${stamp}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' },
+      }),
+    ]);
+
+    const guideResult = await guideResponse.json();
+    const directoryResult = await directoryResponse.json();
+
+    if (!guideResponse.ok) throw new Error(guideResult.error || 'Could not verify the saved guide.');
+    if (!directoryResponse.ok) throw new Error(directoryResult.error || 'Could not verify the Guides directory.');
+
+    const directoryGuide = (directoryResult.guides || []).find((item) => item.slug === slug);
+    const persistedGuide = guideResult.guide;
+
+    if (!persistedGuide || persistedGuide.title !== expectedTitle || persistedGuide.body !== expectedBody) {
+      throw new Error('The database did not return the saved guide exactly as submitted.');
+    }
+    if (!directoryGuide || directoryGuide.title !== expectedTitle) {
+      throw new Error('The Guides directory did not return the saved title.');
+    }
+
+    return persistedGuide;
+  }
+
   async function saveGuide() {
     const nextTitle = draftTitle.trim();
     if (!nextTitle) {
@@ -60,9 +90,11 @@ export default function GuideArticle({ slug, memberId }) {
     setSaving(true);
     setStatus('');
     setError('');
+
     try {
       const response = await fetch(`/api/guides/${encodeURIComponent(slug)}`, {
         method: 'PUT',
+        cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
           'Cache-Control': 'no-cache',
@@ -72,14 +104,14 @@ export default function GuideArticle({ slug, memberId }) {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Unable to save this guide.');
 
-      setGuide(result.guide);
-      setDraftTitle(result.guide?.title || '');
-      setDraft(result.guide?.body || '');
+      const persistedGuide = await verifySavedGuide(nextTitle, draft);
+      setGuide(persistedGuide);
+      setDraftTitle(persistedGuide.title || '');
+      setDraft(persistedGuide.body || '');
       setEditing(false);
-      setStatus('Guide title and text saved. Changes are live and persisted.');
-      router.refresh();
+      setStatus('Saved and verified. The individual guide and Guides directory now use this persisted title.');
     } catch (err) {
-      setError(err.message || 'Unable to save this guide.');
+      setError(err.message || 'Unable to save and verify this guide.');
     } finally {
       setSaving(false);
     }
@@ -109,7 +141,7 @@ export default function GuideArticle({ slug, memberId }) {
       <main className="armory guide-page">
         <div className="armory-atmos" aria-hidden="true" />
         <div className="armory-inner guide-inner">
-          <Link href={`/guides${query}`} className="guide-back">← Guides</Link>
+          <a href={guidesHref} className="guide-back">← Guides</a>
           <div className="guide-error k-narrative">{error || 'Guide not found.'}</div>
         </div>
       </main>
@@ -124,10 +156,8 @@ export default function GuideArticle({ slug, memberId }) {
 
       <div className="armory-inner guide-inner">
         <div className="guide-topbar">
-          <Link href={`/guides${query}`} className="guide-back">← Guides</Link>
-          {isAdmin && (
-            <span className="guide-admin-badge">Admin editing available</span>
-          )}
+          <a href={guidesHref} className="guide-back">← Guides</a>
+          {isAdmin && <span className="guide-admin-badge">Admin editing available</span>}
         </div>
 
         <header className="guide-header">
@@ -181,7 +211,7 @@ export default function GuideArticle({ slug, memberId }) {
             ) : (
               <>
                 <button type="button" className="k-btn guide-save" onClick={saveGuide} disabled={saving}>
-                  {saving ? 'Saving…' : 'Save Changes'}
+                  {saving ? 'Saving & verifying…' : 'Save Changes'}
                 </button>
                 <button type="button" className="guide-cancel" onClick={cancelEdit} disabled={saving}>
                   Cancel
