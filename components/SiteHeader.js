@@ -11,6 +11,11 @@ const NAV_LINKS = [
   { href: '/power-profile', label: 'War Ledger' },
 ];
 
+function isActivePath(pathname, href) {
+  if (href === '/') return pathname === '/';
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export default function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -26,16 +31,19 @@ export default function SiteHeader() {
         </Link>
 
         <nav className="site-nav" aria-label="Main site">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={pathname === link.href ? 'active' : ''}
-              aria-current={pathname === link.href ? 'page' : undefined}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {NAV_LINKS.map((link) => {
+            const active = isActivePath(pathname, link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={active ? 'active' : ''}
+                aria-current={active ? 'page' : undefined}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
           <Link href="/admin" className="site-nav-admin">Admin</Link>
         </nav>
 
@@ -43,7 +51,8 @@ export default function SiteHeader() {
           type="button"
           className="site-nav-toggle"
           aria-expanded={open}
-          aria-label="Toggle navigation menu"
+          aria-controls="site-mobile-navigation"
+          aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
           onClick={() => setOpen((v) => !v)}
         >
           <span />
@@ -53,12 +62,21 @@ export default function SiteHeader() {
       </div>
 
       {open && (
-        <nav className="site-nav-mobile" aria-label="Mobile site">
-          {NAV_LINKS.map((link) => (
-            <Link key={link.href} href={link.href} onClick={() => setOpen(false)} className={pathname === link.href ? 'active' : ''}>
-              {link.label}
-            </Link>
-          ))}
+        <nav id="site-mobile-navigation" className="site-nav-mobile" aria-label="Mobile site">
+          {NAV_LINKS.map((link) => {
+            const active = isActivePath(pathname, link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setOpen(false)}
+                className={active ? 'active' : ''}
+                aria-current={active ? 'page' : undefined}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
           <Link href="/admin" onClick={() => setOpen(false)} className="site-nav-admin">Admin</Link>
         </nav>
       )}
