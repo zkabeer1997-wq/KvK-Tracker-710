@@ -76,11 +76,11 @@ input:focus, select:focus { outline: none; border-color: var(--gold); box-shadow
 
 .status.error { background: var(--danger-bg); color: #fecaca; border-color: rgba(248, 113, 113, 0.4); }
 
-button[type="submit"] { background: var(--gold); color: var(--ink); border: none; padding: 12px; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.03em; transition: background 0.15s ease, transform 0.15s ease; }
+button[type="submit"]:not(.k-btn) { background: var(--gold); color: var(--ink); border: none; padding: 12px; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.03em; transition: background 0.15s ease, transform 0.15s ease; }
 
-button[type="submit"]:hover { background: var(--gold-bright); }
+button[type="submit"]:not(.k-btn):hover { background: var(--gold-bright); }
 
-button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; }
+button[type="submit"]:not(.k-btn):disabled { opacity: 0.5; cursor: not-allowed; }
 
 .public-page { align-items: center; padding: 28px; background: radial-gradient(circle at top left, rgba(255, 179, 0, 0.12), transparent 32%), radial-gradient(circle at bottom right, rgba(217, 169, 78, 0.1), transparent 40%), linear-gradient(135deg, #0d1119 0%, #111622 44%, #181a20 100%); }
 
@@ -174,9 +174,9 @@ button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .power-field-grid > label:last-child { grid-column: 1 / -1; }
 
-.public-form-card button[type="submit"] { background: var(--ember); color: #241a00; border: 1px solid var(--ember); padding: 14px 16px; font-weight: 900; }
+.public-form-card button[type="submit"]:not(.k-btn) { background: var(--ember); color: #241a00; border: 1px solid var(--ember); padding: 14px 16px; font-weight: 900; }
 
-.public-form-card button[type="submit"]:hover { background: var(--ember-bright); }
+.public-form-card button[type="submit"]:not(.k-btn):hover { background: var(--ember-bright); }
 
 .panel-heading span, .rally-sidebar-header span { color: var(--ember); font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
 
@@ -447,7 +447,7 @@ button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .block-edit-actions button { border: none; border-radius: 6px; padding: 7px 12px; font-size: 12px; font-weight: 700; cursor: pointer; }
 
-.block-edit-actions button[type="submit"] { background: var(--gold); color: var(--ink); }
+.block-edit-actions button[type="submit"]:not(.k-btn) { background: var(--gold); color: var(--ink); }
 
 .add-block-bar { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 

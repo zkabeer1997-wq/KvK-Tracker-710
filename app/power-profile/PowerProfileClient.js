@@ -114,14 +114,18 @@ setStatus(result.status === 'created' ? 'Power profile created.' : 'Power profil
 }
 
 return (
-<main className="page public-page">
-<div className="public-shell single-form power-shell">
+<main className="armory">
+<div className="armory-atmos" aria-hidden="true" />
+<div className="armory-rack-l" aria-hidden="true" />
+<div className="armory-rack-r" aria-hidden="true" />
+<div className="armory-inner">
+<header className="armory-head">
+<span className="k-mark">The Armory</span>
+<h1 className="k-display armory-title k-engraved">Governor War Ledger</h1>
+<p className="k-narrative armory-lede">Inspect your equipment. Rally leadership reads this to know what you bring to the field.</p>
+</header>
 {intro}
 <form className="public-form-card war-ledger-form" onSubmit={handleSubmit}>
-<div className="form-section-header">
-<span>War Ledger</span>
-<h1>Record your combat capability</h1>
-</div>
 <section className="identity-grid">
 <label>Your name<input value={form.name} onChange={(e) => updateField('name', e.target.value)} placeholder="Your in-game name" /></label>
 <label>Member ID<input value={form.member_id} onChange={(e) => updateField('member_id', e.target.value)} onBlur={() => lookup()} placeholder="Your Member ID" /></label>

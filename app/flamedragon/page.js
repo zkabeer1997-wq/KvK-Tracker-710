@@ -11,8 +11,9 @@ export default async function FlamedragonPage() {
     getBlocks('flamedragon-intro'),
     checkIsAdmin(),
   ]);
-  const intro = (
-    <EditableSection page="flamedragon-intro" initialBlocks={blocks} isAdmin={isAdmin} as="section" className="public-intro power-intro" />
-  );
+  const hasIntro = Array.isArray(blocks) && blocks.length > 0;
+const intro = (hasIntro || isAdmin) ? (
+<EditableSection page="flamedragon-intro" initialBlocks={blocks} isAdmin={isAdmin} as="section" className="armory-notice" />
+) : null;
   return <FlamedragonClient intro={intro} />;
 }

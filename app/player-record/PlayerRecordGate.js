@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '../../lib/supabaseClient';
+import MusterHall from '../../components/kingdom/world/MusterHall';
 
 export default function PlayerRecordGate({ banner }) {
   const [memberId, setMemberId] = useState('');
@@ -12,7 +13,15 @@ export default function PlayerRecordGate({ banner }) {
   const [status, setStatus] = useState('');
   const [isError, setIsError] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [opening, setOpening] = useState(false);
+  const [reduced, setReduced] = useState(false);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setReduced(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }, []);
+
+  // Auth path is unchanged: same RPC, same arguments, same failure copy.
   async function handleUnlock(e) {
     e.preventDefault();
     setStatus('');
@@ -35,7 +44,17 @@ export default function PlayerRecordGate({ banner }) {
     }
     if (data === true) {
       setVerifiedMemberId(memberId);
-      setUnlocked(true);
+      // The lock disengaging and the inner gate opening is the reward for
+      // authenticating; skipped entirely under reduced motion.
+      if (reduced) {
+        setUnlocked(true);
+      } else {
+        setOpening(true);
+        setTimeout(() => {
+          setUnlocked(true);
+          setOpening(false);
+        }, 1500);
+      }
     } else {
       setIsError(true);
       setStatus('Incorrect PIN for this Member ID.');
@@ -43,60 +62,89 @@ export default function PlayerRecordGate({ banner }) {
   }
 
   if (unlocked) {
-    const encodedId = encodeURIComponent(verifiedMemberId);
-    return (
-      <main className="command-deck-page">
-        <div className="command-deck-inner">
-          <div className="command-deck-header">
-            <span className="eyebrow">Inner Gate &middot; Access Granted</span>
-            <h1>Welcome back, {verifiedMemberId}</h1>
-            <p>Choose which record you would like to update.</p>
-          </div>
-          <div className="command-deck-grid">
-            <Link href={`/power-profile?member_id=${encodedId}`} className="command-deck-tile">
-              <h2>War Ledger</h2>
-              <p>Governor gear, charms, hero gear, and power stats.</p>
-            </Link>
-            <Link href={`/player-record/form?member_id=${encodedId}`} className="command-deck-tile">
-              <h2>Rally Joiner Form</h2>
-              <p>Troop tiers, TG, heroes, and battle availability.</p>
-            </Link>
-            <Link href={`/prep-phase-backpack?member_id=${encodedId}`} className="command-deck-tile">
-              <h2>Minister&rsquo;s Hall</h2>
-              <p>Backpack amounts and minister position bookings.</p>
-            </Link>
-            <Link href={`/flamedragon?member_id=${encodedId}`} className="command-deck-tile">
-              <h2>Flamedragon Tyrant Form</h2>
-              <p>Availability, levels, and heroes.</p>
-            </Link>
-          </div>
-        </div>
-      </main>
-    );
+    return <MusterHall memberId={verifiedMemberId} />;
   }
 
   return (
-    <main className="inner-gate-page">
-      <div className="inner-gate-card">
-        <svg className="inner-gate-crest" viewBox="0 0 40 40" fill="none" aria-hidden="true">
-          <path d="M20 3 L35 8 V19 C35 28 29 34 20 37 C11 34 5 28 5 19 V8 Z" stroke="currentColor" strokeWidth="1.6" />
-        </svg>
+    <main className="k-scene gatehouse">
+      <div className="k-scene-layer gatehouse-art" aria-hidden="true" />
+      <div className="k-scene-layer gatehouse-torch gatehouse-torch-l" aria-hidden="true" />
+      <div className="k-scene-layer gatehouse-torch gatehouse-torch-r" aria-hidden="true" />
+      <div className="k-scene-layer k-vignette" aria-hidden="true" />
+
+      {/* guard silhouettes flanking the checkpoint */}
+      <div className="k-scene-layer gatehouse-guards" aria-hidden="true">
+        <span className="gatehouse-guard gatehouse-guard-l" />
+        <span className="gatehouse-guard gatehouse-guard-r" />
+      </div>
+
+      <div className="gatehouse-inner">
         {banner}
-        <h1>Inner Gate</h1>
-        <p className="sub">Members report to the inner checkpoint. Enter your Member ID and PIN to continue.</p>
-        <form className="inner-gate-form" onSubmit={handleUnlock}>
-          <label htmlFor="gate-member-id">
+
+        <header className="gatehouse-head">
+          <span className="k-mark">Security Checkpoint</span>
+          <h1 className="k-display gatehouse-title">The Gatehouse</h1>
+          <p className="k-narrative gatehouse-lede">
+            Your governor ID is your name inside the kingdom.
+          </p>
+        </header>
+
+        {/* the desk: inputs sit in a physical registry, not a floating card */}
+        <form className="gatehouse-desk k-ui" onSubmit={handleUnlock}>
+          <div className="gatehouse-desk-grain" aria-hidden="true" />
+
+          <label className="k-field" htmlFor="gate-member-id">
             <span>Member ID</span>
-            <input id="gate-member-id" value={memberId} onChange={(e) => setMemberId(e.target.value)} required />
+            <input
+              id="gate-member-id"
+              className="k-input"
+              value={memberId}
+              onChange={(e) => setMemberId(e.target.value)}
+              autoComplete="username"
+              required
+            />
           </label>
-          <label htmlFor="gate-pin">
+
+          <label className="k-field" htmlFor="gate-pin">
             <span>PIN</span>
-            <input id="gate-pin" type="password" value={pin} onChange={(e) => setPin(e.target.value)} placeholder="Leave blank if you are new" />
+            <input
+              id="gate-pin"
+              className="k-input"
+              type="password"
+              value={pin}
+              onChange={(e) => setPin(e.target.value)}
+              autoComplete="current-password"
+              placeholder="Leave blank if you are new"
+            />
           </label>
-          {status && <div className={isError ? 'status error' : 'status'}>{status}</div>}
-          <button type="submit" className="inner-gate-submit" disabled={loading}>{loading ? 'Checking...' : 'Enter the Kingdom'}</button>
+
+          {status && (
+            <div className={isError ? 'status error' : 'status'} role="status">
+              {status}
+            </div>
+          )}
+
+          <button type="submit" className="k-btn k-btn-sky gatehouse-submit" disabled={loading || opening}>
+            {loading ? 'Checking…' : opening ? 'Gate opening…' : 'Present Credentials'}
+          </button>
+
+          <p className="gatehouse-hint k-narrative">
+            First time through? Leave the PIN blank and one will be set for you.
+          </p>
         </form>
-        <p className="inner-gate-hint">First time here? Leave the PIN blank &mdash; one will be set for you.</p>
+
+        {/* Admin is deliberately subordinate to member entry. */}
+        <Link href="/admin" className="gatehouse-restricted">
+          <span className="k-mark">Restricted</span>
+          <span>Command Access</span>
+        </Link>
+      </div>
+
+      {/* inner gate opening on successful auth */}
+      <div className={`gatehouse-doors ${opening ? 'is-open' : ''}`} aria-hidden="true">
+        <span className="gatehouse-door gatehouse-door-l" />
+        <span className="gatehouse-door gatehouse-door-r" />
+        <span className="gatehouse-doorlight" />
       </div>
     </main>
   );
