@@ -25,11 +25,11 @@ const destinations = [
     href: () => '/admin',
   },
   {
-    key: 'new',
-    kicker: 'Under Construction',
-    title: 'New Tools',
-    description: 'More kingdom utilities are being forged.',
-    href: () => '/new-tools',
+    key: 'guides',
+    kicker: 'The Kingdom Library',
+    title: 'Guides',
+    description: 'Strategy, event, and kingdom reference guides.',
+    href: (id) => `/guides?member_id=${id}`,
   },
 ];
 
@@ -97,14 +97,13 @@ function StationSigil({ type }) {
   }
 
   return (
-    <svg className="station-sigil station-sigil-new" viewBox="0 0 96 96" aria-hidden="true">
+    <svg className="station-sigil station-sigil-guides" viewBox="0 0 96 96" aria-hidden="true">
       <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 58 H68 C68 67 62 72 53 72 H38 C29 72 23 67 21 58 Z" strokeWidth="5" />
-        <path d="M36 72 H55 V80 H31 H60" strokeWidth="5" />
-        <path d="M55 58 L72 47 H82" strokeWidth="5" />
-        <path className="sigil-spark sigil-spark-a" d="M48 18 V31 M41 24 H55" strokeWidth="4" />
-        <path className="sigil-spark sigil-spark-b" d="M68 23 L73 28 M73 23 L68 28" strokeWidth="3.5" />
-        <path className="sigil-spark sigil-spark-c" d="M29 28 L34 33 M34 28 L29 33" strokeWidth="3.5" />
+        <path d="M20 24 C29 20 39 22 48 29 V76 C39 69 29 67 20 71 Z" strokeWidth="4.5" />
+        <path d="M76 24 C67 20 57 22 48 29 V76 C57 69 67 67 76 71 Z" strokeWidth="4.5" />
+        <path className="sigil-page" d="M29 36 C34 35 39 37 43 40 M29 47 C34 46 39 48 43 51 M67 36 C62 35 57 37 53 40 M67 47 C62 46 57 48 53 51" strokeWidth="3.2" />
+        <path d="M48 29 V76" strokeWidth="3" />
+        <path className="sigil-page" d="M45 16 L48 10 L51 16 M39 19 L35 14 M57 19 L61 14" strokeWidth="3.2" />
       </g>
     </svg>
   );
@@ -188,16 +187,14 @@ export default function MemberHub({ memberId }) {
         .member-station-admin .member-relic-face{background:linear-gradient(90deg,#242532,#4d5064 48%,#20212b)}
         .member-station-admin .member-sigil-medallion{color:#c8b569}
         .member-station-admin:hover :global(.sigil-crown),.member-station-admin:focus-visible :global(.sigil-crown){filter:drop-shadow(0 0 5px rgba(239,205,112,.45))}
-        .member-station-new{opacity:.72}
-        .member-station-new .member-relic-face{background:linear-gradient(90deg,#2b2622,#514238 48%,#24201d)}
-        .member-station-new .member-sigil-medallion{color:#b99258}
-        .member-station-new:hover,.member-station-new:focus-visible{opacity:1}
-        .member-station-new:hover :global(.sigil-spark),.member-station-new:focus-visible :global(.sigil-spark){color:#ffd68a;filter:drop-shadow(0 0 5px rgba(255,174,74,.72))}
-        :global(.sigil-hammer),:global(.sigil-seal),:global(.sigil-crown),:global(.sigil-spark){transition:transform var(--t-ui) var(--ease-cine),filter var(--t-ui) ease,color var(--t-ui) ease}
+        .member-station-guides .member-relic-face{background:linear-gradient(90deg,#2b2419,#665337 48%,#241e16)}
+        .member-station-guides .member-sigil-medallion{color:#d6b86f}
+        .member-station-guides:hover :global(.sigil-page),.member-station-guides:focus-visible :global(.sigil-page){filter:drop-shadow(0 0 5px rgba(242,203,112,.5));transform:translateY(-1px)}
+        :global(.sigil-hammer),:global(.sigil-seal),:global(.sigil-crown),:global(.sigil-page){transition:transform var(--t-ui) var(--ease-cine),filter var(--t-ui) ease,color var(--t-ui) ease}
         .member-plaque{margin-top:10px}
         @media(max-width:1000px){.member-chambers-inner{padding-top:112px}.member-relic-wrap{height:210px}.member-hall{row-gap:22px}.member-chambers-head{margin-bottom:20px}}
         @media(max-width:560px){.member-chambers-inner{padding-top:92px}.member-chambers-title{font-size:22px}.member-chambers-lede{font-size:15px}.member-relic-wrap{height:170px}.member-relic{width:150px}.member-sigil-medallion{width:72px;height:72px}.station-sigil{width:68px;height:68px}}
-        @media(prefers-reduced-motion:reduce){.member-relic,.member-sigil-medallion,:global(.sigil-hammer),:global(.sigil-seal),:global(.sigil-crown),:global(.sigil-spark){transition:none!important;transform:none!important}}
+        @media(prefers-reduced-motion:reduce){.member-relic,.member-sigil-medallion,:global(.sigil-hammer),:global(.sigil-seal),:global(.sigil-crown),:global(.sigil-page){transition:none!important;transform:none!important}}
       `}</style>
     </main>
   );
