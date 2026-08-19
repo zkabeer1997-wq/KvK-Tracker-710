@@ -113,6 +113,7 @@ body {
 }
 
 .public-intro {
+  top: 88px;
   background:
     radial-gradient(circle at 20% 0%, rgba(235, 194, 106, 0.17), transparent 38%),
     radial-gradient(circle at 100% 85%, rgba(164, 194, 239, 0.11), transparent 42%),
@@ -365,7 +366,7 @@ select {
 }
 
 .rally-sidebar {
-  top: 18px;
+  top: 88px;
 }
 
 .admin-drawer,
