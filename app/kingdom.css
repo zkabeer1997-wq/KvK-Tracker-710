@@ -686,3 +686,149 @@
 @media (max-width: 560px) {
   .march { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ============================================================
+   THE REGISTRY — petition form
+   ============================================================ */
+.interest-petition {
+  background:
+    radial-gradient(ellipse 70% 40% at 50% 0%, rgba(120,84,52,0.20), transparent 62%),
+    linear-gradient(180deg, rgba(36,26,18,0.55), rgba(10,12,19,0.92));
+  border: 1px solid rgba(120,84,52,0.34);
+  border-radius: 3px;
+  box-shadow: var(--depth-2);
+}
+
+.petition-index {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 6px 0 20px; margin-bottom: 6px;
+  border-bottom: 1px solid var(--edge);
+}
+.petition-index-item {
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 40px; padding: 0 14px;
+  font-family: var(--font-body); font-size: 12px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--t-muted); text-decoration: none;
+  border: 1px solid transparent; border-radius: 2px;
+  transition: color var(--t-fast), border-color var(--t-fast);
+}
+.petition-index-item:hover { color: var(--parchment); border-color: var(--edge-strong); }
+.petition-index-num {
+  font-family: var(--font-display); font-size: 13px; color: var(--gold-aged); letter-spacing: 0.04em;
+}
+
+.petition-act { padding: clamp(26px, 4vw, 40px) 0; border-bottom: 1px solid var(--edge); scroll-margin-top: 20px; }
+.petition-act:last-of-type { border-bottom: 0; }
+.petition-act-head { display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 16px; margin-bottom: 22px; }
+.petition-act-num {
+  font-size: clamp(22px, 2.8vw, 30px);
+  color: var(--brass); letter-spacing: 0.06em;
+  min-width: 1.6em; text-align: center;
+}
+.petition-act-title { margin: 0; font-size: clamp(15px, 1.8vw, 21px); letter-spacing: 0.12em; color: var(--parchment); }
+.petition-act-rule { height: 1px; background: linear-gradient(90deg, var(--edge-strong), transparent); }
+.petition-act-body { display: flex; flex-direction: column; gap: 22px; }
+
+.petition-group { display: flex; flex-direction: column; gap: 12px; }
+.petition-group-title { display: block; color: var(--brass); }
+.petition-group-body { display: flex; flex-direction: column; gap: 14px; }
+
+/* ============================================================
+   SEALED PETITION cinematic
+   ============================================================ */
+.sealed {
+  position: fixed; inset: 0; z-index: 420;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 26px; padding: 24px;
+  background: radial-gradient(ellipse 60% 50% at 50% 40%, rgba(120,84,52,0.24), transparent 66%), rgba(4,5,10,0.96);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+}
+.sealed-stage { position: relative; width: min(340px, 76vw); height: 260px; }
+
+.sealed-doc {
+  position: absolute; inset: 0;
+  padding: 26px 24px;
+  background: linear-gradient(172deg, #efe4ca 0%, #e2d4b4 54%, #d0bd96 100%);
+  border: 1px solid #b9a67f; border-radius: 2px;
+  box-shadow: 0 22px 60px rgba(0,0,0,0.7);
+  transform-origin: 50% 50%;
+  transition: transform 760ms var(--ease-heavy), opacity 500ms ease;
+}
+.sealed-doc-lines { display: flex; flex-direction: column; gap: 11px; }
+.sealed-doc-lines span { height: 5px; background: rgba(40,30,16,0.20); border-radius: 1px; }
+
+.sealed-wax {
+  position: absolute; left: 50%; bottom: 26px; width: 62px; height: 62px;
+  transform: translate(-50%, -70px) scale(1.9); opacity: 0;
+  transition: transform 520ms var(--ease-heavy), opacity 260ms ease;
+}
+.sealed-wax svg { width: 100%; height: 100%; }
+
+.sealed-flash {
+  position: absolute; inset: 0; border-radius: 2px; opacity: 0;
+  background: radial-gradient(circle at 50% 76%, rgba(255,229,163,0.95), transparent 62%);
+  pointer-events: none;
+}
+
+.sealed-courier { position: absolute; inset: 0; pointer-events: none; }
+.sealed-courier-body {
+  position: absolute; left: 46%; bottom: 8px; width: 12px; height: 30px; border-radius: 6px;
+  background: #10131d; opacity: 0; transition: opacity 300ms ease, transform 1100ms var(--ease-cine);
+}
+.sealed-fortress {
+  position: absolute; right: -6%; bottom: 6px; width: 92px; height: 74px; opacity: 0;
+  background: linear-gradient(180deg, #2b3145, #121626);
+  clip-path: polygon(0 42%, 12% 42%, 12% 26%, 24% 26%, 24% 42%, 76% 42%, 76% 26%, 88% 26%, 88% 42%, 100% 42%, 100% 100%, 0 100%);
+  transition: opacity 500ms ease;
+}
+
+/* beats */
+.sealed-stage[data-beat='1'] .sealed-wax { transform: translate(-50%, 0) scale(1); opacity: 1; }
+.sealed-stage[data-beat='2'] .sealed-wax { transform: translate(-50%, 0) scale(1); opacity: 1; }
+.sealed-stage[data-beat='2'] .sealed-flash { opacity: 1; transition: opacity 180ms ease; }
+.sealed-stage[data-beat='3'] .sealed-wax { transform: translate(-50%, 0) scale(1); opacity: 1; }
+.sealed-stage[data-beat='3'] .sealed-doc { transform: scaleX(0.12) rotate(-4deg); opacity: 0.9; }
+.sealed-stage[data-beat='3'] .sealed-courier-body { opacity: 1; transform: translateX(120px); }
+.sealed-stage[data-beat='3'] .sealed-fortress { opacity: 0.9; }
+.sealed-stage[data-beat='4'] .sealed-doc { transform: scaleX(0.12) rotate(-4deg); opacity: 0; }
+.sealed-stage[data-beat='4'] .sealed-wax { opacity: 0; }
+.sealed-stage[data-beat='4'] .sealed-courier-body { opacity: 0; transform: translateX(190px); }
+.sealed-stage[data-beat='4'] .sealed-fortress { opacity: 0.55; }
+
+.sealed-copy { max-width: 52ch; text-align: center; opacity: 0; transform: translateY(10px); transition: opacity 520ms var(--ease-cine), transform 520ms var(--ease-cine); }
+.sealed-copy.is-in { opacity: 1; transform: none; }
+.sealed-title { margin: 10px 0 0; font-size: clamp(20px, 3vw, 30px); letter-spacing: 0.10em; }
+.sealed-note { margin: 12px 0 0; }
+.sealed-wink { margin: 8px 0 0; color: var(--brass); font-style: italic; }
+.sealed-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 24px; }
+.sealed-skip {
+  position: absolute; right: 22px; bottom: 22px; min-height: 40px; padding: 0 18px;
+  background: transparent; border: 1px solid rgba(201,164,78,0.34); color: var(--t-secondary);
+  border-radius: 2px; cursor: pointer; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase;
+}
+.sealed-skip:hover { border-color: var(--gold-aged); color: var(--parchment); }
+
+@media (prefers-reduced-motion: reduce) {
+  .sealed-doc, .sealed-wax, .sealed-courier-body, .sealed-copy { transition: none; }
+}
+
+/* Registry page shell */
+.registry {
+  position: relative; min-height: 100svh;
+  background: linear-gradient(180deg, #07080f 0%, #100c08 40%, #0a0b12 100%);
+  padding: 0 0 90px;
+}
+.registry-atmos {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 55% 30% at 50% 0%, rgba(201,132,58,0.18), transparent 66%),
+    radial-gradient(ellipse 80% 40% at 50% 100%, rgba(120,84,52,0.10), transparent 70%);
+}
+.registry-inner { position: relative; z-index: 2; width: min(940px, 100%); margin: 0 auto; padding: clamp(84px, 11vh, 130px) clamp(16px, 4vw, 32px) 0; }
+.registry-head { text-align: center; margin-bottom: clamp(28px, 4vh, 46px); }
+.registry-title { margin: 12px 0 0; font-size: clamp(26px, 4.6vw, 48px); letter-spacing: 0.10em; }
+.registry-lede { max-width: 54ch; margin: 16px auto 0; }
+.registry-notice { margin-bottom: 22px; }
+.registry .public-form-card { max-width: none; }

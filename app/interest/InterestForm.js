@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import SealedPetition from '../../components/kingdom/world/SealedPetition';
 
 const MIGRATE_OPTIONS = [
 '710 (Bear 0200UTC and 1300UTC)',
@@ -29,26 +30,32 @@ const SPENDING_OPTIONS = [
 'F2P (pure skills, always on)',
 ];
 
-const CHAPTERS = [
-  { id: 'identity', label: 'Identity' },
-  { id: 'intake', label: 'Intake' },
-  { id: 'migration', label: 'Migration' },
-  { id: 'troops', label: 'Troops' },
-  { id: 'power', label: 'Power' },
-  { id: 'commitment', label: 'Commitment' },
-  { id: 'spending', label: 'Spending' },
-  { id: 'language', label: 'Language' },
-  { id: 'battle-report', label: 'Battle Report' },
+const ACTS = [
+  { id: 'identity', num: 'I', label: 'Who Approaches' },
+  { id: 'intake', num: 'II', label: 'The Crossing' },
+  { id: 'troops', num: 'III', label: 'Strength of Arms' },
+  { id: 'commitment', num: 'IV', label: 'The Oath' },
+  { id: 'battle-report', num: 'V', label: 'Proof' },
 ];
 
-function Chapter({ id, num, title, children }) {
+function Act({ id, num, title, children }) {
   return (
-    <section id={id} className="interest-chapter">
-      <div className="interest-chapter-head">
-        <span className="interest-chapter-num">{num}</span>
-        <h3>{title}</h3>
-      </div>
-      <div className="interest-chapter-body">{children}</div>
+    <section id={id} className="petition-act">
+      <header className="petition-act-head">
+        <span className="petition-act-num k-display">{num}</span>
+        <h2 className="petition-act-title k-display">{title}</h2>
+        <span className="petition-act-rule" aria-hidden="true" />
+      </header>
+      <div className="petition-act-body">{children}</div>
+    </section>
+  );
+}
+
+function Chapter({ id, title, children }) {
+  return (
+    <section id={id} className="petition-group">
+      <h3 className="petition-group-title k-mark">{title}</h3>
+      <div className="petition-group-body">{children}</div>
     </section>
   );
 }
@@ -84,6 +91,13 @@ const [screenshots, setScreenshots] = useState([]);
 const [status, setStatus] = useState('');
 const [isError, setIsError] = useState(false);
 const [loading, setLoading] = useState(false);
+const [sealed, setSealed] = useState(false);
+const [reducedMotion, setReducedMotion] = useState(false);
+
+useEffect(() => {
+  if (typeof window === 'undefined') return;
+  setReducedMotion(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}, []);
 
 function updateField(key, value) {
 setForm((current) => ({ ...current, [key]: value }));
@@ -177,27 +191,29 @@ setStatus(result.error || 'Something went wrong. Please try again.');
 return;
 }
 setIsError(false);
-setStatus('Thanks! Your interest submission has been received.');
+setStatus('');
 setForm(initialForm);
 setScreenshots([]);
+setSealed(true);
 }
 
 return (
+<>
+{sealed && (
+  <SealedPetition reducedMotion={reducedMotion} onClose={() => setSealed(false)} />
+)}
 <form className="public-form-card interest-petition" onSubmit={handleSubmit}>
-<div className="form-section-header">
-<span>Petition for Entry</span>
-<h1>710 Transfer Onboarding</h1>
-</div>
-
-<nav className="interest-progress" aria-label="Petition sections">
-  {CHAPTERS.map((c, i) => (
-    <a key={c.id} href={`#${c.id}`} className="interest-progress-item">
-      <span>{String(i + 1).padStart(2, '0')}</span>{c.label}
+<nav className="petition-index" aria-label="Petition sections">
+  {ACTS.map((a) => (
+    <a key={a.id} href={`#${a.id}`} className="petition-index-item">
+      <span className="petition-index-num">{a.num}</span>
+      {a.label}
     </a>
   ))}
 </nav>
 
-<Chapter id="identity" num="01" title="Identity">
+<Act id="identity" num="I" title="Who Approaches">
+<Chapter id="identity-fields" title="Identity">
 <div className="identity-grid">
 <label>In-game name<input value={form.inGameName} onChange={(e) => updateField('inGameName', e.target.value)} /></label>
 <label>Player ID<input value={form.playerId} onChange={(e) => updateField('playerId', e.target.value)} /></label>
@@ -207,7 +223,10 @@ return (
 </div>
 </Chapter>
 
-<Chapter id="intake" num="02" title="Intake">
+</Act>
+
+<Act id="intake" num="II" title="The Crossing">
+<Chapter id="intake-fields" title="Intake window">
 <div className="troop-section public-section">
 <div className="section-title-row"><span>Intake</span><h3>Which intake period are you applying for?</h3></div>
 <div className="radio-group">
@@ -221,7 +240,7 @@ return (
 </div>
 </Chapter>
 
-<Chapter id="migration" num="03" title="Migration">
+<Chapter id="migration-fields" title="Migration">
 <div className="troop-section public-section">
 <div className="section-title-row"><span>Migration</span><h3>Which alliance are you looking to migrate to?</h3></div>
 <div className="radio-group">
@@ -238,7 +257,10 @@ return (
 </div>
 </Chapter>
 
-<Chapter id="troops" num="04" title="Troops">
+</Act>
+
+<Act id="troops" num="III" title="Strength of Arms">
+<Chapter id="troops-fields" title="Troops">
 <div className="troop-section public-section">
 <div className="section-title-row"><span>Troops</span><h3>Current highest troop level (not TC)</h3></div>
 <div className="radio-group">
@@ -268,7 +290,7 @@ return (
 </div>
 </Chapter>
 
-<Chapter id="power" num="05" title="Power">
+<Chapter id="power-fields" title="Power">
 <div className="identity-grid">
 <label>Current Mystic Trial TOTAL STAGES<input value={form.mysticTrialStages} onChange={(e) => updateField('mysticTrialStages', e.target.value)} /></label>
 <label>Total Power<input value={form.totalPower} onChange={(e) => updateField('totalPower', e.target.value)} /></label>
@@ -292,7 +314,10 @@ return (
 </div>
 </Chapter>
 
-<Chapter id="commitment" num="06" title="Commitment">
+</Act>
+
+<Act id="commitment" num="IV" title="The Oath">
+<Chapter id="commitment-fields" title="Commitment">
 <div className="troop-section public-section">
 <div className="section-title-row"><span>Commitment</span><h3>Are you able to actively commit to game, and participate in alliance events?</h3></div>
 <div className="radio-group">
@@ -330,7 +355,7 @@ return (
 </div>
 </Chapter>
 
-<Chapter id="spending" num="07" title="Spending">
+<Chapter id="spending-fields" title="Spending">
 <div className="troop-section public-section">
 <div className="section-title-row"><span>Spending</span><h3>Your spending archetype</h3></div>
 <div className="radio-group">
@@ -344,7 +369,7 @@ return (
 </div>
 </Chapter>
 
-<Chapter id="language" num="08" title="Language">
+<Chapter id="language-fields" title="Language">
 <div className="troop-section public-section">
 <div className="section-title-row"><span>Language</span><h3>Main language of communication in-game</h3></div>
 <div className="radio-group">
@@ -363,7 +388,10 @@ return (
 </div>
 </Chapter>
 
-<Chapter id="battle-report" num="09" title="Battle Report">
+</Act>
+
+<Act id="battle-report" num="V" title="Proof">
+<Chapter id="proof-fields" title="Battle report">
 <div className="troop-section public-section">
 <div className="section-title-row"><span>Screenshots</span><h3>Upload your most recent battle report</h3><p>Should show your in-game name, Gov Gears/charms, Hero Gears and Masters.</p></div>
 <input id="battle-report-upload" type="file" multiple accept="image/*" aria-label="Upload battle report screenshots" onChange={(e) => setScreenshots(Array.from(e.target.files || []))} />
@@ -371,8 +399,11 @@ return (
 </div>
 </Chapter>
 
+</Act>
+
 {status && <div className={isError ? 'status error' : 'status'}>{status}</div>}
 <button type="submit" disabled={loading}>{loading ? 'Submitting...' : 'Submit Petition'}</button>
 </form>
+</>
 );
 }
