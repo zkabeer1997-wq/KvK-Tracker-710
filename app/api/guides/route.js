@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
+import { isAdminRequest } from '../../../lib/adminAuth';
 import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
+import { getRequestMemberAccess } from '../../../lib/memberAccessV2';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -11,8 +13,16 @@ const NO_STORE_HEADERS = {
   Expires: '0',
 };
 
-export async function GET() {
+export async function GET(request) {
   try {
+    const [admin, member] = await Promise.all([
+      isAdminRequest(request),
+      getRequestMemberAccess(request),
+    ]);
+    if (!admin && !member) {
+      return NextResponse.json({ error: 'Member access required.' }, { status: 401, headers: NO_STORE_HEADERS });
+    }
+
     const supabase = createAdminSupabaseClient();
     const { data, error } = await supabase
       .from('kingdom_guides')
