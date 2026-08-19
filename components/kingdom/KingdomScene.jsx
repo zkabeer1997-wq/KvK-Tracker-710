@@ -1,94 +1,154 @@
 'use client';
 
-import { useRef, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import KingdomGate from './KingdomGate';
 import KingdomTraveler from './KingdomTraveler';
 
-const GOLD = '#d9a94e';
-const NAVY = '#0b0e1e';
+const NIGHT = '#070a16';
 
-function CameraRig({ hoveredRoad, phase, selectedRoad, elapsedSinceSelect }) {
+function CameraRig({ hoveredRoad, phase, selectedRoad, active }) {
   const { camera } = useThree();
-  const target = useRef({ x: 0, y: 2.2, z: 9, lookX: 0 });
+  const approachElapsed = useRef(0);
+  const transitionElapsed = useRef(0);
+  const previousPhase = useRef(phase);
 
-  useFrame((_, delta) => {
-    let goalX = 0;
-    let goalZ = 9;
-    let lookX = 0;
+  useEffect(() => {
+    if (previousPhase.current !== phase) {
+      if (phase === 'approach') approachElapsed.current = 0;
+      if (phase === 'transitioning') transitionElapsed.current = 0;
+      previousPhase.current = phase;
+    }
+  }, [phase]);
 
-    if (hoveredRoad === 'left') { goalX = -0.9; lookX = -1.4; }
-    if (hoveredRoad === 'right') { goalX = 0.9; lookX = 1.4; }
+  useFrame(({ pointer }, delta) => {
+    if (active && phase === 'approach') approachElapsed.current += delta;
+    if (phase === 'transitioning') transitionElapsed.current += delta;
+
+    const approachT = active ? Math.min(approachElapsed.current / 2.2, 1) : 0;
+    const hoverDirection = hoveredRoad === 'left' ? -1 : hoveredRoad === 'right' ? 1 : 0;
+
+    let goalX = pointer.x * 0.18 + hoverDirection * 0.46;
+    let goalY = 2.72 + pointer.y * 0.08;
+    let goalZ = 10.8 - approachT * 2.1;
+    let lookX = hoverDirection * 1.9;
+    let lookY = 1.65;
+    let lookZ = -3.4;
 
     if (phase === 'transitioning') {
-      const dir = selectedRoad === 'left' ? -1 : 1;
-      const t = Math.min(elapsedSinceSelect.current, 1.6);
-      goalX = dir * (0.9 + t * 2.6);
-      goalZ = 9 - t * 6.5;
-      lookX = dir * (1.4 + t * 3);
+      const direction = selectedRoad === 'left' ? -1 : 1;
+      const t = Math.min(transitionElapsed.current / 1.25, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      goalX = direction * (0.65 + eased * 3.0);
+      goalY = 2.55 - eased * 0.34;
+      goalZ = 8.65 - eased * 5.25;
+      lookX = direction * (2.2 + eased * 2.1);
+      lookY = 1.45;
+      lookZ = -5.2 - eased * 2.4;
     }
 
-    target.current.x += (goalX - target.current.x) * Math.min(delta * 2.2, 1);
-    target.current.z += (goalZ - target.current.z) * Math.min(delta * 2.2, 1);
-    target.current.lookX += (lookX - target.current.lookX) * Math.min(delta * 2.2, 1);
+    const smoothing = 1 - Math.exp(-delta * (phase === 'transitioning' ? 3.8 : 2.5));
+    camera.position.x += (goalX - camera.position.x) * smoothing;
+    camera.position.y += (goalY - camera.position.y) * smoothing;
+    camera.position.z += (goalZ - camera.position.z) * smoothing;
 
-    camera.position.set(target.current.x, 2.2, target.current.z);
-    camera.lookAt(target.current.lookX, 1.3, -3);
+    const lookTarget = camera.userData.lookTarget || { x: 0, y: 1.65, z: -3.4 };
+    lookTarget.x += (lookX - lookTarget.x) * smoothing;
+    lookTarget.y += (lookY - lookTarget.y) * smoothing;
+    lookTarget.z += (lookZ - lookTarget.z) * smoothing;
+    camera.userData.lookTarget = lookTarget;
+    camera.lookAt(lookTarget.x, lookTarget.y, lookTarget.z);
   });
 
   return null;
 }
 
-function SceneContents({ hoveredRoad, phase, selectedRoad, elapsedSinceSelect }) {
-  const travelerRef = useRef(null);
+function TravelerRig({ phase, selectedRoad, active }) {
+  const group = useRef(null);
+  const approachElapsed = useRef(0);
+  const transitionElapsed = useRef(0);
+  const previousPhase = useRef(phase);
+
+  useEffect(() => {
+    if (previousPhase.current !== phase) {
+      if (phase === 'approach') approachElapsed.current = 0;
+      if (phase === 'transitioning') transitionElapsed.current = 0;
+      previousPhase.current = phase;
+    }
+  }, [phase]);
 
   useFrame((_, delta) => {
-    if (phase === 'transitioning') {
-      elapsedSinceSelect.current += delta;
-      if (travelerRef.current) {
-        const dir = selectedRoad === 'left' ? -1 : 1;
-        travelerRef.current.position.x = dir * Math.min(elapsedSinceSelect.current, 1.6) * 1.6;
-        travelerRef.current.position.z = 3.2 - Math.min(elapsedSinceSelect.current, 1.6) * 4.5;
-      }
+    if (!group.current) return;
+
+    if (active && phase === 'approach') {
+      approachElapsed.current += delta;
+      const t = Math.min(approachElapsed.current / 2.2, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      group.current.position.z = 6.2 - eased * 2.75;
+      group.current.position.x = Math.sin(t * Math.PI) * 0.08;
+      group.current.rotation.y = Math.sin(t * Math.PI) * -0.03;
+      return;
     }
+
+    if (phase === 'transitioning') {
+      transitionElapsed.current += delta;
+      const direction = selectedRoad === 'left' ? -1 : 1;
+      const t = Math.min(transitionElapsed.current / 1.25, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      group.current.position.x = direction * (0.08 + eased * 3.25);
+      group.current.position.z = 3.45 - eased * 8.15;
+      group.current.rotation.y = direction * eased * 0.36;
+      return;
+    }
+
+    group.current.position.z += (3.45 - group.current.position.z) * Math.min(delta * 4, 1);
+    group.current.position.x += (0 - group.current.position.x) * Math.min(delta * 4, 1);
+    group.current.rotation.y += (0 - group.current.rotation.y) * Math.min(delta * 4, 1);
   });
 
   return (
+    <group ref={group} position={[0, 0, 6.2]}>
+      <KingdomTraveler walking={active && (phase === 'approach' || phase === 'transitioning')} />
+    </group>
+  );
+}
+
+function SceneContents({ hoveredRoad, phase, selectedRoad, active }) {
+  const leftActive = hoveredRoad === 'left' || selectedRoad === 'left';
+  const rightActive = hoveredRoad === 'right' || selectedRoad === 'right';
+
+  return (
     <>
-      <color attach="background" args={[NAVY]} />
-      <fog attach="fog" args={[NAVY, 10, phase === 'transitioning' ? 6 : 30]} />
-      <ambientLight intensity={0.85} color="#4a5488" />
-      <directionalLight position={[-6, 10, 6]} intensity={1.1} color="#8f9bd4" />
-      <hemisphereLight args={['#4a5590', '#0a0d1c', 0.9]} />
-      <pointLight position={[0, 5, 4]} color={GOLD} intensity={1.4} distance={20} decay={2} />
+      <color attach="background" args={[NIGHT]} />
+      <fog attach="fog" args={[NIGHT, 10, phase === 'transitioning' ? 24 : 34]} />
 
-      <KingdomGate />
-      <group ref={travelerRef} position={[0, 0, 3.4]}>
-        <KingdomTraveler walking={phase === 'transitioning'} />
-      </group>
+      <ambientLight intensity={0.44} color="#53618f" />
+      <hemisphereLight args={['#40507f', '#050711', 0.7]} />
+      <directionalLight position={[-8, 11, 8]} intensity={0.95} color="#8191c2" />
+      <pointLight position={[-4, 3.1, -4.5]} color="#d9a94e" intensity={leftActive ? 3.1 : 1.35} distance={17} decay={2} />
+      <pointLight position={[4, 3.1, -4.5]} color="#7594c8" intensity={rightActive ? 3.1 : 1.25} distance={17} decay={2} />
 
-      <CameraRig hoveredRoad={hoveredRoad} phase={phase} selectedRoad={selectedRoad} elapsedSinceSelect={elapsedSinceSelect} />
+      <KingdomGate hoveredRoad={hoveredRoad} selectedRoad={selectedRoad} />
+      <TravelerRig phase={phase} selectedRoad={selectedRoad} active={active} />
+      <CameraRig hoveredRoad={hoveredRoad} phase={phase} selectedRoad={selectedRoad} active={active} />
     </>
   );
 }
 
-export default function KingdomScene({ hoveredRoad, phase, selectedRoad }) {
-  const elapsedSinceSelect = useRef(0);
-  const dpr = useMemo(() => (typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 1.6) : 1), []);
+export default function KingdomScene({ hoveredRoad, phase, selectedRoad, active }) {
+  const dpr = useMemo(
+    () => (typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, window.innerWidth < 700 ? 1.25 : 1.55) : 1),
+    []
+  );
 
   return (
     <Canvas
       dpr={dpr}
       gl={{ antialias: true, powerPreference: 'high-performance', alpha: false }}
-      camera={{ fov: 42, position: [0, 2.2, 9] }}
+      camera={{ fov: 44, near: 0.1, far: 90, position: [0, 2.72, 10.8] }}
       shadows={false}
     >
-      <SceneContents
-        hoveredRoad={hoveredRoad}
-        phase={phase}
-        selectedRoad={selectedRoad}
-        elapsedSinceSelect={elapsedSinceSelect}
-      />
+      <SceneContents hoveredRoad={hoveredRoad} phase={phase} selectedRoad={selectedRoad} active={active} />
     </Canvas>
   );
 }
