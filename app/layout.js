@@ -1,4 +1,5 @@
 import './globals.css';
+import './kingdom-theme.css';
 import { Cinzel, Inter, JetBrains_Mono } from 'next/font/google';
 import SiteHeader from '../components/SiteHeader';
 import SiteFooter from '../components/SiteFooter';
@@ -43,7 +44,7 @@ export const metadata = {
 };
 
 export const viewport = {
-  themeColor: '#10142a',
+  themeColor: '#132142',
   width: 'device-width',
   initialScale: 1,
 };
