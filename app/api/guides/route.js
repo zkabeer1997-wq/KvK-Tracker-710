@@ -14,7 +14,10 @@ export async function GET() {
       .order('title', { ascending: true });
 
     if (error) throw error;
-    return NextResponse.json({ guides: data || [] });
+    return NextResponse.json(
+      { guides: data || [] },
+      { headers: { 'Cache-Control': 'no-store, max-age=0' } },
+    );
   } catch (error) {
     console.error('guides directory GET failed', error);
     return NextResponse.json({ error: 'Unable to load guides.' }, { status: 500 });
