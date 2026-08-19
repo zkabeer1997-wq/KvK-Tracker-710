@@ -7,7 +7,7 @@ import KingdomAtmosphere from './KingdomAtmosphere';
 import KingdomGate from './KingdomGate';
 import KingdomTraveler from './KingdomTraveler';
 
-const NIGHT = '#050812';
+const TWILIGHT = '#0d1530';
 
 function CameraRig({ hoveredRoad, phase, selectedRoad, active }) {
   const { camera } = useThree();
@@ -131,15 +131,15 @@ function SceneContents({ hoveredRoad, phase, selectedRoad, active, mobile }) {
 
   return (
     <>
-      <color attach="background" args={[NIGHT]} />
-      <fog attach="fog" args={[NIGHT, phase === 'transitioning' ? 7.5 : 12, phase === 'transitioning' ? 27 : 39]} />
+      <color attach="background" args={[TWILIGHT]} />
+      <fog attach="fog" args={[TWILIGHT, phase === 'transitioning' ? 8 : 13, phase === 'transitioning' ? 31 : 44]} />
 
-      <ambientLight intensity={0.24} color="#53618f" />
-      <hemisphereLight args={['#556895', '#03050c', 0.58]} />
+      <ambientLight intensity={0.48} color="#778bbc" />
+      <hemisphereLight args={['#91a9d8', '#0c1428', 0.92]} />
       <directionalLight
         position={[-10, 13, 8]}
-        intensity={1.32}
-        color="#91a2cf"
+        intensity={1.72}
+        color="#b5c8ee"
         castShadow={!mobile}
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
@@ -151,9 +151,10 @@ function SceneContents({ hoveredRoad, phase, selectedRoad, active, mobile }) {
         shadow-camera-far={40}
         shadow-bias={-0.0006}
       />
-      <pointLight position={[0, 6.5, 5.5]} color="#8c72a4" intensity={0.58} distance={24} decay={2} />
-      <pointLight position={[-4.2, 3.2, -4.6]} color="#d9a94e" intensity={leftActive ? 4.3 : 1.18} distance={19} decay={2} />
-      <pointLight position={[4.2, 3.2, -4.6]} color="#7594c8" intensity={rightActive ? 4.1 : 1.08} distance={19} decay={2} />
+      <directionalLight position={[9, 7, 5]} intensity={0.56} color="#7d95c9" />
+      <pointLight position={[0, 6.5, 5.5]} color="#c3b6e4" intensity={0.82} distance={26} decay={2} />
+      <pointLight position={[-4.2, 3.2, -4.6]} color="#e4b85b" intensity={leftActive ? 5.0 : 2.05} distance={21} decay={2} />
+      <pointLight position={[4.2, 3.2, -4.6]} color="#94b5eb" intensity={rightActive ? 4.8 : 1.95} distance={21} decay={2} />
 
       <KingdomAtmosphere activeRoad={activeRoad} />
       <KingdomGate hoveredRoad={hoveredRoad} selectedRoad={selectedRoad} />
@@ -179,7 +180,7 @@ export default function KingdomScene({ hoveredRoad, phase, selectedRoad, active 
       performance={{ min: 0.65 }}
       onCreated={({ gl }) => {
         gl.toneMapping = ACESFilmicToneMapping;
-        gl.toneMappingExposure = mobile ? 1.08 : 1.15;
+        gl.toneMappingExposure = mobile ? 1.26 : 1.34;
         gl.outputColorSpace = SRGBColorSpace;
         if (!mobile) gl.shadowMap.type = PCFSoftShadowMap;
       }}
