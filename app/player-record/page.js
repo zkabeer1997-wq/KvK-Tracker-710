@@ -11,8 +11,11 @@ const [blocks, isAdmin] = await Promise.all([
 getBlocks('player-record-banner'),
 checkIsAdmin(),
 ]);
-const banner = (
-<EditableSection page="player-record-banner" initialBlocks={blocks} isAdmin={isAdmin} as="div" className="card-header" />
-);
+// Only mount the editable banner when it actually has content (or an
+// admin is present to add some) -- otherwise it renders a dead panel.
+const hasBanner = Array.isArray(blocks) && blocks.length > 0;
+const banner = (hasBanner || isAdmin) ? (
+<EditableSection page="player-record-banner" initialBlocks={blocks} isAdmin={isAdmin} as="div" className="gatehouse-notice" />
+) : null;
 return <PlayerRecordGate banner={banner} />;
 }

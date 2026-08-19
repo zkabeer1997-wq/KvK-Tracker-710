@@ -56,7 +56,10 @@ input, select { padding: 10px 12px; border: 1px solid rgba(217, 169, 78, 0.25); 
 input:focus, select:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(217, 169, 78, 0.18); }
 
 .row { display: flex; gap: 16px; }
-.row label { flex: 1; }
+/* min-width:0 — a flex item defaults to min-width:auto and will not
+   shrink below the intrinsic width of a <select>, so without this the
+   controls spill out of narrow containers instead of fitting. */
+.row label { flex: 1; min-width: 0; }
 
 .troop-section { border: 1px solid var(--border-soft); border-radius: 10px; padding: 16px; background: rgba(255, 255, 255, 0.02); }
 
@@ -76,17 +79,22 @@ input:focus, select:focus { outline: none; border-color: var(--gold); box-shadow
 
 .status.error { background: var(--danger-bg); color: #fecaca; border-color: rgba(248, 113, 113, 0.4); }
 
-button[type="submit"] { background: var(--gold); color: var(--ink); border: none; padding: 12px; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.03em; transition: background 0.15s ease, transform 0.15s ease; }
+button[type="submit"]:not(.k-btn) { background: var(--gold); color: var(--ink); border: none; padding: 12px; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.03em; transition: background 0.15s ease, transform 0.15s ease; }
 
-button[type="submit"]:hover { background: var(--gold-bright); }
+button[type="submit"]:not(.k-btn):hover { background: var(--gold-bright); }
 
-button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; }
+button[type="submit"]:not(.k-btn):disabled { opacity: 0.5; cursor: not-allowed; }
 
 .public-page { align-items: center; padding: 28px; background: radial-gradient(circle at top left, rgba(255, 179, 0, 0.12), transparent 32%), radial-gradient(circle at bottom right, rgba(217, 169, 78, 0.1), transparent 40%), linear-gradient(135deg, #0d1119 0%, #111622 44%, #181a20 100%); }
 
 .public-shell { width: min(1180px, 100%); display: grid; grid-template-columns: minmax(280px, 390px) minmax(0, 1fr); gap: 18px; align-items: start; }
 
-.public-shell.single-form { width: min(1180px, 100%); }
+/* .public-shell is a two-column layout (narrative rail + form). The
+   single-form variant only reset the width, so its form stayed in the
+   first track and was capped at 390px with an empty second column beside
+   it — on /flamedragon that squeezed the unit selects until they
+   overflowed their cards and overlapped each other. */
+.public-shell.single-form { width: min(1180px, 100%); grid-template-columns: minmax(0, 1fr); }
 
 .public-intro, .public-form-card { border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--glow); }
 
@@ -174,9 +182,9 @@ button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .power-field-grid > label:last-child { grid-column: 1 / -1; }
 
-.public-form-card button[type="submit"] { background: var(--ember); color: #241a00; border: 1px solid var(--ember); padding: 14px 16px; font-weight: 900; }
+.public-form-card button[type="submit"]:not(.k-btn) { background: var(--ember); color: #241a00; border: 1px solid var(--ember); padding: 14px 16px; font-weight: 900; }
 
-.public-form-card button[type="submit"]:hover { background: var(--ember-bright); }
+.public-form-card button[type="submit"]:not(.k-btn):hover { background: var(--ember-bright); }
 
 .panel-heading span, .rally-sidebar-header span { color: var(--ember); font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
 
@@ -447,7 +455,7 @@ button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .block-edit-actions button { border: none; border-radius: 6px; padding: 7px 12px; font-size: 12px; font-weight: 700; cursor: pointer; }
 
-.block-edit-actions button[type="submit"] { background: var(--gold); color: var(--ink); }
+.block-edit-actions button[type="submit"]:not(.k-btn) { background: var(--gold); color: var(--ink); }
 
 .add-block-bar { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 

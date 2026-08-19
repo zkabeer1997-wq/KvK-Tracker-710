@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 const NAV_ITEMS = [
   { href: '/admin/dashboard', label: 'Player Records', match: '/admin/dashboard' },
@@ -10,11 +11,46 @@ const NAV_ITEMS = [
   { href: '/admin/dashboard/flamedragon', label: 'Flamedragon Tyrant', match: '/admin/dashboard/flamedragon' },
 ];
 
-export default function AdminShell({ title, subtitle, actions, onLogout, children }) {
+const MODE_KEY = 'k710-warroom-mode';
+
+/**
+ * THE WAR ROOM
+ *
+ * The admin shell is the command chamber. It offers two views so the room
+ * never gets in the way of the work:
+ *
+ *   COMMAND — the war table: warm table light, brass counters, atmosphere.
+ *   LEDGER  — dense operational mode for reviewing many rows quickly.
+ *
+ * The choice persists, so a returning admin lands where they actually work.
+ * All page content is unchanged in both modes; only the room around it is.
+ */
+export default function AdminShell({ title, subtitle, actions, onLogout, counters = [], children }) {
   const pathname = usePathname();
+  const [mode, setMode] = useState('ledger');
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(MODE_KEY);
+      if (saved === 'command' || saved === 'ledger') setMode(saved);
+    } catch {
+      /* private mode */
+    }
+  }, []);
+
+  function choose(next) {
+    setMode(next);
+    try {
+      localStorage.setItem(MODE_KEY, next);
+    } catch {
+      /* private mode */
+    }
+  }
 
   return (
-    <div className="admin-shell">
+    <div className={`admin-shell warroom-${mode}`}>
+      <div className="warroom-atmos" aria-hidden="true" />
+
       <aside className="admin-sidebar">
         <div className="admin-sidebar-brand">
           <svg viewBox="0 0 40 40" fill="none" aria-hidden="true">
@@ -22,11 +58,11 @@ export default function AdminShell({ title, subtitle, actions, onLogout, childre
           </svg>
           <div>
             <span className="admin-sidebar-brand-k">K710</span>
-            <span className="admin-sidebar-brand-sub">Command Hall</span>
+            <span className="admin-sidebar-brand-sub">War Room</span>
           </div>
         </div>
 
-        <nav className="admin-sidebar-nav" aria-label="Command Hall sections">
+        <nav className="admin-sidebar-nav" aria-label="War room sections">
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.match;
             return (
@@ -38,6 +74,26 @@ export default function AdminShell({ title, subtitle, actions, onLogout, childre
         </nav>
 
         <div className="admin-sidebar-bottom">
+          <div className="warroom-modes" role="group" aria-label="War room view">
+            <button
+              type="button"
+              className="warroom-mode"
+              data-on={mode === 'command'}
+              aria-pressed={mode === 'command'}
+              onClick={() => choose('command')}
+            >
+              Command
+            </button>
+            <button
+              type="button"
+              className="warroom-mode"
+              data-on={mode === 'ledger'}
+              aria-pressed={mode === 'ledger'}
+              onClick={() => choose('ledger')}
+            >
+              Ledger
+            </button>
+          </div>
           <Link href="/" className="admin-sidebar-view-site">View Public Site</Link>
           {onLogout && (
             <button type="button" className="admin-sidebar-logout" onClick={onLogout}>Log Out</button>
@@ -46,6 +102,7 @@ export default function AdminShell({ title, subtitle, actions, onLogout, childre
       </aside>
 
       <div className="admin-content">
+        <div className="warroom-tablelight" aria-hidden="true" />
         <header className="admin-topbar">
           <div>
             {subtitle && <span className="admin-topbar-kicker">{subtitle}</span>}
@@ -53,6 +110,19 @@ export default function AdminShell({ title, subtitle, actions, onLogout, childre
           </div>
           {actions && <div className="admin-topbar-actions">{actions}</div>}
         </header>
+
+        {/* Brass counters read off the same live data the tables use. */}
+        {counters.length > 0 && (
+          <div className="warroom-counters" aria-label="Command summary">
+            {counters.map((c) => (
+              <div key={c.label} className="warroom-counter">
+                <span className="warroom-counter-val">{c.value}</span>
+                <span className="k-mark warroom-counter-label">{c.label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="admin-content-body">{children}</div>
       </div>
     </div>

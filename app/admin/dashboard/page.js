@@ -421,6 +421,13 @@ return (
 title="Player Records"
 subtitle="K710 command board"
 onLogout={handleLogout}
+counters={[
+{ label: 'Members', value: rows.length },
+{ label: 'Available', value: availableCount },
+{ label: 'Assigned', value: assignedCount },
+{ label: 'Unassigned', value: Math.max(rows.length - assignedCount, 0) },
+{ label: 'Rallies', value: rallyCount },
+]}
 actions={(
 <>
 <button

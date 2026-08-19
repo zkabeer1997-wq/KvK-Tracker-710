@@ -11,8 +11,9 @@ const [blocks, isAdmin] = await Promise.all([
 getBlocks('power-profile-intro'),
 checkIsAdmin(),
 ]);
-const intro = (
-<EditableSection page="power-profile-intro" initialBlocks={blocks} isAdmin={isAdmin} as="section" className="public-intro power-intro" />
-);
+const hasIntro = Array.isArray(blocks) && blocks.length > 0;
+const intro = (hasIntro || isAdmin) ? (
+<EditableSection page="power-profile-intro" initialBlocks={blocks} isAdmin={isAdmin} as="section" className="armory-notice" />
+) : null;
 return <PowerProfileClient intro={intro} />;
 }

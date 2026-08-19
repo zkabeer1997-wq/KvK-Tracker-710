@@ -1,7 +1,7 @@
 import './globals.css';
-import { Cinzel, Inter, JetBrains_Mono } from 'next/font/google';
-import SiteHeader from '../components/SiteHeader';
-import SiteFooter from '../components/SiteFooter';
+import './kingdom.css';
+import { Cinzel, Inter, JetBrains_Mono, Cormorant_Garamond } from 'next/font/google';
+import CrestMenu from '../components/kingdom/world/CrestMenu';
 
 // Self-hosted at build time. Replaces the render-blocking CSS @import
 // that previously chained an extra round-trip to fonts.googleapis.com
@@ -27,6 +27,17 @@ const jetbrains = JetBrains_Mono({
   variable: '--font-mono-loaded',
 });
 
+// Narrative voice. Cinzel is reserved for struck titles; prose and
+// doctrine copy use a refined serif so the world does not read as
+// "everything in medieval caps".
+const cormorant = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  style: ['normal', 'italic'],
+  display: 'swap',
+  variable: '--font-narrative-loaded',
+});
+
 export const metadata = {
   title: {
     default: 'K710 Hub',
@@ -50,11 +61,10 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${cinzel.variable} ${inter.variable} ${jetbrains.variable}`}>
+    <html lang="en" className={`${cinzel.variable} ${inter.variable} ${jetbrains.variable} ${cormorant.variable}`}>
       <body>
-        <SiteHeader />
-        {children}
-        <SiteFooter />
+        <CrestMenu />
+        <div id="main">{children}</div>
       </body>
     </html>
   );

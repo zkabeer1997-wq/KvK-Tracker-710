@@ -3,20 +3,47 @@ import { getBlocks, checkIsAdmin } from '../../lib/contentBlocks';
 import InterestForm from './InterestForm';
 
 export const metadata = {
-title: 'K710 Interest Form',
+  title: 'The Registry',
+  description: 'Petition the registry to transfer into Kingdom 710.',
 };
 
 export default async function InterestPage() {
-const [introBlocks, isAdmin] = await Promise.all([
-getBlocks('interest-intro'),
-checkIsAdmin(),
-]);
-return (
-<main className="page public-page">
-<div className="public-shell single-form">
-<EditableSection page="interest-intro" initialBlocks={introBlocks} isAdmin={isAdmin} as="section" className="public-intro" />
-<InterestForm />
-</div>
-</main>
-);
+  const [introBlocks, isAdmin] = await Promise.all([
+    getBlocks('interest-intro'),
+    checkIsAdmin(),
+  ]);
+
+  // The narrative rail moved to the Chronometer Chamber, so the registry is
+  // now a single column focused on the petition itself. The editable block
+  // is still rendered (admins can add a notice above the form) but no longer
+  // reserves an empty column when it has no content.
+  const hasIntro = Array.isArray(introBlocks) && introBlocks.length > 0;
+
+  return (
+    <main className="registry">
+      <div className="registry-atmos" aria-hidden="true" />
+      <div className="registry-inner">
+        <header className="registry-head">
+          <span className="k-mark">The Registry</span>
+          <h1 className="k-display registry-title k-engraved">Petition for Entry</h1>
+          <p className="k-narrative registry-lede">
+            State your name, your strength, and your intent. The council reviews
+            every petition before intake opens.
+          </p>
+        </header>
+
+        {(hasIntro || isAdmin) && (
+          <EditableSection
+            page="interest-intro"
+            initialBlocks={introBlocks}
+            isAdmin={isAdmin}
+            as="section"
+            className="registry-notice"
+          />
+        )}
+
+        <InterestForm />
+      </div>
+    </main>
+  );
 }
