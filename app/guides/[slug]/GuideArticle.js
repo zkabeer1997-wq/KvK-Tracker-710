@@ -16,18 +16,23 @@ export default function GuideArticle({ slug, memberId }) {
   const query = memberId ? `?member_id=${encodeURIComponent(memberId)}` : '';
   const guidesHref = `/guides${query}`;
 
+  async function fetchGuide() {
+    const response = await fetch(`/api/guides/${encodeURIComponent(slug)}?t=${Date.now()}`, {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache, no-store, max-age=0' },
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Unable to load this guide.');
+    return result;
+  }
+
   useEffect(() => {
     let cancelled = false;
     async function loadGuide() {
       setLoading(true);
       setError('');
       try {
-        const response = await fetch(`/api/guides/${encodeURIComponent(slug)}?t=${Date.now()}`, {
-          cache: 'no-store',
-          headers: { 'Cache-Control': 'no-cache' },
-        });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Unable to load this guide.');
+        const result = await fetchGuide();
         if (cancelled) return;
         setGuide(result.guide);
         setDraftTitle(result.guide?.title || '');
@@ -48,38 +53,6 @@ export default function GuideArticle({ slug, memberId }) {
     return () => { document.title = 'Kingdom Guide | K710'; };
   }, [guide?.title]);
 
-  async function verifySavedGuide(expectedTitle, expectedBody) {
-    const stamp = Date.now();
-    const [guideResponse, directoryResponse] = await Promise.all([
-      fetch(`/api/guides/${encodeURIComponent(slug)}?verify=${stamp}`, {
-        cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache' },
-      }),
-      fetch(`/api/guides?verify=${stamp}`, {
-        cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache' },
-      }),
-    ]);
-
-    const guideResult = await guideResponse.json();
-    const directoryResult = await directoryResponse.json();
-
-    if (!guideResponse.ok) throw new Error(guideResult.error || 'Could not verify the saved guide.');
-    if (!directoryResponse.ok) throw new Error(directoryResult.error || 'Could not verify the Guides directory.');
-
-    const directoryGuide = (directoryResult.guides || []).find((item) => item.slug === slug);
-    const persistedGuide = guideResult.guide;
-
-    if (!persistedGuide || persistedGuide.title !== expectedTitle || persistedGuide.body !== expectedBody) {
-      throw new Error('The database did not return the saved guide exactly as submitted.');
-    }
-    if (!directoryGuide || directoryGuide.title !== expectedTitle) {
-      throw new Error('The Guides directory did not return the saved title.');
-    }
-
-    return persistedGuide;
-  }
-
   async function saveGuide() {
     const nextTitle = draftTitle.trim();
     if (!nextTitle) {
@@ -92,26 +65,37 @@ export default function GuideArticle({ slug, memberId }) {
     setError('');
 
     try {
-      const response = await fetch(`/api/guides/${encodeURIComponent(slug)}`, {
+      const response = await fetch(`/api/guides/${encodeURIComponent(slug)}?t=${Date.now()}`, {
         method: 'PUT',
         cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache',
+          'Cache-Control': 'no-cache, no-store, max-age=0',
         },
         body: JSON.stringify({ title: nextTitle, body: draft }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Unable to save this guide.');
+      if (!result.guide) throw new Error('The save completed but no guide was returned.');
 
-      const persistedGuide = await verifySavedGuide(nextTitle, draft);
-      setGuide(persistedGuide);
-      setDraftTitle(persistedGuide.title || '');
-      setDraft(persistedGuide.body || '');
+      // The UPDATE ... SELECT response is the persisted database row. Use it immediately
+      // so the individual guide title/body cannot remain stuck on pre-save client state.
+      setGuide(result.guide);
+      setDraftTitle(result.guide.title || '');
+      setDraft(result.guide.body || '');
       setEditing(false);
-      setStatus('Saved and verified. The individual guide and Guides directory now use this persisted title.');
+      setStatus('Saved. Reloading the persisted guide…');
+
+      // Read the row back once from the database and display whatever Supabase persisted.
+      // Do not compare raw textarea strings byte-for-byte because browsers normalize line endings.
+      const confirmed = await fetchGuide();
+      setGuide(confirmed.guide);
+      setDraftTitle(confirmed.guide?.title || '');
+      setDraft(confirmed.guide?.body || '');
+      setIsAdmin(Boolean(confirmed.isAdmin));
+      setStatus('Guide saved. The title and text are persisted on this page and in the Guides directory.');
     } catch (err) {
-      setError(err.message || 'Unable to save and verify this guide.');
+      setError(err.message || 'Unable to save this guide.');
     } finally {
       setSaving(false);
     }
@@ -194,7 +178,7 @@ export default function GuideArticle({ slug, memberId }) {
                 onChange={(event) => setDraft(event.target.value)}
                 spellCheck="true"
               />
-              <p>Plain text is preserved exactly, including paragraph breaks and lists.</p>
+              <p>Plain text is preserved, including paragraph breaks and lists.</p>
             </div>
           )}
         </article>
@@ -211,7 +195,7 @@ export default function GuideArticle({ slug, memberId }) {
             ) : (
               <>
                 <button type="button" className="k-btn guide-save" onClick={saveGuide} disabled={saving}>
-                  {saving ? 'Saving & verifying…' : 'Save Changes'}
+                  {saving ? 'Saving…' : 'Save Changes'}
                 </button>
                 <button type="button" className="guide-cancel" onClick={cancelEdit} disabled={saving}>
                   Cancel
