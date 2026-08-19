@@ -33,9 +33,9 @@ function MistBank({ position, scale, drift = 0.4, opacity = 0.12, phase = 0 }) {
   useFrame(({ clock }) => {
     if (!ref.current) return;
     const t = clock.getElapsedTime() * drift + phase;
-    ref.current.position.x = base.x + Math.sin(t) * 1.4;
-    ref.current.position.y = base.y + Math.sin(t * 0.63) * 0.08;
-    ref.current.material.opacity = opacity * (0.86 + Math.sin(t * 0.72) * 0.10);
+    ref.current.position.x = base.x + Math.sin(t) * 0.9;
+    ref.current.position.y = base.y + Math.sin(t * 0.63) * 0.045;
+    ref.current.material.opacity = opacity * (0.9 + Math.sin(t * 0.72) * 0.06);
   });
 
   if (!texture) return null;
@@ -64,7 +64,7 @@ function Moon() {
             map={texture}
             color="#cbd8f2"
             transparent
-            opacity={0.38}
+            opacity={0.34}
             blending={AdditiveBlending}
             depthWrite={false}
             toneMapped={false}
@@ -80,19 +80,18 @@ function Moon() {
 }
 
 export default function KingdomAtmosphere({ activeRoad }) {
-  const roadColor = activeRoad === 'left' ? '#e4b85b' : activeRoad === 'right' ? '#9ebef1' : '#e77a4a';
+  const roadColor = activeRoad === 'left' ? '#e4b85b' : activeRoad === 'right' ? '#9ebef1' : '#d4b46e';
 
   return (
     <>
-      <Stars radius={54} depth={36} count={950} factor={2.45} saturation={0.08} fade speed={0.13} />
+      <Stars radius={54} depth={36} count={560} factor={2.15} saturation={0.05} fade speed={0.08} />
       <Moon />
 
-      <MistBank position={[-7.5, 0.75, -3.5]} scale={[13, 3.3, 1]} drift={0.24} opacity={0.14} phase={0.5} />
-      <MistBank position={[6.8, 0.62, -5.5]} scale={[14, 3.6, 1]} drift={0.2} opacity={0.13} phase={2.2} />
-      <MistBank position={[0.4, 0.42, 2.1]} scale={[12, 2.5, 1]} drift={0.28} opacity={0.075} phase={4.1} />
-      <MistBank position={[1.2, 1.05, -13]} scale={[20, 4.8, 1]} drift={0.13} opacity={0.10} phase={1.4} />
+      <MistBank position={[-7.5, 0.72, -3.5]} scale={[13, 3.1, 1]} drift={0.17} opacity={0.095} phase={0.5} />
+      <MistBank position={[6.8, 0.58, -5.5]} scale={[14, 3.4, 1]} drift={0.15} opacity={0.085} phase={2.2} />
+      <MistBank position={[1.2, 0.9, -13]} scale={[20, 4.4, 1]} drift={0.1} opacity={0.065} phase={1.4} />
 
-      <Sparkles count={62} scale={[18, 5, 15]} position={[0, 1.8, -2]} size={1.55} speed={0.18} color={roadColor} opacity={0.40} />
+      <Sparkles count={18} scale={[16, 3.5, 13]} position={[0, 1.4, -2]} size={1.05} speed={0.08} color={roadColor} opacity={0.22} />
     </>
   );
 }
