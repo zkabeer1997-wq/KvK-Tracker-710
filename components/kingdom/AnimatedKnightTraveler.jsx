@@ -5,7 +5,7 @@ import { useAnimations, useGLTF } from '@react-three/drei';
 import { Box3, Vector3 } from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
-const KNIGHT_URL = 'https://raw.githubusercontent.com/ilrein/warptracker/main/public/models/knight.glb';
+const KNIGHT_URL = '/api/kingdom-assets/knight';
 
 function findClip(names, patterns) {
   for (const pattern of patterns) {
