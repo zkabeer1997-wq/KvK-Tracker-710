@@ -72,19 +72,18 @@ export default async function ChronometerPage() {
           {WARBANDS.map((w) => (
             <article key={w.band} className="standard k-wb" data-band={w.band}>
               <div className="standard-cloth" aria-hidden="true" />
-              <div className="standard-plate k-plate">
-                <span className="k-mark standard-role">{w.role}</span>
-                <h3 className="k-display standard-name">{field(w.nameKey)}</h3>
-                <p className="k-narrative standard-desc">{field(w.descKey)}</p>
-                <ul className="standard-windows">
-                  {w.windows.map((t) => (
-                    <li key={t}>
-                      <span className="k-gem" aria-hidden="true" />
-                      <span className="k-mark">{t} UTC</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <span className="standard-gem" aria-hidden="true" />
+              <span className="k-mark standard-role">{w.role}</span>
+              <h3 className="k-display standard-name">{field(w.nameKey)}</h3>
+              <p className="k-narrative standard-desc">{field(w.descKey)}</p>
+              <ul className="standard-windows">
+                {w.windows.map((t) => (
+                  <li key={t}>
+                    <span className="k-gem" aria-hidden="true" />
+                    <span className="k-mark">{t} UTC</span>
+                  </li>
+                ))}
+              </ul>
             </article>
           ))}
         </div>

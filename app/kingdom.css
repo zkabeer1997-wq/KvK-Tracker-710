@@ -632,32 +632,65 @@
 .chamber-head { margin-bottom: clamp(26px, 4vh, 44px); }
 .chamber-h2 { margin: 10px 0 0; font-size: clamp(21px, 3vw, 34px); letter-spacing: 0.09em; }
 
-/* --- Warband standards --- */
-.standards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(14px, 2.2vw, 26px); }
-.standard { position: relative; }
+/* --- Warband standards ---
+   Three real standards hanging in the chamber: an iron rod, cloth with a
+   brass hem, the band's gemstone set beneath, and the writing engraved on
+   the wall under it. No plate, no card, no panel edge. */
+.standards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(18px, 3vw, 44px); }
+.standard { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .standard-cloth {
-  height: 74px; margin-bottom: -1px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--wb) 62%, #0a0c14), color-mix(in srgb, var(--wb-deep) 84%, #05060d));
-  clip-path: polygon(0 0, 100% 0, 100% 74%, 50% 100%, 0 74%);
-  box-shadow: 0 12px 30px rgba(0,0,0,0.55);
+  position: relative;
+  width: clamp(74px, 8vw, 104px); height: clamp(150px, 19vw, 210px);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--wb) 78%, #0a0c14), color-mix(in srgb, var(--wb-deep) 84%, #05060d));
+  clip-path: polygon(0 0, 100% 0, 100% 88%, 50% 100%, 0 88%);
+  box-shadow: 0 24px 54px rgba(0,0,0,0.6);
 }
-.standard-plate { padding: 22px 20px 20px; }
-.standard-role { display: block; color: var(--wb); }
-.standard-name { margin: 8px 0 0; font-size: 30px; letter-spacing: 0.1em; color: var(--parchment); }
-.standard-desc { margin: 9px 0 0; font-size: 14.5px; }
-.standard-windows { list-style: none; margin: 16px 0 0; padding: 14px 0 0; display: flex; flex-wrap: wrap; gap: 9px; border-top: 1px solid var(--edge); }
+/* the rod it hangs from */
+.standard-cloth::before {
+  content: ''; position: absolute; left: -22%; right: -22%; top: -8px; height: 6px; border-radius: 3px;
+  background: linear-gradient(180deg, #8d94ab, #3b4157 55%, #171a26);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.7);
+}
+/* cloth curvature and the brass hem near the point */
+.standard-cloth::after {
+  content: ''; position: absolute; inset: 0;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,0.48), transparent 26%, rgba(255,255,255,0.13) 48%, transparent 70%, rgba(0,0,0,0.5)),
+    linear-gradient(180deg, transparent 76%, rgba(201,164,78,0.55) 78%, rgba(201,164,78,0.55) 81%, transparent 83%);
+}
+/* the band's gemstone -- the same stone that sits on the dial */
+.standard-gem {
+  width: 15px; height: 15px; border-radius: 50%; margin-top: 20px;
+  background: radial-gradient(circle at 34% 30%, color-mix(in srgb, var(--wb) 70%, #fff), var(--wb-deep));
+  box-shadow: 0 0 16px color-mix(in srgb, var(--wb) 55%, transparent), inset 0 0 0 1.6px rgba(201,164,78,0.6);
+}
+.standard-role { display: block; margin-top: 12px; color: var(--wb); }
+.standard-name { margin: 7px 0 0; font-size: clamp(24px, 3vw, 32px); letter-spacing: 0.12em; color: var(--parchment); }
+.standard-desc { margin: 9px auto 0; font-size: 14.5px; max-width: 30ch; }
+.standard-windows {
+  list-style: none; margin: 16px auto 0; padding: 14px 0 0;
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 9px 14px;
+  border-top: 1px solid var(--edge);
+  width: min(100%, 250px);
+}
 .standard-windows li { display: inline-flex; align-items: center; gap: 7px; }
 
-/* --- Doctrine wall --- */
-.doctrine { display: grid; gap: 2px; background: var(--edge); border: 1px solid var(--edge); }
+/* --- Doctrine wall ---
+   Inscriptions cut into the chamber wall: a brass numeral, a struck title
+   and narrative body, separated by hairline courses. Panels would put the
+   text back inside cards, which is exactly what this page must not be.
+   The numerals were previously drawn as an outline over transparent text,
+   which turned every vertical stem into two strokes: I read as II. */
+.doctrine { display: grid; }
 .doctrine-entry {
-  display: grid; grid-template-columns: 86px 1fr; gap: clamp(14px, 3vw, 34px); align-items: start;
-  padding: clamp(22px, 3.4vw, 34px);
-  background: linear-gradient(180deg, rgba(35,40,58,0.5), rgba(23,26,36,0.72));
+  display: grid; grid-template-columns: 86px 1fr; gap: clamp(14px, 3vw, 34px); align-items: baseline;
+  padding: clamp(20px, 3vw, 30px) 0;
+  border-bottom: 1px solid var(--edge);
 }
+.doctrine-entry:first-child { border-top: 1px solid var(--edge); }
 .doctrine-num {
-  font-size: clamp(28px, 4vw, 44px); color: transparent;
-  -webkit-text-stroke: 1.4px var(--brass); letter-spacing: 0.04em;
+  font-size: clamp(28px, 4vw, 44px); line-height: 1;
+  color: var(--brass-dim); letter-spacing: 0.06em;
 }
 .doctrine-title { margin: 0; font-size: clamp(15px, 1.6vw, 19px); letter-spacing: 0.08em; color: var(--parchment); }
 .doctrine-body { margin: 9px 0 0; font-size: 15px; max-width: 62ch; }
@@ -665,15 +698,22 @@
 /* --- The march --- */
 .march { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(12px, 2vw, 22px); position: relative; }
 .march::before {
-  content: ''; position: absolute; left: 6%; right: 6%; top: 9px; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--edge-strong), var(--edge-strong), transparent);
+  content: ''; position: absolute; left: 4%; right: 4%; top: 8px; height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(201,164,78,0.34) 14%, rgba(201,164,78,0.34) 86%, transparent);
+  box-shadow: 0 6px 18px rgba(201,164,78,0.14);
 }
-.march-stone { position: relative; padding-top: 34px; }
+.march-stone { position: relative; padding-top: 38px; }
+/* a waystone planted on the road, not a bullet */
 .march-marker {
-  position: absolute; top: 3px; left: 0;
-  width: 13px; height: 13px; border-radius: 50%;
-  background: radial-gradient(circle at 34% 30%, var(--gold-hot), var(--brass-dim));
-  box-shadow: 0 0 12px rgba(201,164,78,0.5);
+  position: absolute; top: 0; left: 0;
+  width: 15px; height: 19px;
+  clip-path: polygon(50% 0, 100% 26%, 100% 100%, 0 100%, 0 26%);
+  background: linear-gradient(180deg, #8b8574, #2a2721);
+  box-shadow: 0 0 16px rgba(201,164,78,0.32);
+}
+.march-marker::after {
+  content: ''; position: absolute; left: 3px; right: 3px; top: 7px; height: 2px;
+  background: rgba(201,164,78,0.75);
 }
 .march-num { display: block; color: var(--brass); }
 .march-title { margin: 8px 0 0; font-size: 15px; letter-spacing: 0.06em; color: var(--parchment); }
@@ -850,7 +890,71 @@
 .registry-title { margin: 12px 0 0; font-size: clamp(26px, 4.6vw, 48px); letter-spacing: 0.10em; }
 .registry-lede { max-width: 54ch; margin: 16px auto 0; }
 .registry-notice { margin-bottom: 22px; }
-.registry .public-form-card { max-width: none; }
+/* Same treatment as the Armory: the petition is not a glass card holding
+   eleven rounded sub-cards. Each question group is a course in the
+   register, ruled off rather than boxed. Scoped to .registry. */
+.registry .public-form-card {
+  max-width: none; padding: 0; gap: clamp(26px, 4vh, 40px);
+  background: none; border: 0; border-radius: 0; box-shadow: none;
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+.registry .public-section,
+.registry .troop-section {
+  background: none; border: 0; border-radius: 0;
+  border-left: 2px solid var(--edge-strong);
+  padding: 4px 0 4px clamp(14px, 2.2vw, 24px);
+}
+.registry .public-form-card input[type='text'],
+.registry .public-form-card input[type='number'],
+.registry .public-form-card input:not([type]),
+.registry .public-form-card textarea,
+.registry .public-form-card select {
+  background: linear-gradient(180deg, rgba(4,5,10,0.86), rgba(10,12,19,0.7));
+  border: 1px solid rgba(201,164,78,0.26);
+  border-radius: 3px; color: var(--parchment);
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.6);
+}
+.registry .public-form-card input:focus,
+.registry .public-form-card textarea:focus,
+.registry .public-form-card select:focus {
+  border-color: var(--gold-aged);
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.6), 0 0 0 3px rgba(201,164,78,0.22);
+}
+
+/* the raw file input reads as an unstyled OS control on an otherwise
+   composed page; the button half is restyled and the field framed */
+.registry .public-form-card input[type='file'] {
+  width: 100%; padding: 14px;
+  background: linear-gradient(180deg, rgba(4,5,10,0.7), rgba(10,12,19,0.55));
+  border: 1px dashed rgba(201,164,78,0.34); border-radius: 3px;
+  color: var(--parchment-dim); font-size: 13px;
+}
+.registry .public-form-card input[type='file']::file-selector-button {
+  margin-right: 14px; padding: 9px 18px;
+  background: linear-gradient(180deg, rgba(201,164,78,0.22), rgba(201,164,78,0.08));
+  border: 1px solid rgba(201,164,78,0.44); border-radius: 2px;
+  color: var(--parchment); cursor: pointer;
+  font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase;
+}
+.registry .public-form-card input[type='file']::file-selector-button:hover {
+  background: linear-gradient(180deg, rgba(201,164,78,0.34), rgba(201,164,78,0.14));
+}
+
+/* struck brass submit, matching the Armory and the gate controls */
+.registry .public-form-card button[type="submit"] {
+  padding: 16px 34px;
+  background: linear-gradient(180deg, #d9b566, #9a7526);
+  color: #1a1305;
+  border: 1px solid rgba(255,225,160,0.5);
+  border-radius: 2px;
+  font-family: var(--font-display); font-weight: 800;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,240,200,0.55);
+}
+.registry .public-form-card button[type="submit"]:hover:not(:disabled) {
+  background: linear-gradient(180deg, #eccc84, #ac8531);
+}
+.registry .public-form-card button[type="submit"]:disabled { opacity: 0.55; }
 
 /* ============================================================
    THE GATEHOUSE — member checkpoint
@@ -1204,8 +1308,79 @@
 .armory-title { margin: 12px 0 0; font-size: clamp(24px, 4.2vw, 44px); letter-spacing: 0.09em; }
 .armory-lede { max-width: 56ch; margin: 14px auto 0; }
 .armory-notice { margin-bottom: 20px; }
-.armory .public-form-card { max-width: none; background: linear-gradient(180deg, rgba(35,40,58,0.5), rgba(10,12,19,0.9)); border-color: var(--edge); }
-.armory .ledger-block { background: rgba(255,255,255,0.02); border-color: var(--edge); }
+/* The ledger is not a card. The legacy .public-form-card is a blurred
+   glass panel with a rounded border and, nested inside it, three more
+   rounded panels -- three levels of box before you reach a control. Here
+   the form sits directly on the armory floor and each block is a section
+   of the ledger separated by an engraved course. Scoped to .armory so the
+   other public forms keep their existing treatment. */
+.armory .war-ledger-form {
+  max-width: none; padding: 0; gap: clamp(28px, 4vh, 44px);
+  background: none; border: 0; border-radius: 0; box-shadow: none;
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+.armory .war-ledger-form .identity-grid { gap: 18px; }
+.armory .ledger-block {
+  background: none; border: 0; border-top: 1px solid var(--edge);
+  border-radius: 0; padding: clamp(20px, 3vh, 30px) 0 0; gap: 16px;
+}
+.armory .ledger-block-head h3 {
+  font-family: var(--font-display); text-transform: uppercase;
+  letter-spacing: 0.09em; font-size: clamp(15px, 1.7vw, 19px); color: var(--parchment);
+}
+.armory .ledger-block-kicker { color: var(--brass); }
+
+/* recessed fields with a brass frame, so a control reads as something set
+   into metal rather than a rounded rectangle on glass */
+.armory .war-ledger-form input,
+.armory .war-ledger-form select {
+  background: linear-gradient(180deg, rgba(4,5,10,0.86), rgba(10,12,19,0.7));
+  border: 1px solid rgba(201,164,78,0.26);
+  border-radius: 3px;
+  color: var(--parchment);
+  padding: 11px 12px;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.6);
+}
+.armory .war-ledger-form input:focus,
+.armory .war-ledger-form select:focus {
+  border-color: var(--gold-aged);
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.6), 0 0 0 3px rgba(201,164,78,0.22);
+}
+.armory .war-ledger-form label,
+.armory .war-ledger-form .ledger-select > span {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em;
+  color: var(--brass-dim);
+}
+
+/* struck brass, not the ember orange the legacy rule paints on every
+   public submit button */
+.armory .war-ledger-form button[type="submit"] {
+  align-self: flex-start;
+  padding: 15px 34px;
+  background: linear-gradient(180deg, #d9b566, #9a7526);
+  color: #1a1305;
+  border: 1px solid rgba(255,225,160,0.5);
+  border-radius: 2px;
+  font-family: var(--font-display); font-weight: 800;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,240,200,0.55);
+}
+.armory .war-ledger-form button[type="submit"]:hover:not(:disabled) {
+  background: linear-gradient(180deg, #eccc84, #ac8531);
+}
+.armory .war-ledger-form button[type="submit"]:disabled { opacity: 0.55; }
+.armory .war-ledger-form .pin-panel {
+  background: none; border: 0; border-top: 1px solid var(--edge); border-radius: 0;
+  padding: clamp(20px, 3vh, 30px) 0 0;
+}
+.armory .war-ledger-form .pin-panel .hint { color: var(--parchment-dim); }
+
+/* real racks: uprights with weapons hung between them */
+.armory-rack-l, .armory-rack-r {
+  background:
+    repeating-linear-gradient(90deg, transparent 0 30px, rgba(150,160,190,0.2) 30px 33px),
+    repeating-linear-gradient(0deg, transparent 0 108px, rgba(150,160,190,0.14) 108px 112px);
+}
 
 /* ============================================================
    THE WAR ROOM — admin command chamber
