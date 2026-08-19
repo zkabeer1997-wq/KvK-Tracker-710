@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '../../lib/supabaseClient';
-import MusterHall from '../../components/kingdom/world/MusterHall';
+import MemberHub from '../../components/kingdom/world/MemberHub';
 
 export default function PlayerRecordGate({ banner }) {
   const [memberId, setMemberId] = useState('');
@@ -44,8 +44,6 @@ export default function PlayerRecordGate({ banner }) {
     }
     if (data === true) {
       setVerifiedMemberId(memberId);
-      // The lock disengaging and the inner gate opening is the reward for
-      // authenticating; skipped entirely under reduced motion.
       if (reduced) {
         setUnlocked(true);
       } else {
@@ -62,7 +60,7 @@ export default function PlayerRecordGate({ banner }) {
   }
 
   if (unlocked) {
-    return <MusterHall memberId={verifiedMemberId} />;
+    return <MemberHub memberId={verifiedMemberId} />;
   }
 
   return (
@@ -72,7 +70,6 @@ export default function PlayerRecordGate({ banner }) {
       <div className="k-scene-layer gatehouse-torch gatehouse-torch-r" aria-hidden="true" />
       <div className="k-scene-layer k-vignette" aria-hidden="true" />
 
-      {/* guard silhouettes flanking the checkpoint */}
       <div className="k-scene-layer gatehouse-guards" aria-hidden="true">
         <span className="gatehouse-guard gatehouse-guard-l" />
         <span className="gatehouse-guard gatehouse-guard-r" />
@@ -89,7 +86,6 @@ export default function PlayerRecordGate({ banner }) {
           </p>
         </header>
 
-        {/* the desk: inputs sit in a physical registry, not a floating card */}
         <form className="gatehouse-desk k-ui" onSubmit={handleUnlock}>
           <div className="gatehouse-desk-grain" aria-hidden="true" />
 
@@ -133,14 +129,12 @@ export default function PlayerRecordGate({ banner }) {
           </p>
         </form>
 
-        {/* Admin is deliberately subordinate to member entry. */}
         <Link href="/admin" className="gatehouse-restricted">
           <span className="k-mark">Restricted</span>
           <span>Command Access</span>
         </Link>
       </div>
 
-      {/* inner gate opening on successful auth */}
       <div className={`gatehouse-doors ${opening ? 'is-open' : ''}`} aria-hidden="true">
         <span className="gatehouse-door gatehouse-door-l" />
         <span className="gatehouse-door gatehouse-door-r" />
