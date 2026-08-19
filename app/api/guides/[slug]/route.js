@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { isAdminRequest } from '../../../../lib/adminAuth';
 import { createAdminSupabaseClient } from '../../../../lib/adminSupabase';
+import { getRequestMemberAccess, requestIsSameOrigin } from '../../../../lib/memberAccessV2';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +17,14 @@ export async function GET(request, { params }) {
   }
 
   try {
-    const admin = await isAdminRequest(request);
+    const [admin, member] = await Promise.all([
+      isAdminRequest(request),
+      getRequestMemberAccess(request),
+    ]);
+    if (!admin && !member) {
+      return NextResponse.json({ error: 'Member access required.' }, { status: 401 });
+    }
+
     const supabase = createAdminSupabaseClient();
     const { data, error } = await supabase
       .from('kingdom_guides')
@@ -42,6 +50,9 @@ export async function GET(request, { params }) {
 export async function PUT(request, { params }) {
   if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: 'Admin login required.' }, { status: 401 });
+  }
+  if (!requestIsSameOrigin(request)) {
+    return NextResponse.json({ error: 'Request origin was not accepted.' }, { status: 403 });
   }
 
   const slug = params?.slug;
