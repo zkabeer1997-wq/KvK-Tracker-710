@@ -176,7 +176,7 @@ export default function LanguageProvider({ children }) {
         continue;
       }
       const original = originalTextRef.current.get(node);
-      if (original) node.nodeValue = original.raw;
+      if (original && node.nodeValue !== original.raw) node.nodeValue = original.raw;
     }
 
     for (const element of [...trackedElementsRef.current]) {
@@ -187,7 +187,9 @@ export default function LanguageProvider({ children }) {
       const attrs = originalAttrRef.current.get(element);
       if (!attrs) continue;
       for (const [name, original] of attrs.entries()) {
-        if (element.hasAttribute(name)) element.setAttribute(name, original);
+        if (element.hasAttribute(name) && element.getAttribute(name) !== original) {
+          element.setAttribute(name, original);
+        }
       }
     }
   }, []);
@@ -298,13 +300,17 @@ export default function LanguageProvider({ children }) {
       for (const [textNode, original] of textTargets) {
         if (!textNode.isConnected) continue;
         const translated = cacheRef.current.get(original.normalized);
-        if (translated) textNode.nodeValue = preserveWhitespace(original.raw, translated);
+        if (!translated) continue;
+        const nextValue = preserveWhitespace(original.raw, translated);
+        if (textNode.nodeValue !== nextValue) textNode.nodeValue = nextValue;
       }
 
       for (const [element, name, raw, normalized] of attrTargets) {
         if (!element.isConnected) continue;
         const translated = cacheRef.current.get(normalized);
-        if (translated) element.setAttribute(name, translated || raw);
+        if (!translated) continue;
+        const nextValue = translated || raw;
+        if (element.getAttribute(name) !== nextValue) element.setAttribute(name, nextValue);
       }
 
       setTranslationStatus('ready');
