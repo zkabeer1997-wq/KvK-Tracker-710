@@ -5,92 +5,129 @@ import Link from 'next/link';
 const destinations = [
   {
     key: 'tools',
-    eyebrow: 'Workshop',
+    kicker: 'The Workshop',
     title: 'Tools & Calculators',
-    description: 'Planning tools for events, upgrades, and kingdom strategy.',
+    description: 'Event planning, upgrade optimization, and kingdom utilities.',
     href: (id) => `/tools?member_id=${id}`,
-    icon: '⚙',
+    emblem: '⚙',
   },
   {
     key: 'forms',
-    eyebrow: 'Muster Hall',
+    kicker: 'The Muster Hall',
     title: 'Forms',
     description: 'Rally Lead, Rally Joiner, KvK Prep, and Flamedragon Tyrant.',
     href: (id) => `/forms?member_id=${id}`,
-    icon: '✦',
+    emblem: '✦',
   },
   {
     key: 'admin',
-    eyebrow: 'Restricted',
+    kicker: 'Restricted Command',
     title: 'Admin Portal',
     description: 'Kingdom administration and response management.',
     href: () => '/admin',
-    icon: '♜',
+    emblem: '♜',
   },
   {
     key: 'new',
-    eyebrow: 'Coming Soon',
+    kicker: 'Under Construction',
     title: 'New Tools',
-    description: 'Additional kingdom utilities are being forged.',
+    description: 'More kingdom utilities are being forged.',
     href: () => '/new-tools',
-    icon: '＋',
+    emblem: '+',
   },
 ];
+
+function KingdomCrest() {
+  return (
+    <svg className="muster-crest" viewBox="0 0 120 140" aria-hidden="true">
+      <defs>
+        <linearGradient id="hubCrestStone" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#4b4638" />
+          <stop offset="100%" stopColor="#191713" />
+        </linearGradient>
+      </defs>
+      <path d="M60 6 L110 22 V70 C110 100 88 122 60 134 C32 122 10 100 10 70 V22 Z" fill="url(#hubCrestStone)" stroke="#8a6a28" strokeWidth="3" />
+      <path d="M60 16 L100 29 V70 C100 95 82 113 60 124 C38 113 20 95 20 70 V29 Z" fill="none" stroke="rgba(201,164,78,0.42)" strokeWidth="1.4" />
+      <path d="M60 44 L74 52 V70 L60 82 L46 70 V52 Z" fill="#c9a44e" opacity="0.55" />
+      <path d="M60 54 L67 58 V68 L60 74 L53 68 V58 Z" fill="#1c1710" />
+    </svg>
+  );
+}
 
 export default function MemberHub({ memberId }) {
   const encoded = encodeURIComponent(memberId || '');
 
   return (
-    <main className="member-hub">
-      <div className="member-hub-bg" aria-hidden="true" />
-      <div className="member-hub-vignette" aria-hidden="true" />
+    <main className="k-scene muster member-chambers">
+      <div className="k-scene-layer muster-wall" aria-hidden="true" />
+      <span className="muster-pillar muster-pillar-l" aria-hidden="true" />
+      <span className="muster-pillar muster-pillar-r" aria-hidden="true" />
+      <KingdomCrest />
+      <span className="muster-banner muster-banner-l" data-band="RED" aria-hidden="true" />
+      <span className="muster-banner muster-banner-r" data-band="SKY" aria-hidden="true" />
+      <div className="muster-floor" aria-hidden="true" />
+      <span className="muster-brazier muster-brazier-l" aria-hidden="true"><span className="muster-foot" /><span className="muster-flame" /></span>
+      <span className="muster-brazier muster-brazier-r" aria-hidden="true"><span className="muster-foot" /><span className="muster-flame" /></span>
+      <div className="k-scene-layer k-vignette" aria-hidden="true" />
 
-      <div className="member-hub-inner">
-        <header className="member-hub-head">
-          <span className="member-hub-mark">Kingdom 710 · Member Access · {memberId}</span>
-          <h1>Choose your destination</h1>
-          <p>The inner hall has been reorganized. Select a chamber to continue.</p>
+      <div className="muster-inner member-chambers-inner">
+        <header className="muster-head member-chambers-head">
+          <span className="k-mark">Inner Hall &middot; Member {memberId}</span>
+          <h1 className="k-display member-chambers-title">Choose your chamber</h1>
+          <p className="k-narrative member-chambers-lede">Four doors stand open inside the kingdom. Choose where you need to go.</p>
         </header>
 
-        <nav className="member-destinations" aria-label="Member destinations">
-          {destinations.map((item) => (
-            <Link key={item.key} href={item.href(encoded)} className={`member-destination member-destination-${item.key}`}>
-              <span className="member-destination-icon" aria-hidden="true">{item.icon}</span>
-              <span className="member-destination-copy">
-                <span className="member-destination-eyebrow">{item.eyebrow}</span>
-                <strong>{item.title}</strong>
-                <span>{item.description}</span>
+        <nav className="hall member-hall" aria-label="Member destinations">
+          {destinations.map((item, index) => (
+            <Link
+              key={item.key}
+              href={item.href(encoded)}
+              className={`hall-station member-station member-station-${item.key}`}
+              style={{ '--depth': index === 0 || index === 3 ? 0.9 : 1 }}
+            >
+              <span className="hall-object member-relic-wrap">
+                <span className="member-relic" aria-hidden="true">
+                  <span className="member-relic-top" />
+                  <span className="member-relic-face">
+                    <span className="member-relic-emblem">{item.emblem}</span>
+                  </span>
+                  <span className="member-relic-base" />
+                </span>
+                <span className="hall-shadow" aria-hidden="true" />
               </span>
-              <span className="member-destination-arrow" aria-hidden="true">→</span>
+              <span className="hall-plaque member-plaque">
+                <span className="k-mark hall-kicker">{item.kicker}</span>
+                <span className="k-display hall-title">{item.title}</span>
+                <span className="k-narrative hall-line">{item.description}</span>
+              </span>
             </Link>
           ))}
         </nav>
       </div>
 
       <style jsx>{`
-        .member-hub{min-height:100vh;position:relative;overflow:hidden;color:#f5ead2;background:#0c1116;display:grid;place-items:center;padding:42px 24px}
-        .member-hub-bg{position:absolute;inset:0;background:radial-gradient(circle at 50% 12%,rgba(211,169,78,.18),transparent 34%),linear-gradient(180deg,#182129 0%,#10171d 42%,#090d11 100%)}
-        .member-hub-bg:after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 12.4%,rgba(255,255,255,.015) 12.5%,transparent 12.7%)}
-        .member-hub-vignette{position:absolute;inset:0;box-shadow:inset 0 0 180px rgba(0,0,0,.82);pointer-events:none}
-        .member-hub-inner{position:relative;z-index:1;width:min(1440px,100%)}
-        .member-hub-head{text-align:center;margin:0 auto 34px;max-width:820px}
-        .member-hub-mark{display:inline-block;color:#d3a94e;font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;margin-bottom:12px}
-        .member-hub-head h1{font-family:Georgia,'Times New Roman',serif;font-size:clamp(36px,5vw,68px);font-weight:500;line-height:1;margin:0;color:#f2e6ca;text-shadow:0 3px 18px rgba(0,0,0,.6)}
-        .member-hub-head p{margin:14px auto 0;color:#a9b1b4;font-size:15px;line-height:1.65}
-        .member-destinations{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;align-items:stretch}
-        .member-destination{min-height:310px;position:relative;display:flex;flex-direction:column;justify-content:flex-end;gap:18px;padding:24px;text-decoration:none;color:inherit;border:1px solid rgba(211,169,78,.28);border-radius:6px;background:linear-gradient(180deg,rgba(36,42,45,.74),rgba(19,24,28,.95));box-shadow:0 18px 55px rgba(0,0,0,.34),inset 0 1px rgba(255,255,255,.035);transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;overflow:hidden}
-        .member-destination:before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 22%,rgba(211,169,78,.12),transparent 42%);opacity:.7;transition:opacity .2s ease}
-        .member-destination:hover,.member-destination:focus-visible{transform:translateY(-5px);border-color:rgba(237,197,106,.75);box-shadow:0 24px 70px rgba(0,0,0,.5),0 0 28px rgba(211,169,78,.08);outline:none}
-        .member-destination:hover:before,.member-destination:focus-visible:before{opacity:1}
-        .member-destination-icon{position:absolute;top:28px;left:50%;transform:translateX(-50%);width:92px;height:92px;border-radius:50%;display:grid;place-items:center;font-size:42px;color:#e5c06b;border:1px solid rgba(229,192,107,.28);background:radial-gradient(circle,rgba(211,169,78,.15),rgba(0,0,0,.14));box-shadow:0 0 40px rgba(211,169,78,.08)}
-        .member-destination-copy{position:relative;z-index:1;display:flex;flex-direction:column;text-align:center;align-items:center}
-        .member-destination-eyebrow{color:#d3a94e!important;font-size:10px!important;letter-spacing:.18em;text-transform:uppercase;font-weight:800;margin-bottom:7px}
-        .member-destination-copy strong{font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:500;color:#f2e6ca;margin-bottom:8px}
-        .member-destination-copy>span:last-child{color:#929ca0;font-size:12px;line-height:1.55;max-width:220px}
-        .member-destination-arrow{position:relative;z-index:1;text-align:center;color:#d3a94e;font-size:22px;line-height:1}
-        .member-destination-new{filter:saturate(.72)}
-        @media(max-width:1000px){.member-destinations{grid-template-columns:repeat(2,minmax(0,1fr))}.member-destination{min-height:280px}}
-        @media(max-width:620px){.member-hub{padding:30px 16px}.member-destinations{grid-template-columns:1fr}.member-destination{min-height:220px}.member-destination-icon{width:72px;height:72px;font-size:34px;top:20px}.member-destination-copy strong{font-size:22px}}
+        .member-chambers-inner{padding-top:clamp(142px,19vh,218px)}
+        .member-chambers-head{margin-bottom:clamp(22px,4vh,44px)}
+        .member-chambers-title{margin:10px 0 0;font-size:clamp(22px,3vw,38px);letter-spacing:.12em;color:var(--parchment)}
+        .member-chambers-lede{max-width:52ch;margin:12px auto 0;color:var(--parchment-dim);font-size:clamp(15px,1.4vw,18px);font-style:italic}
+        .member-hall{margin-top:auto}
+        .member-relic-wrap{height:clamp(170px,20vw,250px);display:flex;align-items:flex-end;justify-content:center}
+        .member-relic{position:relative;width:min(72%,190px);height:82%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;filter:drop-shadow(0 12px 8px rgba(0,0,0,.58));transition:filter var(--t-ui) ease}
+        .member-relic-top{width:76%;height:13px;background:linear-gradient(180deg,#8e826b,#38332b);border:1px solid rgba(201,164,78,.28);border-radius:2px 2px 0 0}
+        .member-relic-face{width:68%;flex:1;min-height:106px;display:grid;place-items:center;background:linear-gradient(90deg,#292822,#565145 48%,#24231f);border-inline:1px solid rgba(201,164,78,.24);position:relative}
+        .member-relic-face:after{content:'';position:absolute;inset:13% 15%;border:1px solid rgba(201,164,78,.24);clip-path:polygon(50% 0,94% 18%,88% 72%,50% 100%,12% 72%,6% 18%)}
+        .member-relic-emblem{position:relative;z-index:1;display:grid;place-items:center;width:64px;height:64px;color:#d9b65b;font-family:var(--font-display);font-size:34px;text-shadow:0 2px 8px #000}
+        .member-relic-base{width:90%;height:18px;background:linear-gradient(180deg,#5a5242,#25231e);border-top:1px solid rgba(201,164,78,.3);border-radius:2px}
+        .member-station:hover .member-relic,.member-station:focus-visible .member-relic{filter:drop-shadow(0 15px 10px rgba(0,0,0,.62)) drop-shadow(0 0 9px rgba(201,164,78,.2))}
+        .member-station-tools .member-relic-face{background:linear-gradient(90deg,#242b2e,#4c5a59 48%,#202729)}
+        .member-station-forms .member-relic-face{background:linear-gradient(90deg,#30281c,#695537 48%,#2b2419)}
+        .member-station-admin .member-relic-face{background:linear-gradient(90deg,#242532,#4d5064 48%,#20212b)}
+        .member-station-new{opacity:.72}
+        .member-station-new:hover,.member-station-new:focus-visible{opacity:1}
+        .member-plaque{margin-top:10px}
+        @media(max-width:1000px){.member-chambers-inner{padding-top:112px}.member-relic-wrap{height:210px}.member-hall{row-gap:22px}.member-chambers-head{margin-bottom:20px}}
+        @media(max-width:560px){.member-chambers-inner{padding-top:92px}.member-chambers-title{font-size:22px}.member-chambers-lede{font-size:15px}.member-relic-wrap{height:170px}.member-relic{width:150px}.member-relic-emblem{font-size:30px}}
+        @media(prefers-reduced-motion:reduce){.member-relic{transition:none}}
       `}</style>
     </main>
   );
