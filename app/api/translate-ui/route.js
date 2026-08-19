@@ -1,4 +1,3 @@
-import { getVercelOidcToken } from '@vercel/oidc';
 import uiStrings from '../../../public/ui-strings.json';
 
 export const runtime = 'nodejs';
@@ -8,11 +7,82 @@ export const maxDuration = 30;
 const ALLOWED = new Set(uiStrings.map((value) => normalize(value)));
 const MAX_STRINGS = 64;
 const MAX_STRING_LENGTH = 320;
-const DEFAULT_MODEL = 'google/gemini-3.5-flash-lite';
-const FALLBACK_MODELS = ['google/gemini-3.6-flash'];
+
+// Public LibreTranslate mirrors are used only for static, allow-listed K710 UI copy.
+// Player-entered values never reach this route. An operator can override this list
+// with K710_LIBRETRANSLATE_URLS (comma-separated) or point it at a self-hosted instance.
+const DEFAULT_MIRRORS = [
+  'https://translate.flossboxin.org.in',
+  'https://translate.terraprint.co',
+  'https://translate.argosopentech.com',
+  'https://lt.blitzw.in',
+];
+
+const LANGUAGE_ALIASES = new Map([
+  ['english', 'en'], ['en', 'en'],
+  ['albanian', 'sq'], ['sq', 'sq'],
+  ['arabic', 'ar'], ['العربية', 'ar'], ['ar', 'ar'],
+  ['azerbaijani', 'az'], ['az', 'az'],
+  ['basque', 'eu'], ['eu', 'eu'],
+  ['bengali', 'bn'], ['বাংলা', 'bn'], ['bn', 'bn'],
+  ['bulgarian', 'bg'], ['bg', 'bg'],
+  ['catalan', 'ca'], ['ca', 'ca'],
+  ['chinese', 'zh'], ['chinese simplified', 'zh'], ['chinese (simplified)', 'zh'], ['简体中文', 'zh'], ['zh', 'zh'],
+  ['chinese traditional', 'zt'], ['chinese (traditional)', 'zt'], ['繁體中文', 'zt'], ['zt', 'zt'],
+  ['czech', 'cs'], ['čeština', 'cs'], ['cs', 'cs'],
+  ['danish', 'da'], ['dansk', 'da'], ['da', 'da'],
+  ['dutch', 'nl'], ['nederlands', 'nl'], ['nl', 'nl'],
+  ['esperanto', 'eo'], ['eo', 'eo'],
+  ['estonian', 'et'], ['et', 'et'],
+  ['finnish', 'fi'], ['suomi', 'fi'], ['fi', 'fi'],
+  ['french', 'fr'], ['français', 'fr'], ['francais', 'fr'], ['fr', 'fr'],
+  ['galician', 'gl'], ['gl', 'gl'],
+  ['german', 'de'], ['deutsch', 'de'], ['de', 'de'],
+  ['greek', 'el'], ['ελληνικά', 'el'], ['el', 'el'],
+  ['hebrew', 'he'], ['עברית', 'he'], ['he', 'he'],
+  ['hindi', 'hi'], ['हिन्दी', 'hi'], ['हिंदी', 'hi'], ['hi', 'hi'],
+  ['hungarian', 'hu'], ['magyar', 'hu'], ['hu', 'hu'],
+  ['indonesian', 'id'], ['bahasa indonesia', 'id'], ['id', 'id'],
+  ['irish', 'ga'], ['ga', 'ga'],
+  ['italian', 'it'], ['italiano', 'it'], ['it', 'it'],
+  ['japanese', 'ja'], ['日本語', 'ja'], ['ja', 'ja'],
+  ['korean', 'ko'], ['한국어', 'ko'], ['ko', 'ko'],
+  ['kyrgyz', 'ky'], ['ky', 'ky'],
+  ['latvian', 'lv'], ['lv', 'lv'],
+  ['lithuanian', 'lt'], ['lt', 'lt'],
+  ['malay', 'ms'], ['bahasa melayu', 'ms'], ['ms', 'ms'],
+  ['norwegian', 'nb'], ['norsk', 'nb'], ['nb', 'nb'], ['no', 'nb'],
+  ['persian', 'fa'], ['farsi', 'fa'], ['فارسی', 'fa'], ['fa', 'fa'],
+  ['polish', 'pl'], ['polski', 'pl'], ['pl', 'pl'],
+  ['portuguese', 'pt'], ['português', 'pt'], ['portugues', 'pt'], ['pt', 'pt'],
+  ['portuguese brazil', 'pb'], ['portuguese (brazil)', 'pb'], ['brazilian portuguese', 'pb'], ['pb', 'pb'],
+  ['romanian', 'ro'], ['română', 'ro'], ['romana', 'ro'], ['ro', 'ro'],
+  ['russian', 'ru'], ['русский', 'ru'], ['ru', 'ru'],
+  ['slovak', 'sk'], ['sk', 'sk'],
+  ['slovenian', 'sl'], ['sl', 'sl'],
+  ['spanish', 'es'], ['español', 'es'], ['espanol', 'es'], ['es', 'es'],
+  ['swedish', 'sv'], ['svenska', 'sv'], ['sv', 'sv'],
+  ['tagalog', 'tl'], ['filipino', 'tl'], ['tl', 'tl'],
+  ['thai', 'th'], ['ไทย', 'th'], ['th', 'th'],
+  ['turkish', 'tr'], ['türkçe', 'tr'], ['turkce', 'tr'], ['tr', 'tr'],
+  ['ukrainian', 'uk'], ['ukranian', 'uk'], ['українська', 'uk'], ['uk', 'uk'],
+  ['urdu', 'ur'], ['اردو', 'ur'], ['ur', 'ur'],
+  ['vietnamese', 'vi'], ['tiếng việt', 'vi'], ['tieng viet', 'vi'], ['vi', 'vi'],
+]);
+
+const cache = globalThis.__k710UiTranslationCache || new Map();
+globalThis.__k710UiTranslationCache = cache;
 
 function normalize(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+function normalizeLanguage(value) {
+  return normalize(value)
+    .toLocaleLowerCase('en-US')
+    .replace(/[._-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function sameOrigin(request) {
@@ -26,19 +96,66 @@ function sameOrigin(request) {
   }
 }
 
-function cleanJson(text) {
-  const trimmed = String(text || '').trim();
-  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
-  return fenced ? fenced[1].trim() : trimmed;
+function resolveLanguageCode(language) {
+  const normalized = normalizeLanguage(language);
+  return LANGUAGE_ALIASES.get(normalized) || null;
 }
 
-async function getGatewayToken() {
-  if (process.env.AI_GATEWAY_API_KEY) return process.env.AI_GATEWAY_API_KEY;
+function getMirrors() {
+  const configured = normalize(process.env.K710_LIBRETRANSLATE_URLS || '');
+  const mirrors = configured
+    ? configured.split(',').map((value) => value.trim()).filter(Boolean)
+    : DEFAULT_MIRRORS;
+  return [...new Set(mirrors.map((value) => value.replace(/\/+$/, '')))];
+}
+
+async function translateAtMirror(baseUrl, strings, target) {
+  const response = await fetch(`${baseUrl}/translate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'User-Agent': 'K710Hub/1.0 static-ui-translation',
+    },
+    body: JSON.stringify({
+      q: strings,
+      source: 'en',
+      target,
+      format: 'text',
+    }),
+    cache: 'no-store',
+    signal: AbortSignal.timeout(8_000),
+  });
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '');
+    throw new Error(`${baseUrl} returned ${response.status}: ${detail.slice(0, 160)}`);
+  }
+
+  const payload = await response.json();
+  const translated = payload?.translatedText;
+  if (!Array.isArray(translated) || translated.length !== strings.length) {
+    throw new Error(`${baseUrl} returned an invalid translation payload`);
+  }
+  if (translated.some((value) => typeof value !== 'string')) {
+    throw new Error(`${baseUrl} returned a non-string translation`);
+  }
+
+  return { translated, provider: baseUrl };
+}
+
+async function translateWithFallback(strings, target) {
+  const mirrors = getMirrors();
+  const attempts = mirrors.map((baseUrl) =>
+    translateAtMirror(baseUrl, strings, target).catch((error) => {
+      console.warn('K710 LibreTranslate mirror failed', error?.message || error);
+      throw error;
+    }),
+  );
 
   try {
-    return await getVercelOidcToken({ expirationBufferMs: 60_000 });
+    return await Promise.any(attempts);
   } catch (error) {
-    console.error('K710 translation OIDC token error', error?.message || error);
+    console.error('K710 all LibreTranslate mirrors failed', error?.message || error);
     return null;
   }
 }
@@ -70,85 +187,75 @@ export async function POST(request) {
     return Response.json({ error: 'Only static K710 interface strings may be translated.' }, { status: 400 });
   }
 
-  if (/^english(?:\s*\(.*\))?$/i.test(language)) {
-    return Response.json({ translated: strings });
-  }
-
-  const token = await getGatewayToken();
-  if (!token) {
+  const target = resolveLanguageCode(language);
+  if (!target) {
     return Response.json(
-      { error: 'Translation service authentication is unavailable.' },
-      { status: 503 },
+      {
+        error: `“${language}” is not currently supported by the free translation engine.`,
+        code: 'UNSUPPORTED_LANGUAGE',
+      },
+      { status: 422 },
     );
   }
 
-  const model = process.env.K710_TRANSLATION_MODEL || DEFAULT_MODEL;
-  const system = [
-    'You are the translation engine for a Kingshot community website.',
-    `Translate every item in the JSON array into ${language}.`,
-    'Return ONLY a valid JSON array of strings, in the identical order and with the identical number of items.',
-    'Preserve Kingdom 710, K710, Kingshot, KvK, alliance names, player names, acronyms, URLs, numbers, emoji, and format tokens exactly when they are proper nouns or identifiers.',
-    'Translate ordinary interface labels, instructions, descriptions, headings, and form copy naturally and concisely.',
-    'Do not add explanations, markdown, quotes around the whole response, or extra keys.',
-  ].join(' ');
+  if (target === 'en') {
+    return Response.json({ translated: strings, provider: 'original' });
+  }
 
-  let gatewayResponse;
-  try {
-    gatewayResponse = await fetch('https://ai-gateway.vercel.sh/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model,
-        models: FALLBACK_MODELS,
-        temperature: 0,
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: JSON.stringify(strings) },
-        ],
-      }),
-      cache: 'no-store',
-      signal: AbortSignal.timeout(20_000),
+  const results = new Array(strings.length);
+  const misses = [];
+  const missIndexes = [];
+
+  strings.forEach((source, index) => {
+    const key = `${target}\u0000${source}`;
+    const cached = cache.get(key);
+    if (cached) {
+      results[index] = cached;
+    } else {
+      misses.push(source);
+      missIndexes.push(index);
+    }
+  });
+
+  let provider = 'memory-cache';
+  if (misses.length) {
+    const translated = await translateWithFallback(misses, target);
+    if (!translated) {
+      return Response.json(
+        {
+          error: 'Translation providers are temporarily unavailable.',
+          code: 'PROVIDER_UNAVAILABLE',
+          retryAfter: 60,
+        },
+        {
+          status: 503,
+          headers: { 'Retry-After': '60' },
+        },
+      );
+    }
+
+    provider = translated.provider;
+    translated.translated.forEach((value, offset) => {
+      const index = missIndexes[offset];
+      const source = strings[index];
+      results[index] = value;
+      cache.set(`${target}\u0000${source}`, value);
     });
-  } catch (error) {
-    console.error('K710 translation gateway fetch error', error?.message || error);
-    return Response.json({ error: 'Translation service could not be reached.' }, { status: 502 });
-  }
 
-  if (!gatewayResponse.ok) {
-    const detail = await gatewayResponse.text().catch(() => '');
-    console.error('K710 translation gateway error', gatewayResponse.status, detail.slice(0, 500));
-    return Response.json({ error: 'Translation service returned an error.' }, { status: 502 });
-  }
-
-  let payload;
-  try {
-    payload = await gatewayResponse.json();
-  } catch {
-    return Response.json({ error: 'Translation service returned invalid data.' }, { status: 502 });
-  }
-
-  const content = payload?.choices?.[0]?.message?.content;
-  let translated;
-  try {
-    translated = JSON.parse(cleanJson(content));
-  } catch {
-    translated = null;
-  }
-
-  if (
-    !Array.isArray(translated) ||
-    translated.length !== strings.length ||
-    translated.some((value) => typeof value !== 'string')
-  ) {
-    console.error('K710 translation parse failure', String(content || '').slice(0, 500));
-    return Response.json({ error: 'Translation response was malformed.' }, { status: 502 });
+    // Prevent unbounded growth in long-lived function instances.
+    if (cache.size > 12000) {
+      const removeCount = cache.size - 9000;
+      const iterator = cache.keys();
+      for (let i = 0; i < removeCount; i += 1) {
+        const next = iterator.next();
+        if (next.done) break;
+        cache.delete(next.value);
+      }
+    }
   }
 
   return Response.json(
-    { translated },
+    { translated: results, provider },
     {
       headers: {
         'Cache-Control': 'private, max-age=0, must-revalidate',
