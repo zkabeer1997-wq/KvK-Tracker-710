@@ -269,6 +269,38 @@
   box-shadow: 0 0 0 1px rgba(63, 116, 189, 0.26), 0 10px 30px rgba(63, 116, 189, 0.16);
 }
 
+/* Struck brass: the single affirmative control in this world. Defined once
+   and shared by the Gatehouse, the Registry and the Armory so a primary
+   action looks identical wherever the player meets it, instead of the
+   translucent tint (illegible over leather) and the --ember orange the
+   legacy stylesheet paints on public submit buttons. */
+.k-btn-struck,
+.gatehouse-submit.k-btn,
+.registry .public-form-card button[type="submit"],
+.armory .war-ledger-form button[type="submit"] {
+  padding: 16px 34px;
+  background: linear-gradient(180deg, #d9b566, #9a7526);
+  color: #1a1305;
+  border: 1px solid rgba(255, 225, 160, 0.5);
+  border-radius: 2px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 240, 200, 0.55);
+}
+.k-btn-struck:hover:not(:disabled),
+.gatehouse-submit.k-btn:hover:not(:disabled),
+.registry .public-form-card button[type="submit"]:hover:not(:disabled),
+.armory .war-ledger-form button[type="submit"]:hover:not(:disabled) {
+  background: linear-gradient(180deg, #eccc84, #ac8531);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 245, 210, 0.7);
+}
+.k-btn-struck:disabled,
+.gatehouse-submit.k-btn:disabled,
+.registry .public-form-card button[type="submit"]:disabled,
+.armory .war-ledger-form button[type="submit"]:disabled { opacity: 0.55; }
+
 /* Field: engraved slot in a metal plate, not a floating box. */
 .k-field { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
 
@@ -940,21 +972,6 @@
   background: linear-gradient(180deg, rgba(201,164,78,0.34), rgba(201,164,78,0.14));
 }
 
-/* struck brass submit, matching the Armory and the gate controls */
-.registry .public-form-card button[type="submit"] {
-  padding: 16px 34px;
-  background: linear-gradient(180deg, #d9b566, #9a7526);
-  color: #1a1305;
-  border: 1px solid rgba(255,225,160,0.5);
-  border-radius: 2px;
-  font-family: var(--font-display); font-weight: 800;
-  letter-spacing: 0.14em; text-transform: uppercase;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,240,200,0.55);
-}
-.registry .public-form-card button[type="submit"]:hover:not(:disabled) {
-  background: linear-gradient(180deg, #eccc84, #ac8531);
-}
-.registry .public-form-card button[type="submit"]:disabled { opacity: 0.55; }
 
 /* ============================================================
    THE GATEHOUSE — member checkpoint
@@ -974,16 +991,34 @@
   mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, #000 30%, transparent 78%);
   -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, #000 30%, transparent 78%);
 }
+/* A wall torch, not a bare glow. Previously this was a single blurred
+   orange disc floating on the wall with nothing making the light.
+   .k-scene-layer sets inset:0; it must be cleared or width/left conflict
+   and only one torch resolves. */
 .gatehouse-torch {
-  /* .k-scene-layer sets inset:0; must clear it or width/left conflict
-     and only one torch resolves. */
   inset: auto; position: absolute;
-  width: 300px; height: 300px; top: 14%; border-radius: 50%;
-  background: radial-gradient(circle, rgba(226,105,42,0.34), transparent 66%);
+  width: 34px; height: 62px; top: 20%;
+}
+.gatehouse-torch-l { left: 11%; }
+.gatehouse-torch-r { right: 11%; }
+/* the iron bracket bolted to the wall */
+.gatehouse-torch::before {
+  content: ''; position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
+  width: 100%; height: 58%;
+  clip-path: polygon(34% 100%, 66% 100%, 88% 28%, 100% 0, 0 0, 12% 28%);
+  background: linear-gradient(180deg, #6a5f4c, #2b2620 58%, #131210);
+}
+/* the flame, and the light it throws on the wall */
+.gatehouse-torch::after {
+  content: ''; position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%);
+  width: 400%; height: 400%;
+  background:
+    radial-gradient(ellipse 4% 7% at 50% 50%, rgba(255,246,214,0.95), transparent 70%),
+    radial-gradient(ellipse 9% 14% at 50% 49%, rgba(255,201,116,0.85), rgba(232,118,40,0.4) 42%, transparent 66%),
+    radial-gradient(circle at 50% 50%, rgba(226,105,42,0.24), transparent 60%);
   animation: torch-breathe 3.4s ease-in-out infinite;
 }
-.gatehouse-torch-l { left: 5%; }
-.gatehouse-torch-r { right: 5%; animation-delay: -1.6s; }
+.gatehouse-torch-r::after { animation-delay: -1.6s; }
 @keyframes torch-breathe { 0%,100% { opacity: 0.72; } 50% { opacity: 1; } }
 
 .gatehouse-guards { display: none; }
@@ -1016,10 +1051,15 @@
   border-radius: 3px;
   box-shadow: var(--depth-2);
 }
+/* Leather grain belongs to the desk surface. It is an absolutely
+   positioned sibling, so without an explicit stacking order it painted
+   over the fields and the submit button, striping both. */
 .gatehouse-desk-grain {
-  position: absolute; inset: 0; pointer-events: none; opacity: 0.24; border-radius: 3px;
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  opacity: 0.24; border-radius: 3px;
   background: repeating-linear-gradient(94deg, transparent 0 3px, rgba(0,0,0,0.5) 3px 4px);
 }
+.gatehouse-desk > *:not(.gatehouse-desk-grain) { position: relative; z-index: 1; }
 .gatehouse-submit { width: 100%; margin-top: 4px; }
 .gatehouse-hint { font-size: 13px; margin: 0; color: var(--t-muted); }
 
@@ -1352,23 +1392,7 @@
   color: var(--brass-dim);
 }
 
-/* struck brass, not the ember orange the legacy rule paints on every
-   public submit button */
-.armory .war-ledger-form button[type="submit"] {
-  align-self: flex-start;
-  padding: 15px 34px;
-  background: linear-gradient(180deg, #d9b566, #9a7526);
-  color: #1a1305;
-  border: 1px solid rgba(255,225,160,0.5);
-  border-radius: 2px;
-  font-family: var(--font-display); font-weight: 800;
-  letter-spacing: 0.14em; text-transform: uppercase;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,240,200,0.55);
-}
-.armory .war-ledger-form button[type="submit"]:hover:not(:disabled) {
-  background: linear-gradient(180deg, #eccc84, #ac8531);
-}
-.armory .war-ledger-form button[type="submit"]:disabled { opacity: 0.55; }
+.armory .war-ledger-form button[type="submit"] { align-self: flex-start; }
 .armory .war-ledger-form .pin-panel {
   background: none; border: 0; border-top: 1px solid var(--edge); border-radius: 0;
   padding: clamp(20px, 3vh, 30px) 0 0;

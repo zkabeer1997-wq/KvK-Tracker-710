@@ -56,7 +56,10 @@ input, select { padding: 10px 12px; border: 1px solid rgba(217, 169, 78, 0.25); 
 input:focus, select:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(217, 169, 78, 0.18); }
 
 .row { display: flex; gap: 16px; }
-.row label { flex: 1; }
+/* min-width:0 — a flex item defaults to min-width:auto and will not
+   shrink below the intrinsic width of a <select>, so without this the
+   controls spill out of narrow containers instead of fitting. */
+.row label { flex: 1; min-width: 0; }
 
 .troop-section { border: 1px solid var(--border-soft); border-radius: 10px; padding: 16px; background: rgba(255, 255, 255, 0.02); }
 
@@ -86,7 +89,12 @@ button[type="submit"]:not(.k-btn):disabled { opacity: 0.5; cursor: not-allowed; 
 
 .public-shell { width: min(1180px, 100%); display: grid; grid-template-columns: minmax(280px, 390px) minmax(0, 1fr); gap: 18px; align-items: start; }
 
-.public-shell.single-form { width: min(1180px, 100%); }
+/* .public-shell is a two-column layout (narrative rail + form). The
+   single-form variant only reset the width, so its form stayed in the
+   first track and was capped at 390px with an empty second column beside
+   it — on /flamedragon that squeezed the unit selects until they
+   overflowed their cards and overlapped each other. */
+.public-shell.single-form { width: min(1180px, 100%); grid-template-columns: minmax(0, 1fr); }
 
 .public-intro, .public-form-card { border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--glow); }
 
