@@ -65,7 +65,7 @@ export async function POST(request) {
 
     const { salt, hash } = hashPassphrase(passphrase);
     const now = new Date().toISOString();
-    const { error: updateError } = await supabase
+    const { data: claimed, error: updateError } = await supabase
       .from('member_access_v2_accounts')
       .update({
         passphrase_salt: salt,
@@ -76,8 +76,13 @@ export async function POST(request) {
         updated_at: now,
       })
       .eq('member_id', memberId)
-      .is('claimed_at', null);
+      .is('claimed_at', null)
+      .select('member_id')
+      .maybeSingle();
     if (updateError) throw updateError;
+    if (!claimed) {
+      return NextResponse.json({ error: 'Secure access was activated in another session. Use Sign In.' }, { status: 409 });
+    }
 
     const { token } = await issueMemberSession(memberId, request.headers.get('user-agent'));
     const response = NextResponse.json({ ok: true, memberId, displayName: account.display_name });
