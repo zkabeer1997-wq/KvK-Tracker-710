@@ -6,13 +6,13 @@
   overflow: hidden;
   isolation: isolate;
   background:
-    radial-gradient(circle at 50% 72%, rgba(217, 169, 78, 0.08), transparent 34%),
-    #050812;
-  border-bottom: 1px solid rgba(217, 169, 78, 0.16);
+    radial-gradient(circle at 50% 70%, rgba(228, 184, 91, 0.12), transparent 36%),
+    linear-gradient(180deg, #152247 0%, #0d1530 58%, #091126 100%);
+  border-bottom: 1px solid rgba(228, 184, 91, 0.2);
 }
 
 .blank {
-  background: #050812;
+  background: #0d1530;
 }
 
 .canvasWrap {
@@ -33,10 +33,10 @@
   inset: 0;
   z-index: 0;
   background:
-    linear-gradient(180deg, rgba(5, 8, 18, 0.12), rgba(5, 8, 18, 0.84)),
-    radial-gradient(circle at 36% 28%, rgba(217, 169, 78, 0.2), transparent 18%),
-    radial-gradient(circle at 65% 38%, rgba(117, 148, 200, 0.16), transparent 20%),
-    linear-gradient(135deg, #111938 0%, #070a16 64%, #03050b 100%);
+    linear-gradient(180deg, rgba(17, 28, 57, 0.04), rgba(10, 17, 37, 0.54)),
+    radial-gradient(circle at 35% 28%, rgba(228, 184, 91, 0.28), transparent 20%),
+    radial-gradient(circle at 65% 36%, rgba(158, 190, 241, 0.24), transparent 22%),
+    linear-gradient(135deg, #263967 0%, #142247 52%, #0d1530 100%);
 }
 
 .vignette {
@@ -45,8 +45,8 @@
   z-index: 1;
   pointer-events: none;
   background:
-    linear-gradient(180deg, rgba(2, 4, 10, 0.6) 0%, rgba(2, 4, 10, 0.02) 25%, rgba(2, 4, 10, 0.06) 62%, rgba(2, 4, 10, 0.84) 100%),
-    radial-gradient(ellipse at center, transparent 46%, rgba(0, 0, 0, 0.46) 100%);
+    linear-gradient(180deg, rgba(5, 10, 24, 0.28) 0%, rgba(5, 10, 24, 0.00) 27%, rgba(5, 10, 24, 0.03) 62%, rgba(5, 10, 24, 0.58) 100%),
+    radial-gradient(ellipse at center, transparent 52%, rgba(0, 0, 0, 0.27) 100%);
 }
 
 .overlay {
@@ -64,7 +64,7 @@
 .copy {
   max-width: 760px;
   margin-top: clamp(32px, 8vh, 92px);
-  text-shadow: 0 3px 20px rgba(0, 0, 0, 0.78);
+  text-shadow: 0 3px 14px rgba(0, 0, 0, 0.48);
 }
 
 .eyebrow {
@@ -72,7 +72,7 @@
   align-items: center;
   gap: 10px;
   margin-bottom: 12px;
-  color: #f0c669;
+  color: #f6ce74;
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 800;
@@ -85,13 +85,13 @@
   width: 30px;
   height: 1px;
   background: currentColor;
-  box-shadow: 0 0 10px rgba(240, 198, 105, 0.72);
+  box-shadow: 0 0 10px rgba(246, 206, 116, 0.78);
 }
 
 .title {
   margin: 0;
   max-width: 760px;
-  color: #fff8e8;
+  color: #fffaf0;
   font-size: clamp(42px, 6.3vw, 84px);
   line-height: 0.94;
   letter-spacing: -0.032em;
@@ -102,7 +102,7 @@
 .lede {
   max-width: 650px;
   margin: 15px 0 0;
-  color: rgba(234, 238, 252, 0.86);
+  color: rgba(241, 245, 255, 0.92);
   font-size: clamp(15px, 1.3vw, 18px);
   line-height: 1.58;
   text-wrap: pretty;
@@ -133,11 +133,11 @@
   overflow: hidden;
   border: 0;
   clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 15px 100%, 0 calc(100% - 15px));
-  background: rgba(7, 10, 23, 0.88);
+  background: rgba(20, 31, 58, 0.86);
   color: #fff;
   text-align: left;
   cursor: pointer;
-  box-shadow: inset 0 0 0 1px rgba(222, 228, 247, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(228, 235, 255, 0.26);
   transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), background 180ms ease, box-shadow 180ms ease;
 }
 
@@ -147,7 +147,7 @@
   inset: 0 0 auto;
   height: 2px;
   background: linear-gradient(90deg, transparent, var(--choice-accent) 18%, var(--choice-accent) 82%, transparent);
-  opacity: 0.46;
+  opacity: 0.58;
   transition: opacity 180ms ease;
 }
 
@@ -160,26 +160,26 @@
   height: 170px;
   border-radius: 50%;
   background: var(--choice-accent);
-  opacity: 0.035;
+  opacity: 0.055;
   filter: blur(34px);
   transition: opacity 180ms ease;
   pointer-events: none;
 }
 
 .choiceGold {
-  --choice-accent: #f0c669;
+  --choice-accent: #f6ce74;
 }
 
 .choiceBlue {
-  --choice-accent: #8da8d3;
+  --choice-accent: #a4c2ef;
 }
 
 .choice:hover,
 .choice:focus-visible,
 .choice[data-active='true'] {
   transform: translateY(-3px);
-  background: rgba(10, 14, 30, 0.96);
-  box-shadow: inset 0 0 0 1px var(--choice-accent), inset 0 -26px 60px rgba(255, 255, 255, 0.025);
+  background: rgba(28, 43, 78, 0.95);
+  box-shadow: inset 0 0 0 1px var(--choice-accent), inset 0 -26px 60px rgba(255, 255, 255, 0.05);
   outline: none;
 }
 
@@ -192,7 +192,7 @@
 .choice:hover::after,
 .choice:focus-visible::after,
 .choice[data-active='true']::after {
-  opacity: 0.1;
+  opacity: 0.14;
 }
 
 .choice:disabled {
@@ -207,7 +207,7 @@
   height: 52px;
   place-items: center;
   clip-path: polygon(50% 0, 100% 24%, 88% 82%, 50% 100%, 12% 82%, 0 24%);
-  background: rgba(255, 255, 255, 0.045);
+  background: rgba(255, 255, 255, 0.075);
   box-shadow: inset 0 0 0 1px var(--choice-accent);
   color: var(--choice-accent);
 }
@@ -228,7 +228,7 @@
 .choiceKicker {
   display: block;
   margin-bottom: 4px;
-  color: rgba(225, 231, 249, 0.7);
+  color: rgba(235, 240, 255, 0.8);
   font-size: 10px;
   font-weight: 850;
   letter-spacing: 0.09em;
@@ -237,7 +237,7 @@
 
 .choiceTitle {
   display: block;
-  color: #fff8e8;
+  color: #fffaf0;
   font-family: var(--font-display);
   font-size: clamp(20px, 2vw, 29px);
   font-weight: 800;
@@ -249,7 +249,7 @@
   display: block;
   max-width: 390px;
   margin-top: 7px;
-  color: rgba(223, 229, 247, 0.76);
+  color: rgba(237, 242, 255, 0.84);
   font-size: 13px;
   line-height: 1.35;
 }
@@ -281,25 +281,25 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: rgba(235, 239, 252, 0.78);
+  color: rgba(244, 247, 255, 0.88);
   font-size: 13px;
   font-weight: 760;
   text-decoration: none;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.72);
+  text-shadow: 0 2px 9px rgba(0, 0, 0, 0.46);
   transition: color 160ms ease;
 }
 
 .explore:hover,
 .explore:focus-visible {
-  color: #fff8e8;
+  color: #fffaf0;
   outline: none;
 }
 
 .hint {
-  color: rgba(206, 214, 237, 0.58);
+  color: rgba(225, 232, 250, 0.68);
   font-size: 11px;
   letter-spacing: 0.035em;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.72);
+  text-shadow: 0 2px 9px rgba(0, 0, 0, 0.46);
 }
 
 .overlay[data-phase='approach'] .copy {
@@ -318,18 +318,18 @@
   place-items: center;
   opacity: 0;
   pointer-events: none;
-  background: rgba(3, 5, 12, 0.04);
+  background: rgba(8, 14, 30, 0.03);
   transition: opacity 300ms ease, background 720ms ease, backdrop-filter 720ms ease;
 }
 
 .transitionVeilActive {
   opacity: 1;
-  background: rgba(3, 5, 12, 0.52);
+  background: rgba(8, 14, 30, 0.42);
   backdrop-filter: blur(4px);
 }
 
 .transitionLabel {
-  color: #fff8e8;
+  color: #fffaf0;
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 850;
@@ -344,9 +344,9 @@
   min-height: 720px;
   padding: 42px 20px;
   background:
-    radial-gradient(circle at 38% 22%, rgba(217, 169, 78, 0.16), transparent 28%),
-    radial-gradient(circle at 66% 34%, rgba(117, 148, 200, 0.12), transparent 28%),
-    linear-gradient(180deg, #10162d, #050812 72%);
+    radial-gradient(circle at 38% 22%, rgba(228, 184, 91, 0.22), transparent 30%),
+    radial-gradient(circle at 66% 34%, rgba(158, 190, 241, 0.2), transparent 30%),
+    linear-gradient(180deg, #263967, #0d1530 76%);
 }
 
 .fallbackInner {
@@ -382,7 +382,7 @@
     position: relative;
     min-height: calc(100dvh - 64px);
     padding: 28px 18px 22px;
-    background: linear-gradient(180deg, rgba(4, 6, 14, 0.12), rgba(4, 6, 14, 0.56) 54%, rgba(4, 6, 14, 0.95));
+    background: linear-gradient(180deg, rgba(10, 17, 37, 0.05), rgba(10, 17, 37, 0.34) 54%, rgba(10, 17, 37, 0.84));
   }
 
   .copy {
