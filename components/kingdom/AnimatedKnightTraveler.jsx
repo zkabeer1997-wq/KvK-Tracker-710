@@ -7,11 +7,15 @@ import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 const KNIGHT_URL = 'https://raw.githubusercontent.com/ilrein/warptracker/main/public/models/knight.glb';
 
-function findClip(names, pattern) {
-  return names.find((name) => pattern.test(name)) || null;
+function findClip(names, patterns) {
+  for (const pattern of patterns) {
+    const match = names.find((name) => pattern.test(name));
+    if (match) return match;
+  }
+  return null;
 }
 
-const AnimatedKnightTraveler = forwardRef(function AnimatedKnightTraveler({ walking = false }, forwardedRef) {
+const AnimatedKnightTraveler = forwardRef(function AnimatedKnightTraveler({ movement = 'idle' }, forwardedRef) {
   const root = useRef(null);
   const gltf = useGLTF(KNIGHT_URL);
   const model = useMemo(() => clone(gltf.scene), [gltf.scene]);
@@ -42,19 +46,34 @@ const AnimatedKnightTraveler = forwardRef(function AnimatedKnightTraveler({ walk
   }, [model]);
 
   useEffect(() => {
-    const walkName = findClip(names, /(walk|running|run)/i);
-    const idleName = findClip(names, /(idle|stand)/i) || names[0];
-    const nextName = walking ? (walkName || idleName) : idleName;
+    const idleName = findClip(names, [/(^|[|_\s])idle($|[|_\s])/i, /stand/i]) || names[0];
+    const walkName = findClip(names, [/(^|[|_\s])walk(ing)?($|[|_\s])/i, /walk/i]);
+    const runName = findClip(names, [/(^|[|_\s])run(ning)?($|[|_\s])/i, /run/i]);
+
+    const nextName = movement === 'run'
+      ? (runName || walkName || idleName)
+      : movement === 'walk'
+        ? (walkName || runName || idleName)
+        : idleName;
+
     if (!nextName || !actions[nextName]) return undefined;
 
     const next = actions[nextName];
     Object.entries(actions).forEach(([name, action]) => {
       if (!action || name === nextName) return;
-      action.fadeOut(0.18);
+      action.fadeOut(0.16);
     });
-    next.reset().setEffectiveTimeScale(walking ? 0.92 : 0.78).setEffectiveWeight(1).fadeIn(0.18).play();
-    return () => next.fadeOut(0.12);
-  }, [actions, names, walking]);
+
+    const timeScale = movement === 'run' ? 1.06 : movement === 'walk' ? 0.86 : 0.72;
+    next
+      .reset()
+      .setEffectiveTimeScale(timeScale)
+      .setEffectiveWeight(1)
+      .fadeIn(0.18)
+      .play();
+
+    return () => next.fadeOut(0.1);
+  }, [actions, names, movement]);
 
   return (
     <group ref={root} scale={scale}>
