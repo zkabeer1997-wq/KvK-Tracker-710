@@ -467,24 +467,41 @@
   gap: clamp(12px, 4vw, 60px);
   width: 100%; max-width: 1240px; margin: 0 auto;
 }
+/* Roads are waypoints on the ground, not cards. No panel, no border box:
+   an engraved label with a brass rule that runs off toward its road, and a
+   soft corner vignette (never a rectangle edge) so the type stays legible
+   over whatever the 3D scene puts behind it. */
 .gate-road {
+  position: relative;
   display: flex; flex-direction: column; gap: 5px;
-  flex: 0 1 clamp(220px, 27vw, 330px);
-  padding: 16px 20px 18px;
+  flex: 0 1 clamp(220px, 27vw, 340px);
+  padding: 18px 22px 26px;
   text-align: left; text-decoration: none; cursor: pointer;
-  background: linear-gradient(180deg, rgba(6,8,14,0.10), rgba(6,8,14,0.66));
-  border: 0; border-bottom: 1px solid var(--edge);
-  border-left: 2px solid var(--gold-aged);
-  transition: transform var(--t-ui) var(--ease-cine),
-              border-color var(--t-ui), background var(--t-ui);
+  background: radial-gradient(ellipse 130% 150% at 0% 100%, rgba(4,5,10,0.86), rgba(4,5,10,0.34) 52%, transparent 76%);
+  border: 0;
+  transition: transform var(--t-ui) var(--ease-cine), background var(--t-ui);
 }
-.gate-road-right { border-left: 0; border-right: 2px solid var(--wb-sky); text-align: right; align-items: flex-end; }
+/* the rule running off toward the road it names */
+.gate-road::after {
+  content: ''; position: absolute; bottom: 14px; left: 22px;
+  height: 1px; width: 54px;
+  background: linear-gradient(90deg, var(--gold-aged), rgba(201,164,78,0));
+  transition: width var(--t-ui) var(--ease-cine), opacity var(--t-ui) ease;
+}
+.gate-road-right {
+  text-align: right; align-items: flex-end;
+  background: radial-gradient(ellipse 130% 150% at 100% 100%, rgba(4,5,10,0.86), rgba(4,5,10,0.34) 52%, transparent 76%);
+}
+.gate-road-right::after {
+  left: auto; right: 22px;
+  background: linear-gradient(270deg, var(--wb-sky), rgba(63,116,189,0));
+}
 .gate-road:hover, .gate-road:focus-visible, .gate-road[data-active='true'] {
-  transform: translateY(-5px);
-  background: linear-gradient(180deg, rgba(6,8,14,0.06), rgba(6,8,14,0.78));
+  transform: translateY(-4px);
 }
-.gate-road-left:hover, .gate-road-left[data-active='true'] { border-bottom-color: var(--gold-aged); }
-.gate-road-right:hover, .gate-road-right[data-active='true'] { border-bottom-color: var(--wb-sky); }
+.gate-road:hover::after, .gate-road:focus-visible::after, .gate-road[data-active='true']::after {
+  width: 132px;
+}
 .gate-road:disabled { opacity: 0.4; cursor: default; transform: none; }
 
 .gate-road-kicker { color: var(--gold-aged); }
@@ -505,10 +522,9 @@
   .gate-roads { flex-direction: column; align-items: stretch; gap: 12px; }
   .gate-road, .gate-road-right {
     flex: none; text-align: left; align-items: flex-start;
-    border-left: 2px solid var(--gold-aged); border-right: 0;
-    background: linear-gradient(180deg, rgba(6,8,14,0.42), rgba(6,8,14,0.80));
+    background: linear-gradient(180deg, rgba(4,5,10,0.42), rgba(4,5,10,0.84));
   }
-  .gate-road-right { border-left-color: var(--wb-sky); }
+  .gate-road-right::after { left: 22px; right: auto; background: linear-gradient(90deg, var(--wb-sky), rgba(63,116,189,0)); }
   .gate-title { font-size: clamp(15px, 4.6vw, 22px); letter-spacing: 0.12em; }
 }
 

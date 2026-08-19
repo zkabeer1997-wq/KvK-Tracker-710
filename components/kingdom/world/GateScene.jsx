@@ -2,7 +2,7 @@
 
 import { useMemo, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { AdditiveBlending, CanvasTexture, MathUtils } from 'three';
+import { AdditiveBlending, CanvasTexture, MathUtils, RepeatWrapping } from 'three';
 
 const GOLD = '#d9a94e';
 const FIRE = '#e2692a';
@@ -16,6 +16,43 @@ const NIGHT = '#05060d';
 const WALL_H = 24;
 const GATE_W = 9;
 const GATE_H = 15;
+
+/* Coursed masonry, drawn once to a canvas and repeated across every
+   stone surface. Without it the fortress is flat-shaded boxes: the wall,
+   the towers and the pilasters all return exactly one colour to the
+   camera and the whole scene reads as cardboard. */
+function buildStoneCanvas(base, spread) {
+  const c = document.createElement('canvas');
+  c.width = 256;
+  c.height = 256;
+  const g = c.getContext('2d');
+  const [br, bg, bb] = base;
+  g.fillStyle = `rgb(${br},${bg},${bb})`;
+  g.fillRect(0, 0, 256, 256);
+
+  const rows = 8;
+  const rh = 256 / rows;
+  for (let r = 0; r < rows; r += 1) {
+    const off = r % 2 ? rh * 0.95 : 0;
+    for (let x = -rh * 2; x < 256; x += rh * 1.9) {
+      const v = (Math.random() - 0.5) * spread;
+      g.fillStyle = `rgb(${Math.max(0, br + v)},${Math.max(0, bg + v)},${Math.max(0, bb + v)})`;
+      g.fillRect(x + off + 1.6, r * rh + 1.6, rh * 1.9 - 3.2, rh - 3.2);
+    }
+  }
+  // grime settling in the courses
+  g.fillStyle = 'rgba(0,0,0,0.3)';
+  for (let r = 0; r < rows; r += 1) g.fillRect(0, r * rh + rh - 3, 256, 3);
+  return c;
+}
+
+function makeStone(canvas, rx, ry) {
+  const t = new CanvasTexture(canvas);
+  t.wrapS = RepeatWrapping;
+  t.wrapT = RepeatWrapping;
+  t.repeat.set(rx, ry);
+  return t;
+}
 
 function useGlowTexture() {
   return useMemo(() => {
@@ -55,15 +92,22 @@ function Brazier({ position, color = FIRE, scale = 1, intensity = 7 }) {
       {/* pillar */}
       <mesh position={[0, 1.5 * scale, 0]}>
         <cylinderGeometry args={[0.32 * scale, 0.46 * scale, 3 * scale, 8]} />
-        <meshStandardMaterial color="#333a52" roughness={0.94} />
+        <meshStandardMaterial color="#4a5474" roughness={0.94} />
       </mesh>
       {/* bowl */}
+      {/* the bowl is iron heated by the fire it holds, not a lampshade */}
       <mesh position={[0, 3.15 * scale, 0]}>
         <cylinderGeometry args={[0.72 * scale, 0.4 * scale, 0.55 * scale, 10]} />
-        <meshStandardMaterial color="#2c2013" roughness={0.8} metalness={0.35} />
+        <meshStandardMaterial
+          color="#3a2a1a"
+          emissive={color}
+          emissiveIntensity={0.16}
+          roughness={0.68}
+          metalness={0.5}
+        />
       </mesh>
       {tex && (
-        <sprite ref={glow} position={[0, 3.6 * scale, 0]} scale={[2.6 * scale, 2.6 * scale, 1]}>
+        <sprite ref={glow} position={[0, 3.42 * scale, 0]} scale={[2.6 * scale, 2.6 * scale, 1]}>
           <spriteMaterial
             map={tex}
             color={color}
@@ -119,17 +163,17 @@ function Banner({ position, color, height = 7, width = 1.8 }) {
 }
 
 /* --- Tower ------------------------------------------------------- */
-function Tower({ x, z = -30, h = WALL_H + 10, r = 4.2 }) {
+function Tower({ x, z = -30, h = WALL_H + 10, r = 4.2, stone }) {
   return (
     <group position={[x, 0, z]}>
       <mesh position={[0, h / 2, 0]}>
         <cylinderGeometry args={[r * 0.86, r, h, 10]} />
-        <meshStandardMaterial color="#39415c" roughness={0.95} />
+        <meshStandardMaterial map={stone} color="#4d577a" roughness={0.95} />
       </mesh>
       {/* crenellated cap */}
       <mesh position={[0, h + 0.7, 0]}>
         <cylinderGeometry args={[r * 1.12, r * 1.12, 1.4, 10]} />
-        <meshStandardMaterial color="#2f3650" roughness={0.95} />
+        <meshStandardMaterial color="#39415c" roughness={0.95} />
       </mesh>
       {Array.from({ length: 10 }).map((_, i) => {
         const a = (i / 10) * Math.PI * 2;
@@ -200,7 +244,7 @@ function Road({ side, active, color }) {
         >
           <planeGeometry args={[5.2 * s.s, 2.4 * s.s]} />
           <meshStandardMaterial
-            color={active ? '#5c688f' : '#2b3145'}
+            color={active ? '#7c88b4' : '#3d4664'}
             roughness={1}
           />
         </mesh>
@@ -225,17 +269,18 @@ function Road({ side, active, color }) {
 }
 
 /* --- Camera choreography ------------------------------------------ */
-function CameraRig({ hovered, phase, chosen, travel }) {
+function CameraRig({ hovered, phase, chosen, travel, narrow }) {
   const { camera } = useThree();
-  const state = useRef({ x: 0, y: 1.7, z: 20, lx: 0, ly: 10, lz: -30 });
+  const base = narrow ? 34 : 30;
+  const state = useRef({ x: 0, y: 2.2, z: base, lx: 0, ly: 11, lz: -30 });
 
   useFrame((_, dt) => {
     const s = state.current;
     let gx = 0;
-    let gy = 1.7;
-    let gz = 20;
+    let gy = 2.2;
+    let gz = base;
     let lx = 0;
-    const ly = 10;
+    const ly = 11;
     let lz = -30;
 
     // Hover bias: a few degrees toward the road, no more.
@@ -250,8 +295,8 @@ function CameraRig({ hovered, phase, chosen, travel }) {
       // ease-in-out so the commit feels weighted
       const e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
       gx = dir * (2.4 + e * 15);
-      gz = 20 - e * 34;
-      gy = 1.7 + e * 1.4;
+      gz = base - e * 42;
+      gy = 2.2 + e * 1.2;
       lx = dir * (6 + e * 16);
       lz = -30 - e * 12;
     }
@@ -293,6 +338,27 @@ function Scene({ hovered, phase, chosen, travel, quality }) {
     return new CanvasTexture(c);
   }, []);
 
+  const glowTex = useGlowTexture();
+  /* One masonry canvas, repeated at a different density per surface so a
+     tower block and a wall block are roughly the same size on screen. */
+  const stone = useMemo(() => {
+    if (typeof document === 'undefined') return {};
+    const wallC = buildStoneCanvas([77, 87, 122], 30);
+    const groundC = buildStoneCanvas([51, 60, 85], 20);
+    const tunnelC = buildStoneCanvas([138, 95, 46], 26);
+    return {
+      wall: makeStone(wallC, 9, 3),
+      lintel: makeStone(wallC, 1.4, 1.4),
+      pilaster: makeStone(wallC, 0.5, 3),
+      tower: makeStone(wallC, 3, 3.4),
+      towerB: makeStone(wallC, 3, 3.4),
+      towerC: makeStone(wallC, 2.4, 3),
+      towerD: makeStone(wallC, 2.4, 3),
+      ground: makeStone(groundC, 26, 26),
+      tunnel: makeStone(tunnelC, 1.6, 3),
+    };
+  }, []);
+
   const emberCount = quality === 'mobile' ? 40 : 130;
   const embers = useMemo(
     () =>
@@ -317,20 +383,41 @@ function Scene({ hovered, phase, chosen, travel, quality }) {
       <color attach="background" args={[NIGHT]} />
       <fog attach="fog" args={[NIGHT, 44, phase === 'travelling' ? 62 : 165]} />
 
-      {/* Night ambient: cold and low, so firelight does the work. */}
-      <ambientLight intensity={0.78} color="#4b5678" />
-      <hemisphereLight args={['#5d6a99', '#0a0d18', 1.05]} />
-      <directionalLight position={[-26, 40, 22]} intensity={0.95} color="#93a3d4" />
-      {/* warm spill out of the gate mouth */}
-      <pointLight position={[0, 6, -25]} color={GOLD} intensity={40} distance={90} decay={1.7} />
+      {/* Night ambient is deliberately low. Earlier it was high enough
+          (0.78 ambient + 1.05 hemi) that every surface returned nearly the
+          same value and the fires had nothing left to shape, so the
+          fortress read as flat navy boxes. The fires now do the modelling. */}
+      <ambientLight intensity={0.5} color="#4a5578" />
+      <hemisphereLight args={['#6472a4', '#0a0d18', 0.9]} />
+      <directionalLight position={[-26, 40, 22]} intensity={0.8} color="#93a3d4" />
       {/* moonlight rim so the wall silhouette separates from the sky */}
-      <directionalLight position={[18, 26, 34]} intensity={0.5} color="#aab8e0" />
+      <directionalLight position={[18, 26, 34]} intensity={0.85} color="#b3c0e6" />
+      {/* warm spill out of the gate mouth, and a second, tighter one that
+          throws light forward onto the approach so the opening reads as a
+          light source rather than a lit rectangle */}
+      <pointLight position={[0, 6, -25]} color={GOLD} intensity={55} distance={95} decay={1.7} />
+      <pointLight position={[0, 2.4, -22]} color="#ffb964" intensity={38} distance={46} decay={1.9} />
 
       {/* ---- ground ---- */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -10]}>
         <planeGeometry args={[300, 300]} />
-        <meshStandardMaterial color="#1b2030" roughness={1} />
+        <meshStandardMaterial map={stone.ground} color="#3d4763" roughness={1} />
       </mesh>
+      {/* the wedge of gatelight lying on the approach */}
+      {glowTex && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, -18]}>
+          <planeGeometry args={[26, 30]} />
+          <meshBasicMaterial
+            map={glowTex}
+            color="#ffab52"
+            transparent
+            opacity={0.5}
+            blending={AdditiveBlending}
+            depthWrite={false}
+            toneMapped={false}
+          />
+        </mesh>
+      )}
 
       {/* ---- fortress wall ----
           Built as two segments plus a lintel so the gate is a REAL
@@ -341,21 +428,21 @@ function Scene({ hovered, phase, chosen, travel, quality }) {
         return (
           <mesh key={d} position={[d * (GATE_W / 2 + segW / 2), WALL_H / 2, -30]}>
             <boxGeometry args={[segW, WALL_H, 3]} />
-            <meshStandardMaterial color="#39415c" roughness={0.95} />
+            <meshStandardMaterial map={stone.wall} color="#4d577a" roughness={0.95} />
           </mesh>
         );
       })}
       {/* lintel spanning above the opening */}
       <mesh position={[0, GATE_H + (WALL_H - GATE_H) / 2, -30]}>
         <boxGeometry args={[GATE_W, WALL_H - GATE_H, 3]} />
-        <meshStandardMaterial color="#39415c" roughness={0.95} />
+        <meshStandardMaterial map={stone.lintel} color="#4d577a" roughness={0.95} />
       </mesh>
 
       {/* crenellations */}
       {Array.from({ length: 26 }).map((_, i) => (
         <mesh key={i} position={[-72 / 2 + i * 3 + 1.5, WALL_H + 0.9, -30]}>
           <boxGeometry args={[1.7, 1.8, 3.2]} />
-          <meshStandardMaterial color="#2f3650" roughness={0.95} />
+          <meshStandardMaterial color="#3d4666" roughness={0.95} />
         </mesh>
       ))}
 
@@ -363,7 +450,7 @@ function Scene({ hovered, phase, chosen, travel, quality }) {
       {[-1, 1].map((d) => (
         <mesh key={d} position={[d * (GATE_W / 2), GATE_H / 2, -32]} rotation={[0, d * Math.PI / 2, 0]}>
           <planeGeometry args={[7, GATE_H]} />
-          <meshStandardMaterial color="#6b4a26" roughness={0.9} side={2} />
+          <meshStandardMaterial map={stone.tunnel} color="#8a5f2e" roughness={0.9} side={2} />
         </mesh>
       ))}
 
@@ -373,6 +460,21 @@ function Scene({ hovered, phase, chosen, travel, quality }) {
         <planeGeometry args={[GATE_W, GATE_H]} />
         <meshBasicMaterial map={courtTex} toneMapped={false} />
       </mesh>
+      {/* the opening blooms rather than ending at a hard edge */}
+      {glowTex && (
+        <sprite position={[0, GATE_H / 2 - 1, -33]} scale={[GATE_W * 2.6, GATE_H * 2.1, 1]}>
+          <spriteMaterial
+            map={glowTex}
+            color="#ffbf72"
+            transparent
+            opacity={0.65}
+            blending={AdditiveBlending}
+            depthWrite={false}
+            toneMapped={false}
+          />
+        </sprite>
+      )}
+
       {/* silhouettes moving inside: an active kingdom beyond the gate */}
       <Guard position={[-1.9, 0, -34]} rotation={0.5} />
       <Guard position={[2.1, 0, -33.2]} rotation={-0.4} />
@@ -381,7 +483,7 @@ function Scene({ hovered, phase, chosen, travel, quality }) {
       {[-1, 1].map((d) => (
         <mesh key={d} position={[d * (GATE_W / 2 + 1.2), GATE_H / 2 + 1, -29.2]}>
           <boxGeometry args={[2.2, GATE_H + 3, 3.4]} />
-          <meshStandardMaterial color="#454e6e" roughness={0.92} />
+          <meshStandardMaterial map={stone.pilaster} color="#5b6688" roughness={0.92} />
         </mesh>
       ))}
 
@@ -398,14 +500,14 @@ function Scene({ hovered, phase, chosen, travel, quality }) {
       </mesh>
 
       {/* ---- towers ---- */}
-      <Tower x={-17} />
-      <Tower x={17} />
-      <Tower x={-40} z={-33} h={WALL_H + 3} r={3.4} />
-      <Tower x={40} z={-33} h={WALL_H + 3} r={3.4} />
+      <Tower x={-17} stone={stone.tower} />
+      <Tower x={17} stone={stone.towerB} />
+      <Tower x={-40} z={-33} h={WALL_H + 3} r={3.4} stone={stone.towerC} />
+      <Tower x={40} z={-33} h={WALL_H + 3} r={3.4} stone={stone.towerD} />
 
       {/* ---- three warband banners on the wall ---- */}
       <Banner position={[-11, WALL_H - 1.2, -28.2]} color="#c9963c" height={8.5} width={2.4} />
-      <Banner position={[0, WALL_H - 0.2, -28.2]} color="#a3283c" height={9.5} width={2.6} />
+      <Banner position={[0, WALL_H - 0.2, -28.2]} color="#a3283c" height={4.6} width={2.6} />
       <Banner position={[11, WALL_H - 1.2, -28.2]} color="#3f74bd" height={8.5} width={2.4} />
 
       {/* ---- guards at the gate ---- */}
@@ -416,7 +518,7 @@ function Scene({ hovered, phase, chosen, travel, quality }) {
       {[[-62, -80, 30], [-32, -92, 40], [6, -100, 46], [44, -88, 36], [76, -78, 28]].map((m, i) => (
         <mesh key={i} position={[m[0], m[2] / 2 - 3, m[1]]}>
           <coneGeometry args={[m[2] * 0.95, m[2], 4]} />
-          <meshBasicMaterial color="#141a2c" />
+          <meshBasicMaterial color="#1d2540" />
         </mesh>
       ))}
 
@@ -438,13 +540,14 @@ function Scene({ hovered, phase, chosen, travel, quality }) {
         ))}
       </group>
 
-      <CameraRig hovered={hovered} phase={phase} chosen={chosen} travel={travel} />
+      <CameraRig hovered={hovered} phase={phase} chosen={chosen} travel={travel} narrow={quality === 'mobile'} />
     </>
   );
 }
 
 export default function GateScene({ hovered, phase, chosen, quality = 'standard' }) {
   const travel = useRef(0);
+  const narrow = quality === 'mobile';
   const dpr = useMemo(() => {
     if (typeof window === 'undefined') return 1;
     return quality === 'mobile'
@@ -456,7 +559,7 @@ export default function GateScene({ hovered, phase, chosen, quality = 'standard'
     <Canvas
       dpr={dpr}
       gl={{ antialias: quality !== 'mobile', powerPreference: 'high-performance', alpha: false }}
-      camera={{ fov: 48, position: [0, 1.7, 20], near: 0.1, far: 600 }}
+      camera={{ fov: narrow ? 64 : 48, position: [0, 2.2, narrow ? 34 : 30], near: 0.1, far: 600 }}
       shadows={false}
     >
       <Scene hovered={hovered} phase={phase} chosen={chosen} travel={travel} quality={quality} />
