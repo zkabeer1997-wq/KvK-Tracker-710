@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminShell from '../../../../components/admin/AdminShell';
+import TableSkeleton from '../../../../components/admin/TableSkeleton';
 import { schedule, OPEN_SPOT } from '../prepScheduler.mjs';
 
 const COLUMNS = [
@@ -229,7 +230,7 @@ export default function AdminPrepMinistersPage() {
             <button type="button" onClick={exportExcel} className="logout-btn">Export to Excel</button>
             {saveStatus && (<span className="prep-save-status">{saveStatus === 'saving' ? 'Saving…' : saveStatus === 'saved' ? 'Saved' : 'Save failed'}</span>)}
           </div>
-          {loading && <p>Loading...</p>}
+          {loading && <TableSkeleton columns={COLUMNS.length} rows={7} />}
           {error && <div className="status error">{error}</div>}
           {!loading && !error && (
             <div className="admin-table-wrap">

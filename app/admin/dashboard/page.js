@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminShell from '../../../components/admin/AdminShell';
 import ConfirmDialog from '../../../components/admin/ConfirmDialog';
+import TableSkeleton from '../../../components/admin/TableSkeleton';
 import { useEscapeToClose } from '../../../lib/useEscapeToClose';
 import {
 RALLY_STORAGE_KEY,
@@ -93,6 +94,9 @@ const [ralliesHydrated, setRalliesHydrated] = useState(false);
   const [addMemberStatus, setAddMemberStatus] = useState('');
   const [showAddMember, setShowAddMember] = useState(false);
   const [confirmState, setConfirmState] = useState(null);
+  const [draggingMemberId, setDraggingMemberId] = useState(null);
+  const [dragOverRallyId, setDragOverRallyId] = useState(null);
+  const [collapsedRallyIds, setCollapsedRallyIds] = useState([]);
 const router = useRouter();
 
 useEscapeToClose(showAddMember, () => setShowAddMember(false));
@@ -239,17 +243,31 @@ setRallies((current) => createNextRally(current, `rally-${current.length + 1}-${
 function handleDragStart(event, memberId) {
 event.dataTransfer.effectAllowed = 'move';
 event.dataTransfer.setData('text/plain', String(memberId));
+setDraggingMemberId(String(memberId));
+}
+
+function handleDragEnd() {
+setDraggingMemberId(null);
+setDragOverRallyId(null);
 }
 
 function handleDropOnRally(event, rallyId) {
 event.preventDefault();
 const memberId = event.dataTransfer.getData('text/plain');
+setDraggingMemberId(null);
+setDragOverRallyId(null);
 if (!memberId) return;
 setRallies((current) => assignMemberToRally(current, rallyId, memberId));
 }
 
 function handleRemoveFromRally(memberId) {
 setRallies((current) => removeMemberFromRallies(current, memberId));
+}
+
+function toggleRallyCollapsed(rallyId) {
+setCollapsedRallyIds((current) => (
+current.includes(rallyId) ? current.filter((id) => id !== rallyId) : [...current, rallyId]
+));
 }
 
 function handleDeleteRally(rally) {
@@ -423,7 +441,7 @@ confirmLabel={confirmState ? confirmState.confirmLabel : 'Confirm'}
 onConfirm={() => confirmState && confirmState.onConfirm()}
 onCancel={() => setConfirmState(null)}
 />
-<p style={{ color: 'var(--text-muted)', marginTop: 0 }}>Roster intake, rally composition, and hero guidance in one live planning view.</p>
+<p className="admin-page-lead">Roster intake, rally composition, and hero guidance in one live planning view.</p>
 <div className="dashboard-stats" aria-label="Dashboard summary">
 <div>
 <span>Total members</span>
@@ -436,6 +454,10 @@ onCancel={() => setConfirmState(null)}
 <div>
 <span>Assigned</span>
 <strong>{assignedCount}</strong>
+</div>
+<div className="unassigned-stat">
+<span>Unassigned</span>
+<strong>{Math.max(rows.length - assignedCount, 0)}</strong>
 </div>
 <div>
 <span>Power profiles</span>
@@ -464,7 +486,7 @@ className="admin-search"
 </div>
 {actionStatus && <div className="status">{actionStatus}</div>}
 {actionError && <div className="status error">{actionError}</div>}
-{loading && <p>Loading...</p>}
+{loading && <TableSkeleton columns={COLUMNS.length + 1} rows={7} />}
 {error && <div className="status error">{error}</div>}
 {!loading && !error && (
 <div className="admin-workspace">
@@ -531,12 +553,25 @@ className="admin-search"
 {filteredSorted.map((row) => (
 <tr
 key={row.member_id}
-draggable
-onDragStart={(event) => handleDragStart(event, row.member_id)}
+className={draggingMemberId === String(row.member_id) ? 'row-dragging' : undefined}
 >
 <td>
 <div className="member-name-cell">
+<span className="member-name-row">
+<span
+className="rally-drag-handle"
+draggable
+onDragStart={(event) => handleDragStart(event, row.member_id)}
+onDragEnd={handleDragEnd}
+role="button"
+tabIndex={-1}
+aria-label={`Drag ${row.name} to a rally`}
+title="Drag to assign to a rally"
+>
+&#8942;&#8942;
+</span>
 <span>{row.name}</span>
+</span>
 {rallyByMemberId.has(String(row.member_id)) && (
 <span className="rally-badge">{rallyByMemberId.get(String(row.member_id))}</span>
 )}
@@ -604,15 +639,32 @@ Create Rally {rallies.length + 1}
 {rallies.length === 0 && (
 <div className="rally-empty-state">Create Rally 1 to start assigning members.</div>
 )}
-{rallies.map((rally) => (
+{rallies.map((rally) => {
+const isCollapsed = collapsedRallyIds.includes(rally.id);
+return (
 <section
 key={rally.id}
-className="rally-dropzone"
+className={
+'rally-dropzone'
++ (draggingMemberId ? ' drag-active' : '')
++ (dragOverRallyId === rally.id ? ' drag-over' : '')
+}
 onDragOver={(event) => event.preventDefault()}
+onDragEnter={() => setDragOverRallyId(rally.id)}
+onDragLeave={() => setDragOverRallyId((current) => (current === rally.id ? null : current))}
 onDrop={(event) => handleDropOnRally(event, rally.id)}
 >
 <div className="rally-dropzone-header">
 <div className="rally-title-row">
+<button
+type="button"
+className="rally-collapse-btn"
+onClick={() => toggleRallyCollapsed(rally.id)}
+aria-expanded={!isCollapsed}
+aria-label={isCollapsed ? `Expand ${rally.name}` : `Collapse ${rally.name}`}
+>
+{isCollapsed ? '+' : '−'}
+</button>
 <input className="rally-name-input" type="text" value={rally.name} onChange={(event) => handleRenameRally(rally.id, event.target.value)} aria-label="Rally name" />
 <span>{rally.memberIds.length}</span>
 </div>
@@ -625,6 +677,8 @@ aria-label={`Delete ${rally.name}`}
 Delete
 </button>
 </div>
+{!isCollapsed && (
+<>
 <div className="rally-controls">
 <label className="rally-control-label">
 <span>Rally Lead</span>
@@ -729,8 +783,11 @@ x
 })}
 </div>
 )}
+</>
+)}
 </section>
-))}
+);
+})}
 </div>
 </aside>
 </div>

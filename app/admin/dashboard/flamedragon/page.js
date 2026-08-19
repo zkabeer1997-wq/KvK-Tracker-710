@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminShell from '../../../../components/admin/AdminShell';
+import TableSkeleton from '../../../../components/admin/TableSkeleton';
 
 // Columns used for search, sort, and CSV export (keeps every field).
 const COLUMNS = [
@@ -217,7 +218,7 @@ export default function AdminFlamedragonPage() {
 
         <div className="admin-table-wrap">
           {loading ? (
-            <p>Loading Flamedragon forms...</p>
+            <TableSkeleton columns={TABLE_COLUMNS.length} rows={7} />
           ) : (
             <table className="admin-table">
               <thead>

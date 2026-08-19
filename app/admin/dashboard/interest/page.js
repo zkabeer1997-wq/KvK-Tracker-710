@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminShell from '../../../../components/admin/AdminShell';
 import StatusBadge from '../../../../components/admin/StatusBadge';
+import TableSkeleton from '../../../../components/admin/TableSkeleton';
 import { useEscapeToClose } from '../../../../lib/useEscapeToClose';
 
 const COMPACT_COLUMNS = [
@@ -443,7 +444,7 @@ export default function AdminInterestPage() {
             </label>
             <button type="button" onClick={exportExcel} className="logout-btn">Export to Excel</button>
           </div>
-          {loading && <p>Loading...</p>}
+          {loading && <TableSkeleton columns={COMPACT_COLUMNS.length + 1} rows={7} />}
           {error && <div className="status error">{error}</div>}
           {!loading && !error && (
             <div className="admin-table-wrap">
