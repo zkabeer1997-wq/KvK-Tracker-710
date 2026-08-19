@@ -1,8 +1,10 @@
 import './globals.css';
 import './kingdom-theme.css';
+import './realm-stage.css';
 import { Cinzel, Inter, JetBrains_Mono } from 'next/font/google';
 import SiteHeader from '../components/SiteHeader';
 import SiteFooter from '../components/SiteFooter';
+import RouteRealmStage from '../components/kingdom/RouteRealmStage';
 
 // Self-hosted at build time. Replaces the render-blocking CSS @import
 // that previously chained an extra round-trip to fonts.googleapis.com
@@ -54,6 +56,7 @@ export default function RootLayout({ children }) {
     <html lang="en" className={`${cinzel.variable} ${inter.variable} ${jetbrains.variable}`}>
       <body>
         <SiteHeader />
+        <RouteRealmStage />
         {children}
         <SiteFooter />
       </body>
