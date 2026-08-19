@@ -1,7 +1,9 @@
 import './globals.css';
 import './kingdom.css';
+import './i18n.css';
 import { Cinzel, Inter, JetBrains_Mono, Cormorant_Garamond } from 'next/font/google';
 import CrestMenu from '../components/kingdom/world/CrestMenu';
+import LanguageProvider from '../components/i18n/LanguageProvider';
 
 // Self-hosted at build time. Replaces the render-blocking CSS @import
 // that previously chained an extra round-trip to fonts.googleapis.com
@@ -63,8 +65,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${cinzel.variable} ${inter.variable} ${jetbrains.variable} ${cormorant.variable}`}>
       <body>
-        <CrestMenu />
-        <div id="main">{children}</div>
+        <LanguageProvider>
+          <CrestMenu />
+          <div id="main">{children}</div>
+        </LanguageProvider>
       </body>
     </html>
   );
