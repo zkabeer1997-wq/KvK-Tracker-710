@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import ForgeSequence from './ForgeSequence';
+import { useLanguage } from '../../i18n/LanguageProvider';
 
 const GateScene = dynamic(() => import('./GateScene'), { ssr: false });
 
@@ -50,6 +51,7 @@ function detectQuality() {
 
 export default function GateExperience() {
   const router = useRouter();
+  const { hasChosenLanguage } = useLanguage();
   const [ready, setReady] = useState(false);
   const [forging, setForging] = useState(true);
   const [webgl, setWebgl] = useState(true);
@@ -123,7 +125,7 @@ export default function GateExperience() {
 
   return (
     <div className="k-scene gate-scene">
-      {forging && (
+      {hasChosenLanguage && forging && (
         <ForgeSequence reducedMotion={reduced} onDone={() => setForging(false)} />
       )}
 
