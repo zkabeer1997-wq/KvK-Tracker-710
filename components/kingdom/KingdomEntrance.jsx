@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import ForgeLoader from './ForgeLoader';
 import SceneOverlay from './SceneOverlay';
+import styles from './KingdomEntrance.module.css';
 
 const KingdomScene = dynamic(() => import('./KingdomScene'), { ssr: false });
 
@@ -13,8 +13,11 @@ function detectWebGL() {
   if (typeof window === 'undefined') return false;
   try {
     const canvas = document.createElement('canvas');
-    return Boolean(window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
-  } catch (e) {
+    return Boolean(
+      window.WebGLRenderingContext &&
+      (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
+    );
+  } catch {
     return false;
   }
 }
@@ -26,73 +29,100 @@ export default function KingdomEntrance() {
   const [webglOk, setWebglOk] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [hoveredRoad, setHoveredRoad] = useState(null);
-  const [phase, setPhase] = useState('idle'); // idle | transitioning
+  const [phase, setPhase] = useState('approach');
   const [selectedRoad, setSelectedRoad] = useState(null);
   const [transitionLabel, setTransitionLabel] = useState('');
-  const navigateTimer = useRef(null);
+  const timers = useRef([]);
+
+  const clearTimers = useCallback(() => {
+    timers.current.forEach((timer) => clearTimeout(timer));
+    timers.current = [];
+  }, []);
 
   useEffect(() => {
     setWebglOk(detectWebGL());
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setReducedMotion(mq.matches);
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updateMotion = () => setReducedMotion(motionQuery.matches);
+    updateMotion();
+    motionQuery.addEventListener?.('change', updateMotion);
     setReady(true);
+
     return () => {
-      if (navigateTimer.current) clearTimeout(navigateTimer.current);
+      clearTimers();
+      motionQuery.removeEventListener?.('change', updateMotion);
     };
-  }, []);
+  }, [clearTimers]);
+
+  const finishForge = useCallback(() => {
+    setForging(false);
+    if (reducedMotion) {
+      setPhase('idle');
+      return;
+    }
+    setPhase('approach');
+    const timer = setTimeout(() => setPhase('idle'), 2200);
+    timers.current.push(timer);
+  }, [reducedMotion]);
 
   const handleSelect = useCallback((road, href) => {
     if (phase === 'transitioning') return;
+    clearTimers();
     setSelectedRoad(road);
-    setTransitionLabel(road === 'left' ? 'TAKING THE GOLDEN ROAD' : 'PASSING THE INNER GATE');
+    setHoveredRoad(road);
+    setTransitionLabel(road === 'left' ? 'Following the golden road' : 'Entering the member gate');
     setPhase('transitioning');
-    const duration = reducedMotion ? 350 : 1500;
-    navigateTimer.current = setTimeout(() => {
-      router.push(href);
-    }, duration);
-  }, [phase, reducedMotion, router]);
+
+    const duration = reducedMotion ? 300 : 1250;
+    const timer = setTimeout(() => router.push(href), duration);
+    timers.current.push(timer);
+  }, [clearTimers, phase, reducedMotion, router]);
 
   if (!ready) {
-    return <div className="kingdom-root kingdom-root-blank" aria-hidden="true" />;
+    return <div className={`${styles.root} ${styles.blank}`} aria-hidden="true" />;
   }
 
-  // Static, accessible fallback when WebGL is unavailable.
   if (!webglOk) {
     return (
-      <div className="kingdom-root kingdom-fallback">
-        <div className="kingdom-fallback-inner">
-          <span className="kingdom-eyebrow">Kingdom 710 &middot; Kingshot</span>
-          <h1 className="kingdom-title">The gates of Kingdom 710</h1>
-          <p>Choose your road into the kingdom.</p>
-          <div className="kingdom-roads kingdom-roads-static">
-            <Link href="/interest" className="kingdom-road kingdom-road-gold">
-              <span className="road-kicker">The Golden Road</span>
-              <span className="road-title">Request Entry</span>
-              <span className="road-sub">Petition for transfer into Kingdom 710</span>
-            </Link>
-            <Link href="/player-record" className="kingdom-road kingdom-road-blue">
-              <span className="road-kicker">The Inner Gate</span>
-              <span className="road-title">Enter Kingdom</span>
-              <span className="road-sub">Members report to the inner checkpoint</span>
-            </Link>
+      <section className={`${styles.root} ${styles.fallback}`} aria-label="Kingdom 710 entrance">
+        <div className={styles.fallbackInner}>
+          <span className={styles.eyebrow}>Kingdom 710 · Choose your path</span>
+          <h1 className={styles.title}>Enter the kingdom</h1>
+          <p className={styles.lede}>Choose the option that describes you. We will take you to the right place.</p>
+          <div className={`${styles.choices} ${styles.fallbackChoices}`}>
+            <button type="button" className={`${styles.choice} ${styles.choiceGold}`} onClick={() => router.push('/interest')}>
+              <span className={styles.choiceNumber}>01</span>
+              <span><span className={styles.choiceKicker}>New to K710? Start here</span><span className={styles.choiceTitle}>Request Entry</span><span className={styles.choiceSub}>Apply to transfer into Kingdom 710.</span></span>
+              <span className={styles.choiceArrow}>→</span>
+            </button>
+            <button type="button" className={`${styles.choice} ${styles.choiceBlue}`} onClick={() => router.push('/player-record')}>
+              <span className={styles.choiceNumber}>02</span>
+              <span><span className={styles.choiceKicker}>Already in K710?</span><span className={styles.choiceTitle}>Enter Member Hub</span><span className={styles.choiceSub}>Open member tools and rally records.</span></span>
+              <span className={styles.choiceArrow}>→</span>
+            </button>
           </div>
-          <a href="#dossier" className="kingdom-explore">Explore Kingdom 710 &darr;</a>
         </div>
-      </div>
+      </section>
     );
   }
 
   return (
-    <div className="kingdom-root">
-      {forging && <ForgeLoader reducedMotion={reducedMotion} onDone={() => setForging(false)} />}
+    <section className={styles.root} aria-label="Interactive Kingdom 710 entrance">
+      {forging && <ForgeLoader reducedMotion={reducedMotion} onDone={finishForge} />}
 
-      {!reducedMotion && (
-        <div className="kingdom-canvas-wrap" aria-hidden="true">
-          <KingdomScene hoveredRoad={hoveredRoad} phase={phase} selectedRoad={selectedRoad} />
+      {!reducedMotion ? (
+        <div className={styles.canvasWrap} aria-hidden="true">
+          <KingdomScene
+            hoveredRoad={hoveredRoad}
+            phase={phase}
+            selectedRoad={selectedRoad}
+            active={!forging}
+          />
         </div>
+      ) : (
+        <div className={styles.staticBg} aria-hidden="true" />
       )}
-      {reducedMotion && <div className="kingdom-static-bg" aria-hidden="true" />}
 
+      <div className={styles.vignette} aria-hidden="true" />
       <SceneOverlay
         hoveredRoad={hoveredRoad}
         onHover={setHoveredRoad}
@@ -100,9 +130,9 @@ export default function KingdomEntrance() {
         phase={phase}
       />
 
-      <div className={`kingdom-transition-veil${phase === 'transitioning' ? ' active' : ''}`}>
-        {phase === 'transitioning' && <span>{transitionLabel}</span>}
+      <div className={`${styles.transitionVeil} ${phase === 'transitioning' ? styles.transitionVeilActive : ''}`} aria-hidden="true">
+        {phase === 'transitioning' && <span className={styles.transitionLabel}>{transitionLabel}</span>}
       </div>
-    </div>
+    </section>
   );
 }
