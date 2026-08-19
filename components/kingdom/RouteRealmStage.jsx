@@ -150,6 +150,17 @@ export default function RouteRealmStage() {
   }, []);
 
   useEffect(() => {
+    if (realm?.id) {
+      document.body.dataset.realm = realm.id;
+    } else {
+      delete document.body.dataset.realm;
+    }
+    return () => {
+      delete document.body.dataset.realm;
+    };
+  }, [realm?.id]);
+
+  useEffect(() => {
     setActive(true);
     const node = stageRef.current;
     if (!node || typeof IntersectionObserver === 'undefined') return undefined;
