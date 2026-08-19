@@ -60,7 +60,7 @@ export default function KingdomEntrance() {
       return;
     }
     setPhase('approach');
-    const timer = setTimeout(() => setPhase('idle'), 2200);
+    const timer = setTimeout(() => setPhase('idle'), 2550);
     timers.current.push(timer);
   }, [reducedMotion]);
 
@@ -72,7 +72,7 @@ export default function KingdomEntrance() {
     setTransitionLabel(road === 'left' ? 'Following the golden road' : 'Entering the member gate');
     setPhase('transitioning');
 
-    const duration = reducedMotion ? 300 : 1250;
+    const duration = reducedMotion ? 300 : 1450;
     const timer = setTimeout(() => router.push(href), duration);
     timers.current.push(timer);
   }, [clearTimers, phase, reducedMotion, router]);
@@ -85,19 +85,19 @@ export default function KingdomEntrance() {
     return (
       <section className={`${styles.root} ${styles.fallback}`} aria-label="Kingdom 710 entrance">
         <div className={styles.fallbackInner}>
-          <span className={styles.eyebrow}>Kingdom 710 · Choose your path</span>
-          <h1 className={styles.title}>Enter the kingdom</h1>
-          <p className={styles.lede}>Choose the option that describes you. We will take you to the right place.</p>
+          <span className={styles.eyebrow}>The Northern Gate · Kingdom 710</span>
+          <h1 className={styles.title}>Choose how you enter.</h1>
+          <p className={styles.lede}>New to the kingdom? Request entry. Already in K710? Head straight to the member hub.</p>
           <div className={`${styles.choices} ${styles.fallbackChoices}`}>
             <button type="button" className={`${styles.choice} ${styles.choiceGold}`} onClick={() => router.push('/interest')}>
-              <span className={styles.choiceNumber}>01</span>
-              <span><span className={styles.choiceKicker}>New to K710? Start here</span><span className={styles.choiceTitle}>Request Entry</span><span className={styles.choiceSub}>Apply to transfer into Kingdom 710.</span></span>
-              <span className={styles.choiceArrow}>→</span>
+              <span className={styles.choiceSigil} aria-hidden="true"><span>NEW</span></span>
+              <span className={styles.choiceCopy}><span className={styles.choiceKicker}>Visitors & recruits</span><span className={styles.choiceTitle}>Request Entry</span><span className={styles.choiceSub}>Apply to transfer into Kingdom 710.</span></span>
+              <span className={styles.choiceArrow} aria-hidden="true">→</span>
             </button>
             <button type="button" className={`${styles.choice} ${styles.choiceBlue}`} onClick={() => router.push('/player-record')}>
-              <span className={styles.choiceNumber}>02</span>
-              <span><span className={styles.choiceKicker}>Already in K710?</span><span className={styles.choiceTitle}>Enter Member Hub</span><span className={styles.choiceSub}>Open member tools and rally records.</span></span>
-              <span className={styles.choiceArrow}>→</span>
+              <span className={styles.choiceSigil} aria-hidden="true"><span>710</span></span>
+              <span className={styles.choiceCopy}><span className={styles.choiceKicker}>Current K710 members</span><span className={styles.choiceTitle}>Enter Member Hub</span><span className={styles.choiceSub}>Open rally records and kingdom tools.</span></span>
+              <span className={styles.choiceArrow} aria-hidden="true">→</span>
             </button>
           </div>
         </div>
