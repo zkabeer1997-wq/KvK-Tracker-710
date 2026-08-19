@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function GuideArticle({ slug, memberId }) {
   const [guide, setGuide] = useState(null);
@@ -13,6 +14,7 @@ export default function GuideArticle({ slug, memberId }) {
   const [draft, setDraft] = useState('');
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState('');
+  const router = useRouter();
 
   const query = memberId ? `?member_id=${encodeURIComponent(memberId)}` : '';
 
@@ -22,7 +24,10 @@ export default function GuideArticle({ slug, memberId }) {
       setLoading(true);
       setError('');
       try {
-        const response = await fetch(`/api/guides/${encodeURIComponent(slug)}`, { cache: 'no-store' });
+        const response = await fetch(`/api/guides/${encodeURIComponent(slug)}?t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' },
+        });
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || 'Unable to load this guide.');
         if (cancelled) return;
@@ -40,6 +45,11 @@ export default function GuideArticle({ slug, memberId }) {
     return () => { cancelled = true; };
   }, [slug]);
 
+  useEffect(() => {
+    if (guide?.title) document.title = `${guide.title} | K710`;
+    return () => { document.title = 'Kingdom Guide | K710'; };
+  }, [guide?.title]);
+
   async function saveGuide() {
     const nextTitle = draftTitle.trim();
     if (!nextTitle) {
@@ -53,16 +63,21 @@ export default function GuideArticle({ slug, memberId }) {
     try {
       const response = await fetch(`/api/guides/${encodeURIComponent(slug)}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+        },
         body: JSON.stringify({ title: nextTitle, body: draft }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Unable to save this guide.');
+
       setGuide(result.guide);
       setDraftTitle(result.guide?.title || '');
       setDraft(result.guide?.body || '');
       setEditing(false);
-      setStatus('Guide title and text saved. Changes are live immediately.');
+      setStatus('Guide title and text saved. Changes are live and persisted.');
+      router.refresh();
     } catch (err) {
       setError(err.message || 'Unable to save this guide.');
     } finally {
@@ -127,7 +142,7 @@ export default function GuideArticle({ slug, memberId }) {
                 type="text"
                 value={draftTitle}
                 onChange={(event) => setDraftTitle(event.target.value)}
-                maxLength={160}
+                maxLength={180}
                 autoFocus
               />
             </div>
