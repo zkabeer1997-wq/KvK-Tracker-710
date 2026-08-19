@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { ACESFilmicToneMapping, PCFSoftShadowMap, SRGBColorSpace } from 'three';
 import KingdomAtmosphere from './KingdomAtmosphere';
+import KingdomCinematicFX from './KingdomCinematicFX';
 import KingdomGate from './KingdomGate';
 import KingdomTraveler from './KingdomTraveler';
 
@@ -157,6 +158,7 @@ function SceneContents({ hoveredRoad, phase, selectedRoad, active, mobile }) {
       <pointLight position={[4.2, 3.2, -4.6]} color="#94b5eb" intensity={rightActive ? 4.8 : 1.95} distance={21} decay={2} />
 
       <KingdomAtmosphere activeRoad={activeRoad} />
+      <KingdomCinematicFX activeRoad={activeRoad} mobile={mobile} />
       <KingdomGate hoveredRoad={hoveredRoad} selectedRoad={selectedRoad} />
       <TravelerRig phase={phase} selectedRoad={selectedRoad} active={active} />
       <CameraRig hoveredRoad={hoveredRoad} phase={phase} selectedRoad={selectedRoad} active={active} />
