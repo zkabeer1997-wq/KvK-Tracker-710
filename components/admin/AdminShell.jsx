@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 
 const NAV_ITEMS = [
   { href: '/admin/dashboard', label: 'Player Records', match: '/admin/dashboard' },
+  { href: '/admin/dashboard/member-access', label: 'Member Access', match: '/admin/dashboard/member-access' },
   { href: '/admin/dashboard/interest', label: 'Transfer Requests', match: '/admin/dashboard/interest' },
   { href: '/admin/dashboard/prep-ministers', label: 'Prep Ministers', match: '/admin/dashboard/prep-ministers' },
   { href: '/admin/dashboard/flamedragon', label: 'Flamedragon Tyrant', match: '/admin/dashboard/flamedragon' },
