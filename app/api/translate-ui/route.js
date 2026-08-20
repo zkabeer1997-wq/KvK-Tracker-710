@@ -143,6 +143,46 @@ async function translateAtMirror(baseUrl, strings, target) {
   return { translated, provider: baseUrl };
 }
 
+async function translateWithMyMemory(strings, target) {
+  const translated = new Array(strings.length);
+  const CONCURRENCY = 6;
+
+  for (let start = 0; start < strings.length; start += CONCURRENCY) {
+    const batch = strings.slice(start, start + CONCURRENCY);
+    const values = await Promise.all(batch.map(async (source) => {
+      const params = new URLSearchParams({
+        q: source,
+        langpair: `en|${target}`,
+        mt: '1',
+      });
+
+      const response = await fetch(`https://api.mymemory.translated.net/get?${params.toString()}`, {
+        headers: { 'User-Agent': 'K710Hub/1.0 static-ui-translation' },
+        cache: 'no-store',
+        signal: AbortSignal.timeout(8_000),
+      });
+
+      if (!response.ok) {
+        const detail = await response.text().catch(() => '');
+        throw new Error(`MyMemory returned ${response.status}: ${detail.slice(0, 160)}`);
+      }
+
+      const payload = await response.json();
+      const value = payload?.responseData?.translatedText;
+      if (typeof value !== 'string' || !value.trim()) {
+        throw new Error('MyMemory returned an invalid translation payload');
+      }
+      return value;
+    }));
+
+    values.forEach((value, offset) => {
+      translated[start + offset] = value;
+    });
+  }
+
+  return { translated, provider: 'mymemory' };
+}
+
 async function translateWithFallback(strings, target) {
   const mirrors = getMirrors();
   const attempts = mirrors.map((baseUrl) =>
@@ -156,8 +196,17 @@ async function translateWithFallback(strings, target) {
     return await Promise.any(attempts);
   } catch (error) {
     console.error('K710 all LibreTranslate mirrors failed', error?.message || error);
-    return null;
   }
+
+  if (target === 'tl') {
+    try {
+      return await translateWithMyMemory(strings, target);
+    } catch (error) {
+      console.error('K710 Tagalog MyMemory fallback failed', error?.message || error);
+    }
+  }
+
+  return null;
 }
 
 export async function POST(request) {
