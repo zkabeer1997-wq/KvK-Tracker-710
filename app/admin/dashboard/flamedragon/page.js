@@ -59,6 +59,11 @@ function cellValue(row, key) {
   return row[key] == null ? '' : String(row[key]);
 }
 
+function updatedTimestamp(row) {
+  const parsed = Date.parse(row?.updated_at || '');
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 export default function AdminFlamedragonPage() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -97,7 +102,7 @@ export default function AdminFlamedragonPage() {
       setSortDir((dir) => (dir === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortKey(key);
-      setSortDir('asc');
+      setSortDir(key === 'updated_at' ? 'desc' : 'asc');
     }
   }
 
@@ -108,6 +113,17 @@ export default function AdminFlamedragonPage() {
       list = rows.filter((row) => COLUMNS.some((col) => cellValue(row, col.key).toLowerCase().includes(q)));
     }
     const sorted = [...list].sort((a, b) => {
+      if (sortKey === 'updated_at') {
+        const av = updatedTimestamp(a);
+        const bv = updatedTimestamp(b);
+
+        // Missing/invalid timestamps always sort last, regardless of direction.
+        if (av === null && bv === null) return 0;
+        if (av === null) return 1;
+        if (bv === null) return -1;
+        return sortDir === 'asc' ? av - bv : bv - av;
+      }
+
       const av = cellValue(a, sortKey).toLowerCase();
       const bv = cellValue(b, sortKey).toLowerCase();
       if (av < bv) return sortDir === 'asc' ? -1 : 1;
@@ -225,7 +241,7 @@ export default function AdminFlamedragonPage() {
                 <tr>
                   {TABLE_COLUMNS.map((col) => (
                     <th key={col.key} onClick={() => toggleSort(col.key)}>
-                      {col.label}{sortKey === col.key ? (sortDir === 'asc' ? ' \u2191' : ' \u2193') : ''}
+                      {col.label}{sortKey === col.key ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
                     </th>
                   ))}
                 </tr>
