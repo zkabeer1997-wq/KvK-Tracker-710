@@ -18,6 +18,21 @@ export async function POST(request) {
 
   try {
     const supabase = createSupabaseAdminClient();
+
+    // Fail closed before PIN verification. This protects the member gate even if
+    // the backing verification function is ever changed or missing-member data
+    // is handled incorrectly at the database layer.
+    const { data: member, error: memberError } = await supabase
+      .from('submissions')
+      .select('member_id')
+      .eq('member_id', memberId)
+      .maybeSingle();
+
+    if (memberError) throw memberError;
+    if (!member) {
+      return NextResponse.json({ error: 'Incorrect PIN for this Member ID.' }, { status: 401 });
+    }
+
     const { data, error } = await supabase.rpc('verify_page_pin', {
       p_member_id: memberId,
       p_pin: pin,
