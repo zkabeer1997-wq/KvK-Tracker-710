@@ -1,0 +1,104 @@
+.notice {
+  margin-bottom: 18px;
+  padding: 18px 20px;
+  border: 1px solid rgba(203, 166, 89, 0.24);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(203, 166, 89, 0.08), rgba(12, 18, 34, 0.34));
+}
+
+.noticeKicker {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.notice h2 {
+  margin: 0 0 7px;
+  font-size: 1.05rem;
+}
+
+.notice p {
+  margin: 0;
+  max-width: 880px;
+  line-height: 1.55;
+  opacity: 0.82;
+}
+
+.securedBadge,
+.resetBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.securedBadge {
+  border: 1px solid rgba(85, 181, 129, 0.28);
+  background: rgba(85, 181, 129, 0.1);
+}
+
+.resetBadge {
+  border: 1px solid rgba(219, 143, 76, 0.3);
+  background: rgba(219, 143, 76, 0.11);
+}
+
+.revealBox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 8px 10px 8px 12px;
+  border: 1px solid rgba(203, 166, 89, 0.34);
+  border-radius: 10px;
+  background: rgba(203, 166, 89, 0.08);
+}
+
+.revealLabel {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.pinCode {
+  font-family: var(--font-mono-loaded), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.copyButton {
+  appearance: none;
+  border: 1px solid rgba(203, 166, 89, 0.34);
+  border-radius: 8px;
+  padding: 7px 10px;
+  background: rgba(10, 15, 27, 0.48);
+  color: inherit;
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.copyButton:hover {
+  background: rgba(203, 166, 89, 0.14);
+}
+
+@media (max-width: 720px) {
+  .revealBox {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
