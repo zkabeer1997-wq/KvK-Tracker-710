@@ -6,7 +6,11 @@ import MemberHub from '../../components/kingdom/world/MemberHub';
 
 export default function PlayerRecordGate({ banner }) {
   const [memberId, setMemberId] = useState('');
+  const [name, setName] = useState('');
   const [pin, setPin] = useState('');
+  const [firstTime, setFirstTime] = useState(false);
+  const [issuedPin, setIssuedPin] = useState('');
+  const [copied, setCopied] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [verifiedMemberId, setVerifiedMemberId] = useState('');
   const [status, setStatus] = useState('');
@@ -20,45 +24,93 @@ export default function PlayerRecordGate({ banner }) {
     setReduced(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   }, []);
 
+  function openGate() {
+    if (reduced) {
+      setUnlocked(true);
+      return;
+    }
+    setOpening(true);
+    window.setTimeout(() => {
+      setUnlocked(true);
+      setOpening(false);
+    }, 1500);
+  }
+
+  function switchMode(nextFirstTime) {
+    setFirstTime(nextFirstTime);
+    setStatus('');
+    setIsError(false);
+    setIssuedPin('');
+    setCopied(false);
+    setPin('');
+  }
+
   async function handleUnlock(e) {
     e.preventDefault();
     setStatus('');
     setIsError(false);
-    if (!memberId) {
+
+    if (!memberId.trim()) {
       setIsError(true);
       setStatus('Please enter your Member ID.');
       return;
     }
 
+    if (firstTime && !name.trim()) {
+      setIsError(true);
+      setStatus('Please enter your governor name.');
+      return;
+    }
+
+    if (!firstTime && !pin) {
+      setIsError(true);
+      setStatus('Please enter your PIN.');
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await fetch('/api/member-login', {
+      const response = await fetch(firstTime ? '/api/member-register' : '/api/member-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ memberId, pin }),
+        body: JSON.stringify(firstTime
+          ? { name: name.trim(), memberId: memberId.trim() }
+          : { memberId: memberId.trim(), pin }),
       });
       const data = await response.json();
       if (!response.ok || data?.ok !== true) {
         setIsError(true);
-        setStatus(data?.error || 'Unable to verify member access.');
+        setStatus(data?.error || (firstTime ? 'Unable to create member credentials.' : 'Unable to verify member access.'));
         return;
       }
 
-      setVerifiedMemberId(data.memberId || memberId);
-      if (reduced) {
-        setUnlocked(true);
-      } else {
-        setOpening(true);
-        setTimeout(() => {
-          setUnlocked(true);
-          setOpening(false);
-        }, 1500);
+      setVerifiedMemberId(data.memberId || memberId.trim());
+
+      if (firstTime && data.created === true && data.pin) {
+        setIssuedPin(String(data.pin));
+        setCopied(false);
+        setStatus('Credentials created. Save your PIN before entering the kingdom.');
+        return;
       }
+
+      openGate();
     } catch {
       setIsError(true);
-      setStatus('Unable to verify member access.');
+      setStatus(firstTime ? 'Unable to create member credentials.' : 'Unable to verify member access.');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function copyCredentials() {
+    if (!issuedPin) return;
+    const text = `K710 Member ID: ${verifiedMemberId}\nPIN: ${issuedPin}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+      setStatus('Select and save your Member ID and PIN manually before continuing.');
     }
   }
 
@@ -85,52 +137,111 @@ export default function PlayerRecordGate({ banner }) {
           <span className="k-mark">Security Checkpoint</span>
           <h1 className="k-display gatehouse-title">The Gatehouse</h1>
           <p className="k-narrative gatehouse-lede">
-            Your governor ID is your name inside the kingdom.
+            {firstTime ? 'Register your governor credentials for the kingdom.' : 'Present your Member ID and PIN to enter.'}
           </p>
         </header>
 
-        <form className="gatehouse-desk k-ui" onSubmit={handleUnlock}>
-          <div className="gatehouse-desk-grain" aria-hidden="true" />
-
-          <label className="k-field" htmlFor="gate-member-id">
-            <span>Member ID</span>
-            <input
-              id="gate-member-id"
-              className="k-input"
-              value={memberId}
-              onChange={(e) => setMemberId(e.target.value)}
-              autoComplete="username"
-              required
-            />
-          </label>
-
-          <label className="k-field" htmlFor="gate-pin">
-            <span>PIN</span>
-            <input
-              id="gate-pin"
-              className="k-input"
-              type="password"
-              value={pin}
-              onChange={(e) => setPin(e.target.value)}
-              autoComplete="current-password"
-              placeholder="Leave blank if you are new"
-            />
-          </label>
-
-          {status && (
-            <div className={isError ? 'status error' : 'status'} role="status">
-              {status}
+        {issuedPin ? (
+          <section className="gatehouse-desk k-ui" aria-live="polite">
+            <div className="gatehouse-desk-grain" aria-hidden="true" />
+            <span className="k-mark">Credentials issued</span>
+            <h2 className="k-display" style={{ margin: '8px 0 16px', fontSize: '1.35rem' }}>Save these now</h2>
+            <p className="k-narrative" style={{ margin: '0 0 16px' }}>
+              Your PIN is stored as a one-way hash and cannot be shown again. An admin can reset it later if needed.
+            </p>
+            <div className="k-field">
+              <span>Member ID</span>
+              <div className="k-input" style={{ display: 'flex', alignItems: 'center', minHeight: 44 }}>{verifiedMemberId}</div>
             </div>
-          )}
+            <div className="k-field">
+              <span>6-digit PIN</span>
+              <div className="k-input" style={{ display: 'flex', alignItems: 'center', minHeight: 44, letterSpacing: '.18em', fontWeight: 800 }}>{issuedPin}</div>
+            </div>
+            {status && <div className="status" role="status">{status}</div>}
+            <div style={{ display: 'grid', gap: 10, marginTop: 14 }}>
+              <button type="button" className="k-btn" onClick={copyCredentials}>{copied ? 'Credentials copied' : 'Copy credentials'}</button>
+              <button type="button" className="k-btn k-btn-sky gatehouse-submit" onClick={openGate} disabled={opening}>
+                {opening ? 'Gate opening…' : 'I saved them — enter the kingdom'}
+              </button>
+            </div>
+          </section>
+        ) : (
+          <form className="gatehouse-desk k-ui" onSubmit={handleUnlock}>
+            <div className="gatehouse-desk-grain" aria-hidden="true" />
 
-          <button type="submit" className="k-btn k-btn-sky gatehouse-submit" disabled={loading || opening}>
-            {loading ? 'Checking…' : opening ? 'Gate opening…' : 'Present Credentials'}
-          </button>
+            {firstTime && (
+              <label className="k-field" htmlFor="gate-member-name">
+                <span>Governor Name</span>
+                <input
+                  id="gate-member-name"
+                  className="k-input"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  autoComplete="name"
+                  maxLength={120}
+                  required
+                />
+              </label>
+            )}
 
-          <p className="gatehouse-hint k-narrative">
-            First time through? Leave the PIN blank and one will be set for you.
-          </p>
-        </form>
+            <label className="k-field" htmlFor="gate-member-id">
+              <span>Member ID</span>
+              <input
+                id="gate-member-id"
+                className="k-input"
+                value={memberId}
+                onChange={(e) => setMemberId(e.target.value)}
+                autoComplete="username"
+                maxLength={120}
+                required
+              />
+            </label>
+
+            {!firstTime && (
+              <label className="k-field" htmlFor="gate-pin">
+                <span>PIN</span>
+                <input
+                  id="gate-pin"
+                  className="k-input"
+                  type="password"
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  autoComplete="current-password"
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="6-digit PIN"
+                  required
+                />
+              </label>
+            )}
+
+            {status && (
+              <div className={isError ? 'status error' : 'status'} role="status">
+                {status}
+              </div>
+            )}
+
+            <button type="submit" className="k-btn k-btn-sky gatehouse-submit" disabled={loading || opening}>
+              {loading ? (firstTime ? 'Creating…' : 'Checking…') : opening ? 'Gate opening…' : firstTime ? 'Generate credentials' : 'Present Credentials'}
+            </button>
+
+            <button
+              type="button"
+              className="k-btn"
+              style={{ width: '100%', marginTop: 10 }}
+              onClick={() => switchMode(!firstTime)}
+              disabled={loading || opening}
+            >
+              {firstTime ? 'I already have credentials' : 'First time member? Create credentials'}
+            </button>
+
+            <p className="gatehouse-hint k-narrative">
+              {firstTime
+                ? 'Use the Member ID from Kingshot. The site will generate a secure 6-digit PIN and show it once.'
+                : 'Forgot your PIN? An admin can reset it from the Member PINs panel.'}
+            </p>
+          </form>
+        )}
 
         <Link href="/admin" className="gatehouse-restricted">
           <span className="k-mark">Restricted</span>
