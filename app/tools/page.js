@@ -22,6 +22,14 @@ const tools = [
     icon: '/images/pet-calculator.svg',
   },
   {
+    key: 'kingdom-planning',
+    event: 'Alliance Coordination',
+    title: 'Kingdom Planning Toolkit',
+    description: 'Synchronize march arrivals with a Rally Timer and estimate kingdom age, opening date, and upcoming server milestones from multiple evidence types.',
+    status: '2 calculators',
+    icon: '/images/calculator-ledger.svg',
+  },
+  {
     key: 'wavebound-charms',
     event: 'Wavebound Voyage',
     title: 'Charm Merge Optimizer',
