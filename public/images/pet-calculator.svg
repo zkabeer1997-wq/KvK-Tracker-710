@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="Pet calculator">
+  <defs><radialGradient id="g"><stop offset="0" stop-color="#f0cf79"/><stop offset="1" stop-color="#8d6a29"/></radialGradient></defs>
+  <path d="M80 132c-26 0-42-13-42-32 0-16 12-28 25-34 4-2 8-8 9-15 1-5 4-9 8-9s7 4 8 9c1 7 5 13 9 15 13 6 25 18 25 34 0 19-16 32-42 32Z" fill="url(#g)" stroke="#d7b85c" stroke-width="3"/>
+  <ellipse cx="45" cy="58" rx="13" ry="18" transform="rotate(-25 45 58)" fill="#b98c37"/>
+  <ellipse cx="115" cy="58" rx="13" ry="18" transform="rotate(25 115 58)" fill="#b98c37"/>
+  <ellipse cx="63" cy="34" rx="11" ry="16" transform="rotate(-9 63 34)" fill="#c9a44e"/>
+  <ellipse cx="97" cy="34" rx="11" ry="16" transform="rotate(9 97 34)" fill="#c9a44e"/>
+  <path d="M55 101h50M80 76v49" stroke="#201a10" stroke-width="5" stroke-linecap="round" opacity=".72"/>
+</svg>
