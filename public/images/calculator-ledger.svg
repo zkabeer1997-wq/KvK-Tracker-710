@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="Calculator ledger">
+  <defs>
+    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7b715c"/>
+      <stop offset="0.5" stop-color="#3b372f"/>
+      <stop offset="1" stop-color="#171612"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f0cf79"/>
+      <stop offset="1" stop-color="#94702d"/>
+    </linearGradient>
+  </defs>
+  <path d="M38 18h84a8 8 0 0 1 8 8v108a8 8 0 0 1-8 8H38a8 8 0 0 1-8-8V26a8 8 0 0 1 8-8Z" fill="url(#metal)" stroke="#c9a44e" stroke-width="3"/>
+  <rect x="46" y="34" width="68" height="28" rx="3" fill="#131712" stroke="#88713a" stroke-width="2"/>
+  <path d="M55 50h48" stroke="#d9c27d" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+  <g fill="url(#gold)" stroke="#d9bc68" stroke-width="1">
+    <rect x="46" y="76" width="16" height="16" rx="2"/><rect x="72" y="76" width="16" height="16" rx="2"/><rect x="98" y="76" width="16" height="16" rx="2"/>
+    <rect x="46" y="102" width="16" height="16" rx="2"/><rect x="72" y="102" width="16" height="16" rx="2"/><rect x="98" y="102" width="16" height="16" rx="2"/>
+  </g>
+  <path d="M21 52c5-8 11-14 18-18M139 108c-5 8-11 14-18 18" fill="none" stroke="#4aa9f5" stroke-width="3" stroke-linecap="round" opacity=".45"/>
+</svg>
