@@ -6,6 +6,14 @@ export const metadata = {
 
 const tools = [
   {
+    key: 'calculators',
+    event: 'Progression Workshop',
+    title: 'Kingshot Calculator Library',
+    description: 'Governor Gear, Charms, Hero Shards, Widgets, Hero XP, Hero Gear, Forgehammers, troop training, and VIP progression — calculator math only, with no upgrade optimizer.',
+    status: '9 calculators',
+    icon: '/images/calculator-ledger.svg',
+  },
+  {
     key: 'wavebound-charms',
     event: 'Wavebound Voyage',
     title: 'Charm Merge Optimizer',
@@ -55,7 +63,7 @@ export default function ToolsPage({ searchParams }) {
 
         <div className="tools-empty-note">
           <span className="k-mark">Workshop Ledger</span>
-          <p className="k-narrative">Additional calculators will be added here as they are forged. The directory is now the permanent entry point for member tools.</p>
+          <p className="k-narrative">Progression calculators use deterministic game-cost math. Optimizers and recommendation engines remain separate tools so calculation and strategy are not mixed together.</p>
         </div>
 
         <Link href={backHref} className="tools-back">← Return to member gate</Link>
