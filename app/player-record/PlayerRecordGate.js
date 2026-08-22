@@ -205,11 +205,9 @@ export default function PlayerRecordGate({ banner }) {
                   className="k-input"
                   type="password"
                   value={pin}
-                  onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  onChange={(e) => setPin(e.target.value)}
                   autoComplete="current-password"
-                  inputMode="numeric"
-                  maxLength={6}
-                  placeholder="6-digit PIN"
+                  placeholder="Enter the PIN you originally set"
                   required
                 />
               </label>
@@ -238,7 +236,7 @@ export default function PlayerRecordGate({ banner }) {
             <p className="gatehouse-hint k-narrative">
               {firstTime
                 ? 'Use the Member ID from Kingshot. The site will generate a secure 6-digit PIN and show it once.'
-                : 'Forgot your PIN? An admin can reset it from the Member PINs panel.'}
+                : 'Use the PIN you originally set. Forgot it? An admin can reset it from the Member PINs panel.'}
             </p>
           </form>
         )}
