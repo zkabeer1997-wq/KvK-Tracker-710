@@ -14,6 +14,14 @@ const tools = [
     icon: '/images/calculator-ledger.svg',
   },
   {
+    key: 'pets',
+    event: 'Pet Progression',
+    title: 'Pets Upgrade Calculator',
+    description: 'Calculate Pet Food, Growth Manuals, Nutrient Potions, and Promotion Medallions from any current pet level to a target level across released generations.',
+    status: '14 pets',
+    icon: '/images/pet-calculator.svg',
+  },
+  {
     key: 'wavebound-charms',
     event: 'Wavebound Voyage',
     title: 'Charm Merge Optimizer',
