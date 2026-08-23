@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { isAdminRequest } from '../../../lib/adminAuth';
 import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
+import { mergePowerProfilesIntoRows } from '../../../lib/powerProfiles.mjs';
 
 const ADMIN_COLUMNS = 'member_id,name,current_alliance,infantry_tier,infantry_tg,cavalry_tier,cavalry_tg,archer_tier,archer_tg,heroes,charms,governor_gear,pet_power,masters_power,mystic_trial_score,availability,voice_chat,auto_help,updated_at';
+const POWER_COLUMNS = 'member_id,name,governor_gear,charms,hero_gear,pet_power,masters_power,infantry_tier,infantry_tg,cavalry_tier,cavalry_tg,archer_tier,archer_tg,heroes,updated_at';
 
 function isMissingTableError(error) {
   return error && (
@@ -16,17 +18,24 @@ export async function GET(request) {
   }
   try {
     const supabase = createAdminSupabaseClient();
-    const { data, error } = await supabase
-      .from('flamedragon_forms')
-      .select(ADMIN_COLUMNS)
-      .order('updated_at', { ascending: false });
+    const [formResult, profileResult] = await Promise.all([
+      supabase.from('flamedragon_forms').select(ADMIN_COLUMNS).order('updated_at', { ascending: false }),
+      supabase.from('power_profiles').select(POWER_COLUMNS),
+    ]);
+    const { data, error } = formResult;
     if (error) {
       if (isMissingTableError(error)) {
         return NextResponse.json({ rows: [], configured: false });
       }
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    return NextResponse.json({ rows: data || [], configured: true });
+    if (profileResult.error) {
+      return NextResponse.json({ error: profileResult.error.message }, { status: 500 });
+    }
+    return NextResponse.json({
+      rows: mergePowerProfilesIntoRows(data || [], profileResult.data || []),
+      configured: true,
+    });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

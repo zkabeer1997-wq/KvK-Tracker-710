@@ -15,6 +15,7 @@ const COLUMNS = [
   { key: 'heroes', label: 'Heroes' },
   { key: 'charms', label: 'Charms' },
   { key: 'governor_gear', label: 'Governor Gear' },
+  { key: 'hero_gear', label: 'Hero Gear' },
   { key: 'pet_power', label: 'Pet Power' },
   { key: 'masters_power', label: 'Masters Power' },
   { key: 'mystic_trial_score', label: 'Mystic Trial' },
@@ -186,6 +187,7 @@ export default function AdminFlamedragonPage() {
         <div className="power-cell flamedragon-power-cell">
           <span>Gov {row.governor_gear || '-'}</span>
           <span>Charms {row.charms || '-'}</span>
+          <span>Hero {row.hero_gear || '-'}</span>
           <span>Pet {row.pet_power || '-'}</span>
           <span>Masters {row.masters_power || '-'}</span>
           <span>Mystic {row.mystic_trial_score || '-'}</span>
