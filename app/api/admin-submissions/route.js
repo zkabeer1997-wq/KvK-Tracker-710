@@ -26,6 +26,13 @@ const POWER_COLUMNS = [
 'hero_gear',
 'pet_power',
 'masters_power',
+'infantry_tier',
+'infantry_tg',
+'cavalry_tier',
+'cavalry_tg',
+'archer_tier',
+'archer_tg',
+'heroes',
 'updated_at',
 ].join(',');
 

@@ -3,7 +3,7 @@ import EditableSection from '../../components/EditableSection';
 import PowerProfileClient from './PowerProfileClient';
 
 export const metadata = {
-title: 'K710 Power Profile',
+title: 'K710 Player Profile',
 };
 
 export default async function PowerProfilePage() {

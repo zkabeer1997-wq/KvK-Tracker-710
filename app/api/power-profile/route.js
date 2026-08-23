@@ -3,7 +3,11 @@ import { NextResponse } from 'next/server';
 import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
 import { publicPowerProfile, sanitizePowerProfileInput } from '../../../lib/powerProfiles.mjs';
 
-const PUBLIC_COLUMNS = 'member_id,name,governor_gear,charms,hero_gear,pet_power,masters_power,updated_at';
+const PUBLIC_COLUMNS = [
+'member_id', 'name', 'governor_gear', 'charms', 'hero_gear', 'pet_power', 'masters_power',
+'infantry_tier', 'infantry_tg', 'cavalry_tier', 'cavalry_tg', 'archer_tier', 'archer_tg',
+'heroes', 'updated_at',
+].join(',');
 
 function pinHash(pin) {
 return createHash('sha256').update('kvk-power-profile-v1:' + pin).digest('hex');
@@ -74,6 +78,13 @@ charms: profile.charms || null,
 hero_gear: profile.hero_gear || null,
 pet_power: profile.pet_power || null,
 masters_power: profile.masters_power || null,
+infantry_tier: profile.infantry_tier || null,
+infantry_tg: profile.infantry_tg || null,
+cavalry_tier: profile.cavalry_tier || null,
+cavalry_tg: profile.cavalry_tg || null,
+archer_tier: profile.archer_tier || null,
+archer_tg: profile.archer_tg || null,
+heroes: profile.heroes,
 pin_hash: nextHash,
 updated_at: new Date().toISOString(),
 };

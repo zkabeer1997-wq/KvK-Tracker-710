@@ -7,7 +7,11 @@ CHARM_LEVEL_OPTIONS,
 CHARM_SLOTS,
 GOVERNOR_GEAR_OPTIONS,
 GOVERNOR_GEAR_SLOTS,
+HEROES,
 POWER_PROFILE_FIELDS,
+PROFILE_UNIT_FIELDS,
+TROOP_TGS,
+TROOP_TIERS,
 blankCharmSelections,
 blankGovernorGearSelections,
 parseCharmSelections,
@@ -25,6 +29,13 @@ charms: '',
 hero_gear: '',
 pet_power: '',
 masters_power: '',
+infantry_tier: '',
+infantry_tg: '',
+cavalry_tier: '',
+cavalry_tg: '',
+archer_tier: '',
+archer_tg: '',
+heroes: [],
 pin: '',
 });
 const [governorGear, setGovernorGear] = useState(blankGovernorGearSelections());
@@ -54,6 +65,15 @@ return next;
 });
 }
 
+function toggleHero(hero) {
+setForm((current) => ({
+...current,
+heroes: current.heroes.includes(hero)
+? current.heroes.filter((currentHero) => currentHero !== hero)
+: [...current.heroes, hero],
+}));
+}
+
 async function lookup(overrideMemberId) {
 const memberId = (overrideMemberId !== undefined ? overrideMemberId : form.member_id).trim();
 if (!memberId) return;
@@ -79,6 +99,13 @@ charms: charmSummary || result.profile.charms || '',
 hero_gear: result.profile.hero_gear || '',
 pet_power: result.profile.pet_power || '',
 masters_power: result.profile.masters_power || '',
+infantry_tier: result.profile.infantry_tier || '',
+infantry_tg: result.profile.infantry_tg || '',
+cavalry_tier: result.profile.cavalry_tier || '',
+cavalry_tg: result.profile.cavalry_tg || '',
+archer_tier: result.profile.archer_tier || '',
+archer_tg: result.profile.archer_tg || '',
+heroes: Array.isArray(result.profile.heroes) ? result.profile.heroes : [],
 }));
 } else {
 setOnFile(null);
@@ -106,11 +133,11 @@ const result = await response.json();
 setLoading(false);
 if (!response.ok) {
 setIsError(true);
-setStatus(result.error || 'Could not save power profile.');
+setStatus(result.error || 'Could not save Player Profile.');
 return;
 }
 setOnFile(result.profile);
-setStatus(result.status === 'created' ? 'Power profile created.' : 'Power profile updated.');
+setStatus(result.status === 'created' ? 'Player Profile created.' : 'Player Profile updated.');
 }
 
 return (
@@ -121,8 +148,8 @@ return (
 <div className="armory-inner">
 <header className="armory-head">
 <span className="k-mark">The Armory</span>
-<h1 className="k-display armory-title k-engraved">Governor War Ledger</h1>
-<p className="k-narrative armory-lede">Inspect your equipment. Rally leadership reads this to know what you bring to the field.</p>
+<h1 className="k-display armory-title k-engraved">Player Profile</h1>
+<p className="k-narrative armory-lede">Record your equipment, troops, and heroes so rally leadership knows what you bring to the field.</p>
 </header>
 {intro}
 <form className="public-form-card war-ledger-form" onSubmit={handleSubmit}>
@@ -132,9 +159,44 @@ return (
 </section>
 {onFile && (
 <div className="on-file">
-Power profile on file - Governor Gear: {onFile.governor_gear || '-'} / Charms: {onFile.charms || '-'} / Hero Gear: {onFile.hero_gear || '-'} / Pet Power: {onFile.pet_power || '-'} / Masters Power: {onFile.masters_power || '-'}
+Player profile on file - Governor Gear: {onFile.governor_gear || '-'} / Charms: {onFile.charms || '-'} / Heroes: {onFile.heroes?.length ? onFile.heroes.join(', ') : '-'}
 </div>
 )}
+
+<div className="ledger-block">
+  <div className="ledger-block-head">
+    <span className="ledger-block-kicker">Army Strength</span>
+    <h3>Troop Levels</h3>
+    <p>Choose the best tier and TG for each troop type.</p>
+  </div>
+  <div className="unit-card-grid">
+    {PROFILE_UNIT_FIELDS.map((unit) => (
+      <div key={unit.key} className={`unit-card ${unit.key}`}>
+        <h4>{unit.label}</h4>
+        <div className="row">
+          <label>Tier<select value={form[unit.tier]} onChange={(event) => updateField(unit.tier, event.target.value)}><option value="">Tier</option>{TROOP_TIERS.map((tier) => <option key={tier} value={tier}>{tier}</option>)}</select></label>
+          <label>TG<select value={form[unit.tg]} onChange={(event) => updateField(unit.tg, event.target.value)}><option value="">TG</option>{TROOP_TGS.map((tg) => <option key={tg} value={tg}>{tg}</option>)}</select></label>
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
+
+<div className="ledger-block">
+  <div className="ledger-block-head">
+    <span className="ledger-block-kicker">Hero Roster</span>
+    <h3>Heroes</h3>
+    <p>Select every hero you can confidently field.</p>
+  </div>
+  <div className="hero-chip-grid">
+    {HEROES.map((hero) => (
+      <label key={hero} className={form.heroes.includes(hero) ? 'hero-chip selected' : 'hero-chip'}>
+        <input type="checkbox" checked={form.heroes.includes(hero)} onChange={() => toggleHero(hero)} />
+        <span>{hero}</span>
+      </label>
+    ))}
+  </div>
+</div>
 
 <div className="ledger-block">
   <div className="ledger-block-head">
@@ -204,10 +266,10 @@ Power profile on file - Governor Gear: {onFile.governor_gear || '-'} / Charms: {
 
 <section className="pin-panel">
 <label>Enter your PIN<input type="password" value={form.pin} onChange={(e) => updateField('pin', e.target.value)} placeholder="Your PIN" /></label>
-<p className="hint">First power submission sets your PIN for this page. Enter the same PIN next time to update it.</p>
+<p className="hint">First Player Profile submission sets your PIN for this page. Enter the same PIN next time to update it.</p>
 </section>
 {status && <div className={isError ? 'status error' : 'status'}>{status}</div>}
-<button type="submit" disabled={loading}>{loading ? 'Saving...' : 'Save War Ledger'}</button>
+<button type="submit" disabled={loading}>{loading ? 'Saving...' : 'Save Player Profile'}</button>
 </form>
 </div>
 </main>

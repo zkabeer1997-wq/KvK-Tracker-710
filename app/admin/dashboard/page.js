@@ -467,7 +467,7 @@ onCancel={() => setConfirmState(null)}
 <strong>{Math.max(rows.length - assignedCount, 0)}</strong>
 </div>
 <div>
-<span>Power profiles</span>
+<span>Player Profiles</span>
 <strong>{powerProfileCount}</strong>
 </div>
 <div>
@@ -604,7 +604,7 @@ title="Drag to assign to a rally"
 <span>Masters {powerValue(row.power_profile, 'masters_power')}</span>
 </div>
 ) : (
-<span className="missing-power-pill">No power profile</span>
+<span className="missing-power-pill">No Player Profile</span>
 )}
 </td>
 <td>

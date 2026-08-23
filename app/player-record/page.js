@@ -3,7 +3,7 @@ import EditableSection from '../../components/EditableSection';
 import PlayerRecordGate from './PlayerRecordGate';
 
 export const metadata = {
-title: 'K710 Rallies',
+title: 'K710 KvK Availability',
 };
 
 export default async function PlayerRecordPage() {

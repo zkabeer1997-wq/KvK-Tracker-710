@@ -14,7 +14,7 @@ const destinations = [
     key: 'forms',
     kicker: 'The Muster Hall',
     title: 'Forms',
-    description: 'Rally Lead, Rally Joiner, KvK Prep, and Flamedragon Tyrant.',
+    description: 'Player Profile, KvK Availability, KvK Prep, and Flamedragon Tyrant.',
     href: (id) => `/forms?member_id=${id}`,
   },
   {

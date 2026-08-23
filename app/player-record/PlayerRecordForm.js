@@ -3,12 +3,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 
-const HEROES = [
-'Chenko', 'Yeonwoo', 'Amane', 'Amadeus', 'Vivian', 'Margot', 'Thrud', 'Saul', 'Hilde', 'Gordon',
-'Eric', 'Fahd', 'Alcar', 'Long Fei', 'Triton', 'Sophia', 'Zoe', 'Jaeger', 'Petra', 'Rosa'
-];
-const TIERS = ['T11', 'T10'];
-const TGS = ['TG8', 'TG7', 'TG6', 'TG5', 'Below TG5'];
 const AVAILABILITY_OPTIONS = [
 'First half (12-14:30 UTC)',
 'Second half (14:30-17 UTC)',
@@ -16,11 +10,6 @@ const AVAILABILITY_OPTIONS = [
 'Not Available'
 ];
 const ALLIANCES = ['710', 'RED', 'SKY'];
-const UNIT_FIELDS = [
-{ key: 'infantry', label: 'Infantry', tier: 'infantryTier', tg: 'infantryTg' },
-{ key: 'cavalry', label: 'Cavalry', tier: 'cavalryTier', tg: 'cavalryTg' },
-{ key: 'archer', label: 'Archer', tier: 'archerTier', tg: 'archerTg' },
-];
 
 export default function PlayerRecordForm({ initialMemberId = '' }) {
 const [name, setName] = useState('');
@@ -39,11 +28,6 @@ const [onFile, setOnFile] = useState(null);
 const [status, setStatus] = useState('');
 const [isError, setIsError] = useState(false);
 const [loading, setLoading] = useState(false);
-
-const tierValues = { infantryTier, cavalryTier, archerTier };
-const tgValues = { infantryTg, cavalryTg, archerTg };
-const tierSetters = { infantryTier: setInfantryTier, cavalryTier: setCavalryTier, archerTier: setArcherTier };
-const tgSetters = { infantryTg: setInfantryTg, cavalryTg: setCavalryTg, archerTg: setArcherTg };
 
 async function lookup() {
 if (!memberId) return;
@@ -75,12 +59,6 @@ lookup();
 }
 // eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
-
-function toggleHero(hero) {
-setHeroes((prev) => (
-prev.includes(hero) ? prev.filter((h) => h !== hero) : [...prev, hero]
-));
-}
 
 async function handleSubmit(e) {
 e.preventDefault();
@@ -127,17 +105,17 @@ data === 'created' ? 'Submitted! Your entry has been created.' : 'Updated! Your 
 return (
 <div className="public-shell single-form">
 <section className="public-intro">
-<span className="public-kicker">Player record</span>
-<h1>Troops and heroes</h1>
-<p>Share your unit strength, hero roster, and battle window so rally leads can build cleaner marches.</p>
+<span className="public-kicker">KvK Availability</span>
+<h1>Battle availability</h1>
+<p>Tell kingdom leadership when you can participate in KvK.</p>
 <div className="public-intro-stats" aria-label="Submission checklist">
 <div>
-<strong>3</strong>
-<span>Troop types</span>
+<strong>1</strong>
+<span>Quick form</span>
 </div>
 <div>
-<strong>{heroes.length}</strong>
-<span>Heroes picked</span>
+<strong>UTC</strong>
+<span>Battle time</span>
 </div>
 <div>
 <strong>{availability ? 'Set' : 'Open'}</strong>
@@ -147,8 +125,8 @@ return (
 </section>
 <form className="public-form-card" onSubmit={handleSubmit}>
 <div className="form-section-header">
-<span>Player record</span>
-<h2>Tell rally leads what you can bring.</h2>
+<span>KvK Availability</span>
+<h2>Tell us when you can join.</h2>
 </div>
 <section className="identity-grid">
 <label>Your name<input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your in-game name" /></label>
@@ -160,36 +138,9 @@ return (
 </section>
 {onFile && (
 <div className="on-file">
-Currently on file - Infantry: {onFile.infantry_tier || '-'}-{onFile.infantry_tg || '-'} / Cavalry: {onFile.cavalry_tier || '-'}-{onFile.cavalry_tg || '-'} / Archer: {onFile.archer_tier || '-'}-{onFile.archer_tg || '-'}
-{onFile.heroes && onFile.heroes.length > 0 && <> / Heroes: {onFile.heroes.join(', ')}</>}
-{onFile.availability && <> / Availability: {onFile.availability}</>}
+Currently on file - Availability: {onFile.availability || '-'}
 </div>
 )}
-<section className="troop-section public-section">
-<div className="section-title-row"><span>Troops</span><h3>Unit strength</h3><p>Choose the best tier and TG for each troop type.</p></div>
-<div className="unit-card-grid">
-{UNIT_FIELDS.map((unit) => (
-<div key={unit.key} className={`unit-card ${unit.key}`}>
-<h4>{unit.label}</h4>
-<div className="row">
-<label>Tier<select value={tierValues[unit.tier]} onChange={(e) => tierSetters[unit.tier](e.target.value)}><option value="">Tier</option>{TIERS.map((t) => <option key={t} value={t}>{t}</option>)}</select></label>
-<label>TG<select value={tgValues[unit.tg]} onChange={(e) => tgSetters[unit.tg](e.target.value)}><option value="">TG</option>{TGS.map((t) => <option key={t} value={t}>{t}</option>)}</select></label>
-</div>
-</div>
-))}
-</div>
-</section>
-<section className="troop-section public-section">
-<div className="section-title-row"><span>Heroes</span><h3>Available heroes</h3><p>Pick every hero you can confidently use for rally guidance.</p></div>
-<div className="hero-chip-grid">
-{HEROES.map((hero) => (
-<label key={hero} className={heroes.includes(hero) ? 'hero-chip selected' : 'hero-chip'}>
-<input type="checkbox" checked={heroes.includes(hero)} onChange={() => toggleHero(hero)} />
-<span>{hero}</span>
-</label>
-))}
-</div>
-</section>
 <section className="troop-section public-section">
 <div className="section-title-row"><span>Timing</span><h3>Battle availability</h3><p>Select the window rally planners should count on.</p></div>
 <div className="availability-grid">
@@ -206,7 +157,7 @@ Currently on file - Infantry: {onFile.infantry_tier || '-'}-{onFile.infantry_tg 
 <p className="hint">First submission sets your PIN. Enter the same PIN next time to update your entry.</p>
 </section>
 {status && <div className={isError ? 'status error' : 'status'}>{status}</div>}
-<button type="submit" disabled={loading}>{loading ? 'Submitting...' : 'Submit loadout'}</button>
+<button type="submit" disabled={loading}>{loading ? 'Submitting...' : 'Save KvK Availability'}</button>
 </form>
 </div>
 );
