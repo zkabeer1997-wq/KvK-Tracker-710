@@ -3,12 +3,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 
-const CATEGORIES=['Charms','Governor Gear','Hero Gear','Pets','Masters'];
+const CATEGORIES=['Charms','Governor Gear','Hero Gear','Pets','Masters','Special Event Shops'];
 const TOOLS={
   Charms:[
     {key:'charm-pack-optimizer',event:'Governor Charms',title:'Charm Pack Optimizer',description:'Set all 18 charms individually, calculate every upgrade material, and build the cheapest week-by-week pack plan.',status:'New',icon:'/images/charm-pack-forge.svg'},
     {key:'wavebound-charms',event:'Wavebound Voyage',title:'Charms Sailing Optimizer',description:'Calculate Tidal Treasure merges for a target Charm level, including Exquisite and Majestic outcomes.',status:'Available',icon:'/images/wavebound-charm-sail.svg'},
-  ],'Governor Gear':[],'Hero Gear':[],Pets:[],Masters:[],
+  ],'Governor Gear':[],'Hero Gear':[],Pets:[],Masters:[],'Special Event Shops':[
+    {key:'flamedragon-shop',event:'Flamedragon Tyrant',title:'Dragon’s Caravan Optimizer',description:'Build a reward cart, prioritize the best-value shop items, and calculate the cheapest Dragon Essence pack combination.',status:'New',icon:'/images/flamedragon-caravan.svg'},
+  ],
 };
 
 export default function ToolsDirectory({memberId}){
