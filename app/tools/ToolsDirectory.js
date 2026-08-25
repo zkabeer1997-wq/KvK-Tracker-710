@@ -10,6 +10,7 @@ const TOOLS={
     {key:'wavebound-charms',event:'Wavebound Voyage',title:'Charms Sailing Optimizer',description:'Calculate Tidal Treasure merges for a target Charm level, including Exquisite and Majestic outcomes.',status:'Available',icon:'/images/wavebound-charm-sail.svg'},
   ],'Governor Gear':[],'Hero Gear':[],Pets:[],Masters:[],'Special Event Shops':[
     {key:'flamedragon-shop',event:'Flamedragon Tyrant',title:'Dragon’s Caravan Optimizer',description:'Build a reward cart, prioritize the best-value shop items, and calculate the cheapest Dragon Essence pack combination.',status:'New',icon:'/images/flamedragon-caravan.svg'},
+    {key:'adventure-stall',event:'Adventure Stall',title:'Adventure Stall Optimizer',description:'Choose your event rewards and calculate the lowest-cost daily pack plan after using the Shells already in your inventory.',status:'New',icon:'/images/adventure-stall.svg'},
   ],
 };
 
