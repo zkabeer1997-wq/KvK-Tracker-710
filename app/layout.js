@@ -1,4 +1,5 @@
 import './tokens.css';
+import '../components/ui/primitives.css';
 import './globals.css';
 import './kingdom.css';
 import './i18n.css';

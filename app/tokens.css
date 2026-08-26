@@ -172,12 +172,33 @@
    kingdom846.com's dark-navy-and-antique-gold portal.
    ============================================================ */
 
+/* Each theme class paints its own ground and default ink, not just the
+   custom properties - otherwise a .theme-realm subtree still sits on
+   whatever background its ancestor (usually <body>, itself
+   .theme-console) already painted, and the light-surface text tokens
+   render illegibly dark-on-dark. Caught by actually screenshotting the
+   preview page in PR 3, not by reading the CSS. */
+.theme-console,
+.theme-realm {
+  background: var(--color-bg);
+  color: var(--color-ink);
+}
+
+/* --color-bg / --color-ink are pinned to the exact tokens body{} already
+   renders (--ink, --text - see globals.css), not the "obsidian"/"parchment"
+   material names that would be the more obvious choice. .theme-console is
+   already applied to <body> (see layout.js) and a class selector always
+   outranks the bare `body` element rule, so any value here other than
+   what's already on screen would silently redecorate the live site the
+   moment this class starts actually painting a background. Everything
+   below --color-ink is new UI surface (Panel/Table/...) with no existing
+   caller, so those are free to pick whatever reads well. */
 .theme-console {
-  --color-bg:            var(--obsidian);
+  --color-bg:            var(--ink);
   --color-bg-alt:        var(--stone);
   --color-surface:       var(--stone-lit);
   --color-surface-alt:   var(--steel);
-  --color-ink:           var(--parchment);
+  --color-ink:           var(--text);
   --color-ink-muted:     var(--t-secondary);
   --color-ink-dim:       var(--t-muted);
   --color-accent:        var(--gold-aged);

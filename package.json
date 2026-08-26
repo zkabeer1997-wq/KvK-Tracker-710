@@ -10,7 +10,7 @@
     "lint": "next lint",
     "qa": "node scripts/qa-routes.js",
     "analyze": "ANALYZE=true npm run build",
-    "lint:css": "stylelint 'app/**/*.css' --allow-empty-input"
+    "lint:css": "stylelint 'app/**/*.css' 'components/**/*.css' --allow-empty-input"
   },
   "dependencies": {
     "@dnd-kit/core": "6.1.0",
