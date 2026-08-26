@@ -67,3 +67,28 @@ SSR body with real `<a href>` navigation, not a first-load JS delta.
   `prefers-reduced-motion`, `saveData`, `deviceMemory`), not merely deferred.
 - `polyfills-*` at 112 KB is worth revisiting; it serves browsers this audience
   almost certainly does not use.
+
+
+## PR 5 update — the front door has content now
+
+`/` is server-rendered with real headings, `<a href>` nav, and CTAs — no
+longer an empty `<div class="k-scene">`. Verified against the built,
+minified output, not just by reading the source: fetched `/` from a
+production server and grepped the raw HTML for `<h1>` and `<a href>` — both
+present. First Load JS is **100 kB**, down slightly from the 106 kB
+pre-PR-5 baseline above (the Gate scene went from merely deferred to
+genuinely conditional — see below).
+
+The three.js scene now only mounts when `window.innerWidth >= 768`,
+`prefers-reduced-motion` is not set, there's no Save-Data header, and
+`detectQuality()` isn't `'mobile'` (checked once on mount in
+`GateBackdrop.jsx`). Everywhere else, `.gate-backdrop-art` — a CSS gradient,
+zero extra bytes, shared via the `--gate-fallback-gradient` token with the
+scene's own no-WebGL fallback — renders instead, immediately, with no
+loading state to wait on.
+
+The full cinematic moved to `/gate` (5.25 kB page, 107 kB First Load JS,
+statically prerendered) — unchanged behaviour, just no longer forced to be
+the front door. Reached via a hero link, not an auto-redirect: an
+unskippable interstitial in front of a homepage that finally has content
+would undo the point of rebuilding it.

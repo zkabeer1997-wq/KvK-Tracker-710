@@ -6,21 +6,20 @@ import SiteFooter from './SiteFooter';
 
 // Two routes deliberately opt out of the shared header/footer:
 //
-//   /                  The Gate. Its own comment calls it "a location, not
-//                       a document" - a full-bleed scene with no page
-//                       chrome by design. PR 5 rebuilds its content; until
-//                       then, wrapping it in chrome would just sandwich an
-//                       empty scene between two bars.
+//   /gate              The full cinematic (moved here from "/" in PR 5).
+//                       "A location, not a document" - full-bleed, no page
+//                       chrome, by design.
 //   /admin/dashboard*   AdminShell already renders a full sidebar shell on
 //                       every page under here. A second top nav stacked
 //                       above it would be redundant chrome on a working
 //                       console, not navigation anyone needs.
 //
-// Everything else - guides, tools, member forms, /admin/login, the 404 -
-// currently has no site-wide navigation at all beyond the floating
-// CrestMenu, so this is a real, if unglamorous, win on its own.
+// "/" used to be on this list too, when it was only the Gate scene. Now
+// that PR 5 gives it real content, it needs the same wayfinding every
+// other public page has - a visitor reading the homepage should be able
+// to reach Guides or Tools without knowing to look for a hero CTA.
 function wantsChrome(pathname) {
-  if (pathname === '/') return false;
+  if (pathname === '/gate') return false;
   if (pathname.startsWith('/admin/dashboard')) return false;
   return true;
 }

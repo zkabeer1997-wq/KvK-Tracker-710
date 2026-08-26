@@ -415,10 +415,47 @@
 .gate-canvas canvas { display: block; }
 
 .gate-fallback-art {
-  background:
-    radial-gradient(ellipse 46% 34% at 50% 62%, rgba(201,132,58,0.34), transparent 66%),
-    radial-gradient(ellipse 80% 40% at 50% 100%, rgba(226,105,42,0.16), transparent 70%),
-    linear-gradient(180deg, #05060d 0%, #0b0f1c 46%, #141a2a 100%);
+  background: var(--gate-fallback-gradient);
+}
+
+/* ============================================================
+   GATE BACKDROP — the decorative homepage layer (GateBackdrop.jsx).
+   Not the cinematic (/gate, .gate-scene above) - a quiet, inert
+   background sitting behind real page content. Absolutely
+   positioned to the nearest positioned ancestor (the homepage sets
+   position:relative on its hero section), never to the viewport,
+   so it can never intercept a click meant for the content in front
+   of it.
+   ============================================================ */
+
+.gate-backdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.gate-backdrop-art {
+  position: absolute;
+  inset: 0;
+  background: var(--gate-fallback-gradient);
+}
+
+.gate-backdrop-canvas {
+  position: absolute;
+  inset: 0;
+}
+.gate-backdrop-canvas canvas { display: block; }
+
+/* Content sitting in front of this backdrop needs to stay readable
+   over a photographic 3D scene - a bottom-weighted fade toward the
+   page's actual background color does that without a flat scrim
+   dulling the art everywhere. */
+.gate-backdrop-fade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(5,6,13,0.25) 0%, rgba(5,6,13,0.55) 55%, var(--ink) 100%);
 }
 
 .gate-content {
@@ -1427,4 +1464,134 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .warroom-atmos, .warroom-tablelight, .warroom-mode { transition: none; }
+}
+
+/* ============================================================
+   HOMEPAGE (.theme-realm)
+   The first real page built on PR 2's --color-* / --space-* /
+   --radius-* / --text-* scales rather than the legacy --parchment
+   /--ink/--gold tokens used everywhere else on this still-console-
+   styled site. Typography stays on the existing --font-display
+   (Cinzel) / --font-narrative tokens for now - swapping the public
+   surface to a warmer display face is still open, see PR 2's notes.
+   ============================================================ */
+
+.home-page { background: var(--color-bg); color: var(--color-ink); }
+
+.home-hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 640px;
+  display: flex;
+  align-items: center;
+  padding: var(--space-10) var(--space-6);
+}
+.home-hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+.home-hero-content .k-mark { color: var(--gold-hot); }
+.home-hero-title {
+  margin: 0;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: 800;
+  font-size: clamp(32px, 6vw, var(--text-4xl));
+  color: var(--hero-ink);
+  text-shadow: 0 4px 24px rgba(0,0,0,0.55);
+}
+.home-hero-sub {
+  margin: 0;
+  font-family: var(--font-narrative);
+  font-size: var(--text-lg);
+  line-height: 1.6;
+  color: var(--hero-ink-muted);
+  text-shadow: 0 2px 12px rgba(0,0,0,0.5);
+  max-width: 60ch;
+}
+.home-hero-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; justify-content: center; margin-top: var(--space-2); }
+
+/* .ui-btn-quiet's color comes from --color-ink, which is correct
+   everywhere else on this page (dark text on the light cream ground) but
+   wrong here: the hero's local background is always the dark Gate scene,
+   regardless of theme, so quiet-variant buttons went dark-on-dark and
+   disappeared. Caught by screenshotting the actual homepage, the same way
+   PR 3's button/input bugs were - the fix is the same shape: an override
+   scoped to where the ground actually differs from what the component
+   assumed, using --hero-ink instead of --color-ink. */
+.home-hero-actions .ui-btn-quiet {
+  color: var(--hero-ink);
+  border-color: color-mix(in srgb, var(--hero-ink) 40%, transparent);
+}
+.home-hero-actions .ui-btn-quiet:hover {
+  background: color-mix(in srgb, var(--hero-ink) 12%, transparent);
+  border-color: var(--hero-ink);
+}
+.home-hero-gate-link { opacity: 0.9; }
+.home-hero-content .k710-chronometer,
+.home-hero-content [class*="chronometer"] { margin-top: var(--space-6); }
+
+.home-section { max-width: 1080px; margin: 0 auto; padding: var(--space-9) var(--space-6); }
+.home-section-head { text-align: center; max-width: 640px; margin: 0 auto var(--space-7); display: flex; flex-direction: column; gap: var(--space-2); }
+.home-section-head .k-mark { color: var(--color-accent-strong); }
+.home-section-title {
+  margin: 0;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-weight: 800;
+  font-size: clamp(24px, 3.4vw, var(--text-3xl));
+  color: var(--color-ink);
+}
+.home-section-sub { margin: 0; font-size: var(--text-md); color: var(--color-ink-muted); line-height: 1.6; }
+
+.home-doctrine, .home-alliances { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-5); }
+.home-doctrine-card, .home-alliance-card { padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-2); }
+.home-doctrine-num { color: var(--color-accent); font-size: var(--text-lg); }
+.home-doctrine-title, .home-alliance-name { margin: 0; font-family: var(--font-display); font-size: var(--text-lg); letter-spacing: 0.02em; }
+.home-doctrine-body, .home-alliance-desc { margin: 0; font-size: var(--text-sm); color: var(--color-ink-muted); line-height: 1.55; }
+.home-alliance-card .ui-tag { align-self: flex-start; }
+
+.home-section-more {
+  display: block;
+  text-align: center;
+  margin-top: var(--space-6);
+  color: var(--color-accent-strong);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  text-decoration: none;
+}
+.home-section-more:hover { text-decoration: underline; }
+
+.home-events-card { padding: var(--space-7); text-align: center; display: flex; flex-direction: column; gap: var(--space-2); align-items: center; }
+
+.home-deck { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); }
+.home-deck-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  transition: border-color 160ms, transform 160ms;
+}
+.home-deck-item:hover { border-color: var(--color-accent); transform: translateY(-2px); }
+.home-deck-label { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.02em; color: var(--color-ink); font-size: var(--text-md); }
+.home-deck-sub { font-size: var(--text-xs); color: var(--color-ink-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+.home-final-cta { text-align: center; display: flex; flex-direction: column; align-items: center; gap: var(--space-4); padding-bottom: var(--space-11); }
+
+@media (max-width: 640px) {
+  .home-hero { min-height: 520px; padding: var(--space-8) var(--space-4); }
+  .home-section { padding: var(--space-7) var(--space-4); }
 }

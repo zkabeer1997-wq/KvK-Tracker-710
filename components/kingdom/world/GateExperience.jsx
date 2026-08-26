@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import ForgeSequence from './ForgeSequence';
 import CrestMenu from './CrestMenu';
 import { useLanguage } from '../../i18n/LanguageProvider';
+import { detectQuality, detectWebGL } from './gateCapabilities';
 
 const GateScene = dynamic(() => import('./GateScene'), { ssr: false });
 
@@ -28,27 +29,6 @@ const ROADS = {
     aria: 'Enter kingdom — members report to the inner checkpoint',
   },
 };
-
-function detectWebGL() {
-  if (typeof window === 'undefined') return false;
-  try {
-    const c = document.createElement('canvas');
-    return Boolean(
-      window.WebGLRenderingContext && (c.getContext('webgl') || c.getContext('experimental-webgl')),
-    );
-  } catch {
-    return false;
-  }
-}
-
-function detectQuality() {
-  if (typeof window === 'undefined') return 'standard';
-  const w = window.innerWidth;
-  const mem = navigator.deviceMemory || 4;
-  if (w < 820 || mem <= 2) return 'mobile';
-  if (w >= 1600 && mem >= 8) return 'ultra';
-  return 'standard';
-}
 
 export default function GateExperience() {
   const router = useRouter();
