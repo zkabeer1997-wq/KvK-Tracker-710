@@ -10,14 +10,16 @@ export default function SiteFooter() {
           </svg>
           <div>
             <span className="site-footer-name">Kingdom 710</span>
-            <span className="site-footer-tag">One kingdom, three alliances, every timezone covered.</span>
+            <span className="site-footer-tag">Three alliances. One kingdom. KvK-first.</span>
           </div>
         </div>
         <nav className="site-footer-links" aria-label="Footer">
           <Link href="/">Home</Link>
+          <Link href="/chronometer">About</Link>
+          <Link href="/guides">Guides</Link>
+          <Link href="/tools">Tools</Link>
           <Link href="/player-record">Members</Link>
-          <Link href="/interest">Request Entry</Link>
-          <Link href="/power-profile">War Ledger</Link>
+          <Link href="/interest">Join K710</Link>
           <Link href="/admin">Admin</Link>
         </nav>
       </div>

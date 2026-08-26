@@ -369,6 +369,9 @@ button[type="submit"]:not(.k-btn):disabled { opacity: 0.5; cursor: not-allowed; 
 
 .site-nav a:hover { background: rgba(217, 169, 78, 0.1); color: var(--parchment); }
 .site-nav a.active { color: var(--gold-bright); background: rgba(217, 169, 78, 0.08); }
+.site-nav-cta { margin-left: 6px; border: 1px solid var(--gold); color: var(--ink) !important; background: var(--gold); font-weight: 800; }
+.site-nav-cta:hover { background: var(--gold-bright); border-color: var(--gold-bright); }
+
 .site-nav-admin { margin-left: 6px; border: 1px solid var(--line-bright); color: var(--text-muted) !important; }
 .site-nav-admin:hover { border-color: var(--gold); }
 

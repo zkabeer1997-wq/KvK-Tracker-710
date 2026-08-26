@@ -4,16 +4,30 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
+// The real, currently-live route surface. `about` points at /chronometer
+// because that page already carries the kingdom-identity/doctrine/alliance
+// content an "About" link conventionally means - it gets its own /about
+// route in Wave 3 (PR 10); update the href here when that lands, not the
+// label.
 const NAV_LINKS = [
   { href: '/', label: 'Home' },
+  { href: '/chronometer', label: 'About' },
+  { href: '/guides', label: 'Guides' },
+  { href: '/tools', label: 'Tools' },
   { href: '/player-record', label: 'Members' },
-  { href: '/interest', label: 'Request Entry' },
-  { href: '/power-profile', label: 'War Ledger' },
 ];
 
 export default function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+
+  // Guides/tools/admin have detail routes below them (/guides/[slug],
+  // /tools/*, /admin/*); highlight the parent nav item on those too, not
+  // just an exact path match.
+  function isActive(href) {
+    if (href === '/') return pathname === '/';
+    return pathname === href || pathname.startsWith(`${href}/`);
+  }
 
   return (
     <header className="site-header">
@@ -30,12 +44,13 @@ export default function SiteHeader() {
             <Link
               key={link.href}
               href={link.href}
-              className={pathname === link.href ? 'active' : ''}
-              aria-current={pathname === link.href ? 'page' : undefined}
+              className={isActive(link.href) ? 'active' : ''}
+              aria-current={isActive(link.href) ? 'page' : undefined}
             >
               {link.label}
             </Link>
           ))}
+          <Link href="/interest" className="site-nav-cta">Join K710</Link>
           <Link href="/admin" className="site-nav-admin">Admin</Link>
         </nav>
 
@@ -55,10 +70,11 @@ export default function SiteHeader() {
       {open && (
         <nav className="site-nav-mobile" aria-label="Mobile site">
           {NAV_LINKS.map((link) => (
-            <Link key={link.href} href={link.href} onClick={() => setOpen(false)} className={pathname === link.href ? 'active' : ''}>
+            <Link key={link.href} href={link.href} onClick={() => setOpen(false)} className={isActive(link.href) ? 'active' : ''}>
               {link.label}
             </Link>
           ))}
+          <Link href="/interest" onClick={() => setOpen(false)} className="site-nav-cta">Join K710</Link>
           <Link href="/admin" onClick={() => setOpen(false)} className="site-nav-admin">Admin</Link>
         </nav>
       )}

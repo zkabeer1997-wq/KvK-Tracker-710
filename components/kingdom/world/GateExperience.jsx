@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import ForgeSequence from './ForgeSequence';
+import CrestMenu from './CrestMenu';
 import { useLanguage } from '../../i18n/LanguageProvider';
 
 const GateScene = dynamic(() => import('./GateScene'), { ssr: false });
@@ -99,6 +100,7 @@ export default function GateExperience() {
   if (!webgl) {
     return (
       <div className="k-scene gate-fallback">
+        <CrestMenu />
         <div className="k-scene-layer gate-fallback-art" aria-hidden="true" />
         <div className="k-scene-layer k-vignette" aria-hidden="true" />
         <div className="k-scene-content gate-content">
@@ -125,6 +127,7 @@ export default function GateExperience() {
 
   return (
     <div className="k-scene gate-scene">
+      <CrestMenu />
       {hasChosenLanguage && forging && (
         <ForgeSequence reducedMotion={reduced} onDone={() => setForging(false)} />
       )}

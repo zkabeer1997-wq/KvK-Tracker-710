@@ -4,8 +4,8 @@ import './globals.css';
 import './kingdom.css';
 import './i18n.css';
 import { Cinzel, Inter, JetBrains_Mono, Cormorant_Garamond } from 'next/font/google';
-import CrestMenu from '../components/kingdom/world/CrestMenu';
 import LanguageProvider from '../components/i18n/LanguageProvider';
+import SiteChrome from '../components/SiteChrome';
 import FilipinoTagalogOptions from '../components/i18n/FilipinoTagalogOptions';
 
 // Self-hosted at build time. Replaces the render-blocking CSS @import
@@ -70,8 +70,7 @@ export default function RootLayout({ children }) {
       <body className="theme-console">
         <LanguageProvider>
           <FilipinoTagalogOptions />
-          <CrestMenu />
-          <div id="main">{children}</div>
+          <SiteChrome>{children}</SiteChrome>
         </LanguageProvider>
       </body>
     </html>
