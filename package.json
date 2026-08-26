@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "node scripts/extract-ui-strings.js && next dev",
+    "dev": "node scripts/extract-ui-strings.js && node scripts/dev-server.mjs",
     "build": "node scripts/extract-ui-strings.js && next build",
     "start": "next start"
   },

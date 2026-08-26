@@ -2,54 +2,39 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 
-const NAV_ITEMS = [
-  { href: '/admin/dashboard', label: 'Player Records', match: '/admin/dashboard' },
-  { href: '/admin/dashboard/member-pins', label: 'Member PINs', match: '/admin/dashboard/member-pins' },
-  { href: '/admin/dashboard/interest', label: 'Transfer Requests', match: '/admin/dashboard/interest' },
-  { href: '/admin/dashboard/prep-ministers', label: 'Prep Ministers', match: '/admin/dashboard/prep-ministers' },
-  { href: '/admin/dashboard/flamedragon', label: 'Flamedragon Tyrant', match: '/admin/dashboard/flamedragon' },
+const NAV_GROUPS = [
+  {
+    label: 'Roster',
+    items: [
+      { href: '/admin/dashboard', label: 'Player Records', match: '/admin/dashboard' },
+      { href: '/admin/dashboard/member-pins', label: 'Member Access', match: '/admin/dashboard/member-pins' },
+    ],
+  },
+  {
+    label: 'Recruitment',
+    items: [
+      { href: '/admin/dashboard/interest', label: 'Transfer Requests', match: '/admin/dashboard/interest' },
+    ],
+  },
+  {
+    label: 'Events',
+    items: [
+      { href: '/admin/dashboard/prep-ministers', label: 'Prep Ministers', match: '/admin/dashboard/prep-ministers' },
+      { href: '/admin/dashboard/flamedragon', label: 'Flamedragon Tyrant', match: '/admin/dashboard/flamedragon' },
+    ],
+  },
 ];
 
-const MODE_KEY = 'k710-warroom-mode';
-
-/**
- * THE WAR ROOM
- *
- * The admin shell is the command chamber. It offers two views so the room
- * never gets in the way of the work:
- *
- *   COMMAND — the war table: warm table light, brass counters, atmosphere.
- *   LEDGER  — dense operational mode for reviewing many rows quickly.
- *
- * The choice persists, so a returning admin lands where they actually work.
- * All page content is unchanged in both modes; only the room around it is.
- */
 export default function AdminShell({ title, subtitle, actions, onLogout, counters = [], children }) {
   const pathname = usePathname();
-  const [mode, setMode] = useState('ledger');
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(MODE_KEY);
-      if (saved === 'command' || saved === 'ledger') setMode(saved);
-    } catch {
-      /* private mode */
-    }
-  }, []);
-
-  function choose(next) {
-    setMode(next);
-    try {
-      localStorage.setItem(MODE_KEY, next);
-    } catch {
-      /* private mode */
-    }
-  }
+  const currentDate = useMemo(() => new Intl.DateTimeFormat('en-US', {
+    month: 'long', day: 'numeric', year: 'numeric',
+  }).format(new Date()), []);
 
   return (
-    <div className={`admin-shell warroom-${mode}`}>
+    <div className="admin-shell warroom-ledger">
       <div className="warroom-atmos" aria-hidden="true" />
 
       <aside className="admin-sidebar">
@@ -64,37 +49,23 @@ export default function AdminShell({ title, subtitle, actions, onLogout, counter
         </div>
 
         <nav className="admin-sidebar-nav" aria-label="War room sections">
-          {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.match;
-            return (
-              <Link key={item.href} href={item.href} className={isActive ? 'active' : ''} aria-current={isActive ? 'page' : undefined}>
-                {item.label}
-              </Link>
-            );
-          })}
+          {NAV_GROUPS.map((group) => (
+            <section className="admin-nav-group" key={group.label}>
+              <span className="admin-nav-label">{group.label}</span>
+              {group.items.map((item) => {
+                const isActive = pathname === item.match;
+                return (
+                  <Link key={item.href} href={item.href} className={isActive ? 'active' : ''} aria-current={isActive ? 'page' : undefined}>
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </section>
+          ))}
         </nav>
 
         <div className="admin-sidebar-bottom">
-          <div className="warroom-modes" role="group" aria-label="War room view">
-            <button
-              type="button"
-              className="warroom-mode"
-              data-on={mode === 'command'}
-              aria-pressed={mode === 'command'}
-              onClick={() => choose('command')}
-            >
-              Command
-            </button>
-            <button
-              type="button"
-              className="warroom-mode"
-              data-on={mode === 'ledger'}
-              aria-pressed={mode === 'ledger'}
-              onClick={() => choose('ledger')}
-            >
-              Ledger
-            </button>
-          </div>
+          <div className="admin-sidebar-date"><strong>{currentDate}</strong><span>Current date</span></div>
           <Link href="/" className="admin-sidebar-view-site">View Public Site</Link>
           {onLogout && (
             <button type="button" className="admin-sidebar-logout" onClick={onLogout}>Log Out</button>
@@ -112,7 +83,6 @@ export default function AdminShell({ title, subtitle, actions, onLogout, counter
           {actions && <div className="admin-topbar-actions">{actions}</div>}
         </header>
 
-        {/* Brass counters read off the same live data the tables use. */}
         {counters.length > 0 && (
           <div className="warroom-counters" aria-label="Command summary">
             {counters.map((c) => (

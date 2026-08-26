@@ -97,6 +97,7 @@ const [ralliesHydrated, setRalliesHydrated] = useState(false);
   const [draggingMemberId, setDraggingMemberId] = useState(null);
   const [dragOverRallyId, setDragOverRallyId] = useState(null);
   const [collapsedRallyIds, setCollapsedRallyIds] = useState([]);
+  const [selectedMemberId, setSelectedMemberId] = useState('');
 const router = useRouter();
 
 useEscapeToClose(showAddMember, () => setShowAddMember(false));
@@ -153,6 +154,7 @@ return () => clearTimeout(timer);
 
 useEffect(() => {
 if (!rows.length) return;
+setSelectedMemberId((current) => current || String(rows[0].member_id));
 setRallies((current) => {
 const normalized = normalizeRalliesForRows(current, rows);
 return JSON.stringify(normalized) === JSON.stringify(current) ? current : normalized;
@@ -415,6 +417,16 @@ const lastUpdated = rows.reduce((latest, row) => {
 const timestamp = row.updated_at ? Date.parse(row.updated_at) : 0;
 return timestamp > latest ? timestamp : latest;
 }, 0);
+const selectedMember = rows.find((row) => String(row.member_id) === selectedMemberId) || rows[0] || null;
+const selectedProfileScore = selectedMember ? Math.round([
+selectedMember.name,
+selectedMember.member_id,
+selectedMember.infantry_tier,
+selectedMember.cavalry_tier,
+selectedMember.archer_tier,
+selectedMember.availability,
+selectedMember.power_profile,
+].filter(Boolean).length / 7 * 100) : 0;
 
 return (
 <AdminShell
@@ -560,7 +572,11 @@ className="admin-search"
 {filteredSorted.map((row) => (
 <tr
 key={row.member_id}
-className={draggingMemberId === String(row.member_id) ? 'row-dragging' : undefined}
+className={[
+draggingMemberId === String(row.member_id) ? 'row-dragging' : '',
+selectedMember && String(selectedMember.member_id) === String(row.member_id) ? 'admin-row-selected' : '',
+].filter(Boolean).join(' ') || undefined}
+onClick={() => setSelectedMemberId(String(row.member_id))}
 >
 <td>
 <div className="member-name-cell">
@@ -631,6 +647,35 @@ disabled={deletingIds.includes(String(row.member_id))}
 {filteredSorted.length === 0 && <p>No results found.</p>}
 </div>
 </section>
+<div className="admin-right-rail">
+{selectedMember && (
+<aside className="member-inspector" aria-label="Selected member profile">
+<div className="member-inspector-head">
+<div><span>Selected player</span><h2>{selectedMember.name || selectedMember.member_id}</h2><p>Member ID: {selectedMember.member_id}</p></div>
+<div className="member-profile-ring" style={{ '--profile-progress': `${selectedProfileScore * 3.6}deg` }}>{selectedProfileScore}%</div>
+</div>
+<section>
+<span className="member-inspector-label">Availability</span>
+<strong className={`member-inspector-availability ${availabilityTone(selectedMember.availability)}`}>{selectedMember.availability || 'Not provided'}</strong>
+</section>
+<section>
+<span className="member-inspector-label">Troop summary</span>
+<dl className="member-troop-list">
+<div><dt>Infantry</dt><dd>{formatUnitLevel(selectedMember.infantry_tier, selectedMember.infantry_tg)}</dd></div>
+<div><dt>Cavalry</dt><dd>{formatUnitLevel(selectedMember.cavalry_tier, selectedMember.cavalry_tg)}</dd></div>
+<div><dt>Archer</dt><dd>{formatUnitLevel(selectedMember.archer_tier, selectedMember.archer_tg)}</dd></div>
+</dl>
+</section>
+<section>
+<span className="member-inspector-label">Lead heroes ({(selectedMember.heroes || []).length})</span>
+<div className="member-hero-list">{(selectedMember.heroes || []).length ? selectedMember.heroes.map((hero) => <span key={hero}>{hero}</span>) : <p>No heroes selected.</p>}</div>
+</section>
+<div className="member-inspector-actions">
+<button type="button" onClick={() => setShowAddMember(true)}>Add member</button>
+<button type="button" className="danger" onClick={() => deleteMember(selectedMember)}>Remove member</button>
+</div>
+</aside>
+)}
 <aside className="rally-sidebar" aria-label="Rally planner">
 <div className="rally-sidebar-header">
 <div>
@@ -797,6 +842,7 @@ x
 })}
 </div>
 </aside>
+</div>
 </div>
 )}
 </AdminShell>

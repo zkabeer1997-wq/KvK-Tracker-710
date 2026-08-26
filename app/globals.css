@@ -972,6 +972,110 @@ tr.row-dragging { opacity: 0.5; }
   .interest-progress { display: none; }
 }
 
+/* ============================================================
+   ADMIN OPERATIONS LEDGER — Option 2 dashboard direction
+   ============================================================ */
+.admin-shell.warroom-ledger {
+  grid-template-columns: 220px minmax(0, 1fr);
+  background: radial-gradient(circle at 52% -18%, rgba(42, 74, 111, 0.3), transparent 38%), #07101c;
+  color: #eef1f5;
+}
+.admin-shell.warroom-ledger .admin-sidebar {
+  gap: 18px;
+  padding: 22px 14px;
+  background: linear-gradient(180deg, #08131f 0%, #070e18 100%);
+  border-right-color: #26364a;
+}
+.admin-shell.warroom-ledger .admin-sidebar-brand { padding: 0 6px 8px; gap: 12px; }
+.admin-shell.warroom-ledger .admin-sidebar-brand svg { width: 42px; height: 48px; }
+.admin-shell.warroom-ledger .admin-sidebar-brand-k { font-family: var(--font-display); font-size: 22px; color: var(--gold-bright); }
+.admin-shell.warroom-ledger .admin-sidebar-brand-sub { color: var(--gold); letter-spacing: .18em; }
+.admin-nav-group { display: flex; flex-direction: column; gap: 3px; padding: 14px 0; border-top: 1px solid rgba(217,169,78,.18); }
+.admin-nav-group:first-child { border-top: 0; padding-top: 0; }
+.admin-nav-label { padding: 0 10px 7px; color: var(--gold); font-family: var(--font-mono); font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.admin-shell.warroom-ledger .admin-sidebar-nav { gap: 0; }
+.admin-shell.warroom-ledger .admin-sidebar-nav a { border: 1px solid transparent; border-radius: 6px; padding: 10px 12px; font-size: 13px; }
+.admin-shell.warroom-ledger .admin-sidebar-nav a.active { padding-left: 12px; border-color: rgba(217,169,78,.5); background: linear-gradient(90deg, rgba(217,169,78,.14), rgba(217,169,78,.035)); }
+.admin-sidebar-date { display: flex; flex-direction: column; gap: 3px; padding: 11px 12px; border: 1px solid #26364a; border-radius: 6px; }
+.admin-sidebar-date strong { color: var(--gold-bright); font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.admin-sidebar-date span { color: var(--text-dim); font-size: 10px; }
+.admin-shell.warroom-ledger .admin-content { min-height: 100vh; background: rgba(5, 13, 23, .38); }
+.admin-shell.warroom-ledger .admin-topbar { padding: 25px 30px 14px; border-bottom: 0; }
+.admin-shell.warroom-ledger .admin-topbar h1 { font-family: var(--font-display); font-size: 32px; letter-spacing: .02em; }
+.admin-shell.warroom-ledger .admin-topbar-kicker { font-size: 10px; letter-spacing: .19em; }
+.admin-shell.warroom-ledger .warroom-counters { margin: 0 30px 18px; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid rgba(217,169,78,.42); border-radius: 7px; background: rgba(8, 18, 30, .72); overflow: hidden; }
+.admin-shell.warroom-ledger .warroom-counter { min-height: 82px; display: grid; place-content: center; text-align: center; border-right: 1px solid #26364a; }
+.admin-shell.warroom-ledger .warroom-counter:last-child { border-right: 0; }
+.admin-shell.warroom-ledger .warroom-counter-val { color: #f4f1ea; font-family: var(--font-display); font-size: 25px; line-height: 1; }
+.admin-shell.warroom-ledger .warroom-counter-label { margin-top: 7px; color: #a9b2bf; font-size: 9px; letter-spacing: .06em; }
+.admin-shell.warroom-ledger .admin-content-body { padding: 0 30px 32px; }
+.admin-shell.warroom-ledger .admin-page-lead { margin: -69px 250px 30px 0; max-width: 650px; color: #8f9bae; }
+.admin-shell.warroom-ledger .dashboard-stats { display: none; }
+.admin-shell.warroom-ledger .admin-actions { margin: 0 0 10px; }
+.admin-shell.warroom-ledger .search-shell { width: 100%; display: block; }
+.admin-shell.warroom-ledger .search-shell > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+.admin-shell.warroom-ledger .admin-search { width: 100%; min-height: 44px; border: 1px solid #26364a; border-radius: 6px; background: #091421; color: #f2f4f7; padding: 0 14px; }
+.admin-shell.warroom-ledger .admin-search:focus { border-color: var(--gold); outline: 3px solid rgba(217,169,78,.12); }
+.admin-shell.warroom-ledger .admin-workspace { grid-template-columns: minmax(0, 1fr) 330px; gap: 16px; }
+.admin-shell.warroom-ledger .roster-panel { min-width: 0; }
+.admin-shell.warroom-ledger .panel-heading { display: flex; align-items: end; justify-content: space-between; margin-bottom: 8px; }
+.admin-shell.warroom-ledger .panel-heading h2 { margin: 0; font-size: 18px; }
+.admin-shell.warroom-ledger .roster-toolbar { display: flex; gap: 9px; justify-content: flex-end; margin: -43px 0 10px; }
+.admin-shell.warroom-ledger .export-xlsx-btn,
+.admin-shell.warroom-ledger .create-rally-btn { min-height: 38px; border-radius: 6px; }
+.admin-shell.warroom-ledger .admin-table-wrap { border-color: #26364a; border-radius: 7px; background: rgba(8, 19, 31, .92); }
+.admin-shell.warroom-ledger .admin-table { font-size: 12px; }
+.admin-shell.warroom-ledger .admin-table th { color: var(--gold-bright); background: #0a1624; border-bottom-color: rgba(217,169,78,.5); font-size: 9px; letter-spacing: .07em; }
+.admin-shell.warroom-ledger .admin-table td { border-bottom-color: #1d2b3c; }
+.admin-shell.warroom-ledger .admin-table tbody tr { cursor: pointer; transition: background .15s ease; }
+.admin-shell.warroom-ledger .admin-table tbody tr:hover { background: #101f31; }
+.admin-shell.warroom-ledger .admin-table tbody tr.admin-row-selected { background: linear-gradient(90deg, rgba(32,65,97,.72), rgba(14,29,45,.74)); box-shadow: inset 2px 0 var(--gold); }
+.admin-shell.warroom-ledger .unit-pill { border-radius: 6px; }
+.admin-right-rail { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.member-inspector { position: sticky; top: 16px; border: 1px solid #26364a; border-radius: 8px; padding: 18px; background: linear-gradient(180deg, #0b1827, #08121e); box-shadow: 0 18px 50px rgba(0,0,0,.22); }
+.member-inspector-head { display: flex; justify-content: space-between; gap: 14px; padding-bottom: 17px; border-bottom: 1px solid #26364a; }
+.member-inspector-head > div:first-child > span,
+.member-inspector-label { display: block; color: #9ca8b8; font-family: var(--font-mono); font-size: 9px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+.member-inspector-head h2 { margin: 5px 0 0; color: #f2efe8; font-family: var(--font-display); font-size: 22px; overflow-wrap: anywhere; }
+.member-inspector-head p { margin: 3px 0 0; color: #8f9bae; font-size: 10px; }
+.member-profile-ring { --profile-progress: 0deg; flex: 0 0 54px; width: 54px; height: 54px; display: grid; place-items: center; border-radius: 50%; background: radial-gradient(circle, #0b1827 63%, transparent 65%), conic-gradient(#72d368 var(--profile-progress), #26364a 0); color: #fff; font-size: 12px; font-weight: 800; }
+.member-inspector section { padding: 17px 0; border-bottom: 1px solid #26364a; }
+.member-inspector-availability { display: block; margin-top: 10px; color: #72d368; font-size: 13px; }
+.member-inspector-availability.unavailable { color: #f17a7a; }
+.member-troop-list { margin: 8px 0 0; }
+.member-troop-list > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 0; }
+.member-troop-list dt { color: #d9dee6; }
+.member-troop-list dd { margin: 0; padding: 4px 8px; border: 1px solid rgba(217,169,78,.35); border-radius: 5px; color: var(--gold-bright); font-size: 10px; font-weight: 800; }
+.member-hero-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
+.member-hero-list span { padding: 7px 8px; border: 1px solid #26364a; border-radius: 5px; color: #d6dce5; text-align: center; font-size: 11px; }
+.member-hero-list p { grid-column: 1 / -1; margin: 0; color: #7f8a9a; font-size: 11px; }
+.member-inspector-actions { display: grid; gap: 8px; padding-top: 17px; }
+.member-inspector-actions button { padding: 9px 11px; border: 1px solid #31445a; border-radius: 5px; background: #0e1c2c; color: #e0e5eb; text-align: left; cursor: pointer; }
+.member-inspector-actions button:hover { border-color: var(--gold); }
+.member-inspector-actions button.danger { border-color: rgba(242,111,111,.36); color: #ff8080; }
+.admin-right-rail .rally-sidebar { position: static; border-color: #26364a; background: #0a1624; box-shadow: none; }
+
+@media (max-width: 1250px) {
+  .admin-shell.warroom-ledger .admin-workspace { grid-template-columns: minmax(0, 1fr) 290px; }
+  .admin-shell.warroom-ledger .admin-table { min-width: 1180px; }
+}
+@media (max-width: 960px) {
+  .admin-shell.warroom-ledger { grid-template-columns: 1fr; }
+  .admin-shell.warroom-ledger .admin-sidebar { position: static; height: auto; }
+  .admin-shell.warroom-ledger .admin-sidebar-nav { display: flex; flex-direction: row; overflow-x: auto; width: 100%; }
+  .admin-shell.warroom-ledger .admin-nav-group { min-width: max-content; border-top: 0; }
+  .admin-shell.warroom-ledger .admin-sidebar-bottom { display: none; }
+  .admin-shell.warroom-ledger .admin-workspace { grid-template-columns: 1fr; }
+  .admin-shell.warroom-ledger .admin-page-lead { margin: 0 0 22px; }
+  .admin-shell.warroom-ledger .warroom-counters { margin-inline: 16px; grid-template-columns: repeat(3, 1fr); }
+  .admin-shell.warroom-ledger .admin-content-body { padding-inline: 16px; }
+  .member-inspector { position: static; }
+}
+@media (max-width: 620px) {
+  .admin-shell.warroom-ledger .warroom-counters { grid-template-columns: repeat(2, 1fr); }
+  .admin-shell.warroom-ledger .roster-toolbar { margin: 0 0 10px; justify-content: flex-start; }
+}
+
 /* War Ledger (power profile) */
 .ledger-block { border: 1px solid var(--border-soft); border-radius: 10px; background: rgba(255,255,255,0.02); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 .ledger-block-head { display: flex; flex-direction: column; gap: 3px; }
