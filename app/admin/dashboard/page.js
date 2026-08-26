@@ -24,6 +24,7 @@ removeMemberFromRallies,
 setRallyLead,
 setRallyTroopWeight,
 toggleRallyLeadHero,
+MAX_LEAD_HEROES,
 } from './rallyState.mjs';
 
 const EMPTY_MEMBER = {
@@ -722,12 +723,12 @@ onChange={(event) => handleTroopWeightChange(rally.id, key, event.target.value)}
 <div className="lead-heroes-block">
 <div className="lead-heroes-header">
 <span>Lead Heroes</span>
-<span>{(rally.leadHeroes || []).length}/4</span>
+<span>{(rally.leadHeroes || []).length}/{MAX_LEAD_HEROES}</span>
 </div>
 <div className="lead-heroes-grid">
 {HEROES.map((hero) => {
 const selected = (rally.leadHeroes || []).includes(hero);
-const disabled = !selected && (rally.leadHeroes || []).length >= 4;
+const disabled = !selected && (rally.leadHeroes || []).length >= MAX_LEAD_HEROES;
 return (
 <button
 key={hero}

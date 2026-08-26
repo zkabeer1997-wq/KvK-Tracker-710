@@ -10,7 +10,7 @@
  * form, server-side admin gating, the PIN gate, and horizontal overflow
  * at six widths.
  */
-const { chromium } = require('playwright-core');
+const { chromium } = require('playwright');
 const B = process.env.QA_BASE || 'http://localhost:3111';
 let pass = 0, fail = 0;
 const ok = (n, c, d = '') => { c ? pass++ : fail++; console.log(`${c ? 'PASS' : 'FAIL'}  ${n}${d ? ' — ' + d : ''}`); };

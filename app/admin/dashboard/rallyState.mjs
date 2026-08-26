@@ -1,5 +1,9 @@
 export const RALLY_STORAGE_KEY = 'kvk-admin-rallies-v1';
 export const DEFAULT_TROOP_WEIGHTS = { infantry: 0, cavalry: 0, archer: 0 };
+// A march carries at most four lead heroes. The dashboard disables the
+// checkbox at the limit, but state can also arrive from localStorage or the
+// rallies table, so the rule is enforced here rather than in the UI alone.
+export const MAX_LEAD_HEROES = 4;
 
 export function createNextRally(rallies, id = `rally-${Date.now()}`) {
 return [
@@ -31,7 +35,9 @@ troopWeights: {
 ...DEFAULT_TROOP_WEIGHTS,
 ...(rally.troopWeights || {}),
 },
-leadHeroes: Array.isArray(rally.leadHeroes) ? rally.leadHeroes.map(String) : [],
+leadHeroes: Array.isArray(rally.leadHeroes)
+? rally.leadHeroes.map(String).slice(0, MAX_LEAD_HEROES)
+: [],
 };
 }
 
@@ -87,12 +93,11 @@ export function toggleRallyLeadHero(rallies, rallyId, hero) {
 return rallies.map((rally) => {
 if (rally.id !== rallyId) return rally;
 const leadHeroes = rally.leadHeroes || [];
-return {
-...rally,
-leadHeroes: leadHeroes.includes(hero)
-? leadHeroes.filter((currentHero) => currentHero !== hero)
-: [...leadHeroes, hero],
-};
+if (leadHeroes.includes(hero)) {
+return { ...rally, leadHeroes: leadHeroes.filter((currentHero) => currentHero !== hero) };
+}
+if (leadHeroes.length >= MAX_LEAD_HEROES) return rally;
+return { ...rally, leadHeroes: [...leadHeroes, hero] };
 });
 }
 
