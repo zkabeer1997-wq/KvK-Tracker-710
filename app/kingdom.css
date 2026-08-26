@@ -8,65 +8,10 @@
    (obsidian, brass, leather, parchment) rather than as cards.
    ============================================================ */
 
-:root {
-  /* --- Materials ------------------------------------------ */
-  --obsidian:        #07080d;
-  --obsidian-deep:   #04050a;
-  --stone:           #171a24;
-  --stone-lit:       #23283a;
-  --steel:           #2c313f;
-  --steel-bright:    #3d4456;
-  --timber:          #241a12;
-  --leather:         #2a1d14;
-  --leather-lit:     #3a2a1d;
+/* Tokens moved to app/tokens.css, loaded first — see that file's
+   header comment for the full history of why. This file now only
+   contains component rules for the world/scene system. */
 
-  /* Brass reads as a gradient, never a flat fill. */
-  --brass:           #a8834a;
-  --brass-bright:    #d9b878;
-  --brass-dim:       #6e5530;
-  --gold-aged:       #c9a44e;
-  --gold-hot:        #f3d99a;
-
-  --parchment:       #e8dcc0;
-  --parchment-dim:   #c4b493;
-  --ink:             #14100a;
-
-  /* Fire / atmosphere */
-  --fire:            #e2692a;
-  --fire-core:       #ffb257;
-  --smoke:           rgba(20, 22, 30, 0.72);
-
-  /* --- Alliance heraldry ---------------------------------- */
-  --wb-710:          #d9a94e;
-  --wb-710-deep:     #8a6a28;
-  --wb-red:          #a3283c;
-  --wb-red-deep:     #611620;
-  --wb-sky:          #3f74bd;
-  --wb-sky-deep:     #1f3f6d;
-
-  /* --- Text ----------------------------------------------- */
-  --t-primary:       #ece3d0;
-  --t-secondary:     #9aa1b4;
-  --t-muted:         #6a7085;
-  --t-gold:          var(--gold-aged);
-
-  /* --- Edges / depth -------------------------------------- */
-  --edge:            rgba(201, 164, 78, 0.18);
-  --edge-strong:     rgba(201, 164, 78, 0.42);
-  --edge-cold:       rgba(120, 140, 180, 0.16);
-  --depth-1:         0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 24px rgba(0,0,0,0.5);
-  --depth-2:         0 1px 0 rgba(255,255,255,0.05) inset, 0 18px 48px rgba(0,0,0,0.62);
-
-  /* --- Motion --------------------------------------------- */
-  --ease-cine:       cubic-bezier(0.22, 0.61, 0.36, 1);
-  --ease-heavy:      cubic-bezier(0.65, 0.02, 0.25, 1);
-  --t-fast:          160ms;
-  --t-ui:            260ms;
-  --t-scene:         900ms;
-
-  /* Narrative serif, loaded via next/font in layout.js */
-  --font-narrative:  var(--font-narrative-loaded), Georgia, 'Times New Roman', serif;
-}
 
 /* ============================================================
    TYPOGRAPHY

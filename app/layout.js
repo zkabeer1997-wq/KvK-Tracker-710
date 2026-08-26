@@ -1,3 +1,4 @@
+import './tokens.css';
 import './globals.css';
 import './kingdom.css';
 import './i18n.css';
@@ -65,7 +66,7 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${cinzel.variable} ${inter.variable} ${jetbrains.variable} ${cormorant.variable}`}>
-      <body>
+      <body className="theme-console">
         <LanguageProvider>
           <FilipinoTagalogOptions />
           <CrestMenu />

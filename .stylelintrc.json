@@ -1,0 +1,24 @@
+{
+  "rules": {
+    "color-no-hex": true,
+    "declaration-property-value-disallowed-list": {
+      "/^(color|background|background-color|border(-top|-bottom|-left|-right)?(-color)?|fill|stroke|box-shadow|outline-color|text-shadow)$/": [
+        "/^rgb\\(/",
+        "/^rgba\\(/",
+        "/^hsl\\(/",
+        "/^hsla\\(/"
+      ]
+    }
+  },
+  "overrides": [
+    {
+      "comment": "tokens.css is the one file allowed to declare raw color literals — everything else should reference a var(--...) defined there.",
+      "files": ["app/tokens.css"],
+      "rules": {
+        "color-no-hex": null,
+        "declaration-property-value-disallowed-list": null
+      }
+    }
+  ],
+  "ignoreFiles": ["node_modules/**", ".next/**", "public/**"]
+}

@@ -1,0 +1,207 @@
+/* ============================================================
+   K710 DESIGN TOKENS — single source of truth.
+
+   Loaded first, before globals.css and kingdom.css. Two jobs:
+
+   1. LEGACY TOKENS (--ink, --parchment, --gold, ...). globals.css
+      and kingdom.css each used to declare their own :root block
+      with the same names and different values. Because kingdom.css
+      loaded second, it silently won for every shared name — most
+      importantly --ink (#10142a navy vs #14100a near-black-brown)
+      and --parchment (#f3e9d2 vs #e8dcc0). Every rule in
+      globals.css that reads var(--ink) or var(--parchment) has
+      been rendering kingdom.css's values all along, whether the
+      author of that rule knew it or not.
+
+      Fix: declare each name exactly ONCE, here, using whichever
+      value currently wins (kingdom.css's, since it loads last).
+      This is a zero-visual-diff change — nothing on screen moves —
+      it just removes the footgun and gives future edits one place
+      to look. globals.css and kingdom.css no longer declare :root.
+
+   2. NEW TOKENS, for work starting at PR3 (primitives) onward:
+        - --space-*, --radius-*, --text-*  scales
+        - --color-*  role tokens, themed by .theme-realm / .theme-console
+
+      These are additive. No existing rule reads them yet, so
+      nothing in the ~2,700 lines of legacy CSS changes behaviour
+      by their presence. Retrofitting existing components onto the
+      scales is real work and belongs to the page-by-page rebuilds
+      in Waves 2-4, not to this file.
+
+      `npm run lint:css` runs stylelint's color-no-hex / no-raw-rgb rule
+      against every CSS file under app/, exempting this file. As of PR 2 it reports
+      310 pre-existing violations in globals.css and kingdom.css — an
+      honest baseline, not a regression, and not yet wired into `npm run
+      lint` or CI. Burn it down page by page as each one is touched;
+      don't mass-replace it in one pass, since a few of those literals
+      are one-off tints with no matching token today.
+   ============================================================ */
+
+:root {
+  /* --- Legacy materials & heraldry (from kingdom.css) ------- */
+  --obsidian:        #07080d;
+  --obsidian-deep:   #04050a;
+  --stone:           #171a24;
+  --stone-lit:       #23283a;
+  --steel:           #2c313f;
+  --steel-bright:    #3d4456;
+  --timber:          #241a12;
+  --leather:         #2a1d14;
+  --leather-lit:     #3a2a1d;
+
+  --brass:           #a8834a;
+  --brass-bright:    #d9b878;
+  --brass-dim:       #6e5530;
+  --gold-aged:       #c9a44e;
+  --gold-hot:        #f3d99a;
+
+  /* Single source for the two colliding names. */
+  --parchment:       #e8dcc0;
+  --parchment-dim:   #c4b493;
+  --ink:             #14100a;
+
+  --fire:            #e2692a;
+  --fire-core:       #ffb257;
+  --smoke:           rgba(20, 22, 30, 0.72);
+
+  --wb-710:          #d9a94e;
+  --wb-710-deep:     #8a6a28;
+  --wb-red:          #a3283c;
+  --wb-red-deep:     #611620;
+  --wb-sky:          #3f74bd;
+  --wb-sky-deep:     #1f3f6d;
+
+  --t-primary:       #ece3d0;
+  --t-secondary:     #9aa1b4;
+  --t-muted:         #6a7085;
+  --t-gold:          var(--gold-aged);
+
+  --edge:            rgba(201, 164, 78, 0.18);
+  --edge-strong:     rgba(201, 164, 78, 0.42);
+  --edge-cold:       rgba(120, 140, 180, 0.16);
+  --depth-1:         0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 24px rgba(0,0,0,0.5);
+  --depth-2:         0 1px 0 rgba(255,255,255,0.05) inset, 0 18px 48px rgba(0,0,0,0.62);
+
+  --ease-cine:       cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-heavy:      cubic-bezier(0.65, 0.02, 0.25, 1);
+  --t-fast:          160ms;
+  --t-ui:            260ms;
+  --t-scene:         900ms;
+
+  /* --- Legacy "glass" tokens (from globals.css) ------------- */
+  --bg:              #10142a;
+  --bg-alt:          #1a2140;
+  --ink-soft:        #1a2140;
+  --ink-soft-2:      #212a4d;
+
+  --glass:           rgba(26, 33, 64, 0.55);
+  --glass-strong:    rgba(16, 20, 42, 0.78);
+  --line:            rgba(217, 169, 78, 0.22);
+  --line-bright:     rgba(217, 169, 78, 0.45);
+  --border-soft:     rgba(217, 169, 78, 0.12);
+  --gold:            #d9a94e;
+  --gold-bright:     #f0c669;
+  --ember:           #d9622d;
+  --ember-bright:    #ef8348;
+  --text:            #f3e9d2;
+  --text-muted:      #aab4d0;
+  --text-dim:        #7c85a8;
+  --moss:            #86a873;
+  --success:         #86a873;
+  --danger:          #ff6b6b;
+  --danger-bg:       rgba(127, 29, 29, 0.32);
+  --glow:            0 8px 32px rgba(0,0,0,0.5), 0 0 26px rgba(217,169,78,0.08);
+
+  /* --- Fonts (next/font variables set on <html> in layout.js) - */
+  --font-display:    var(--font-display-loaded), Georgia, 'Times New Roman', serif;
+  --font-body:       var(--font-body-loaded), -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono:       var(--font-mono-loaded), 'SF Mono', Consolas, monospace;
+  --font-narrative:  var(--font-narrative-loaded), Georgia, 'Times New Roman', serif;
+
+  /* --- Spacing scale (4px base) ------------------------------ */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-7:  32px;
+  --space-8:  40px;
+  --space-9:  48px;
+  --space-10: 64px;
+  --space-11: 80px;
+  --space-12: 96px;
+
+  /* --- Radius scale ------------------------------------------ */
+  --radius-xs:   2px;
+  --radius-sm:   6px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-pill: 999px;
+
+  /* --- Type scale ---------------------------------------------
+     Sizes only; the three-voice family assignment (display/body/
+     mono/narrative) stays a per-component decision. */
+  --text-xs:   12px;
+  --text-sm:   13px;
+  --text-base: 15px;
+  --text-md:   16px;
+  --text-lg:   18px;
+  --text-xl:   22px;
+  --text-2xl:  28px;
+  --text-3xl:  36px;
+  --text-4xl:  48px;
+}
+
+/* ============================================================
+   THEMES — .theme-console (dark ops) / .theme-realm (bright
+   public). Both scope a NEW --color-* role set, deliberately
+   namespaced apart from the legacy tokens above so this can ship
+   without touching any of the ~2,700 lines that already read
+   --ink / --parchment / --gold directly. PR3's primitives and
+   every Wave 2+ public page consume --color-*; nothing else does
+   yet, so applying either class today changes nothing visually
+   until something opts in.
+
+   .theme-console matches the site's current dark-gold-navy look —
+   applying it is a no-op relative to today. .theme-realm is the
+   bright, warm, sunlit-fantasy direction: a cream/parchment
+   GROUND rather than navy, so it does not read as a sibling of
+   kingdom846.com's dark-navy-and-antique-gold portal.
+   ============================================================ */
+
+.theme-console {
+  --color-bg:            var(--obsidian);
+  --color-bg-alt:        var(--stone);
+  --color-surface:       var(--stone-lit);
+  --color-surface-alt:   var(--steel);
+  --color-ink:           var(--parchment);
+  --color-ink-muted:     var(--t-secondary);
+  --color-ink-dim:       var(--t-muted);
+  --color-accent:        var(--gold-aged);
+  --color-accent-strong: var(--gold-hot);
+  --color-on-accent:     var(--ink);
+  --color-border:        var(--edge);
+  --color-border-strong: var(--edge-strong);
+  --color-danger:        var(--danger);
+  --color-success:       var(--moss);
+}
+
+.theme-realm {
+  --color-bg:            #fbf3e0;
+  --color-bg-alt:        #f5e6c4;
+  --color-surface:       #fffaf0;
+  --color-surface-alt:   #fdf1da;
+  --color-ink:           #2c1c0c;
+  --color-ink-muted:     #6b5738;
+  --color-ink-dim:       rgba(44, 28, 12, 0.55);
+  --color-accent:        #d97a1f;
+  --color-accent-strong: #f2941f;
+  --color-on-accent:     #2c1c0c;
+  --color-border:        rgba(180, 120, 40, 0.28);
+  --color-border-strong: rgba(180, 120, 40, 0.5);
+  --color-danger:        #b3402f;
+  --color-success:       #4d7a4d;
+}
