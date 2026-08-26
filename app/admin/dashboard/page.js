@@ -52,11 +52,8 @@ const COLUMNS = [
 { key: 'infantry_tg', label: 'Infantry' },
 { key: 'cavalry_tg', label: 'Cavalry' },
 { key: 'archer_tg', label: 'Archer' },
-{ key: 'heroes', label: 'Heroes' },
-{ key: 'power_profile', label: 'Power' },
 { key: 'availability', label: 'Availability' },
-  { key: 'current_alliance', label: 'Alliance' },
-{ key: 'updated_at', label: 'Updated' },
+{ key: 'power_profile', label: 'Profile' },
 ];
 
 function formatUnitLevel(tier, tg) {
@@ -98,6 +95,8 @@ const [ralliesHydrated, setRalliesHydrated] = useState(false);
   const [dragOverRallyId, setDragOverRallyId] = useState(null);
   const [collapsedRallyIds, setCollapsedRallyIds] = useState([]);
   const [selectedMemberId, setSelectedMemberId] = useState('');
+  const [compactRows, setCompactRows] = useState(true);
+  const [showRallyPlanner, setShowRallyPlanner] = useState(false);
 const router = useRouter();
 
 useEscapeToClose(showAddMember, () => setShowAddMember(false));
@@ -436,8 +435,7 @@ onLogout={handleLogout}
 counters={[
 { label: 'Members', value: rows.length },
 { label: 'Available', value: availableCount },
-{ label: 'Assigned', value: assignedCount },
-{ label: 'Unassigned', value: Math.max(rows.length - assignedCount, 0) },
+{ label: 'Profiles Complete', value: powerProfileCount },
 { label: 'Rallies', value: rallyCount },
 ]}
 actions={(
@@ -491,18 +489,6 @@ onCancel={() => setConfirmState(null)}
 <strong>{lastUpdated ? new Date(lastUpdated).toLocaleDateString() : '-'}</strong>
 </div>
 </div>
-<div className="admin-actions">
-<div className="search-shell">
-<span>Search</span>
-<input
-type="text"
-placeholder="Search by name, member ID, hero, availability..."
-value={search}
-onChange={(e) => setSearch(e.target.value)}
-className="admin-search"
-/>
-</div>
-</div>
 {actionStatus && <div className="status">{actionStatus}</div>}
 {actionError && <div className="status error">{actionError}</div>}
 {loading && <TableSkeleton columns={COLUMNS.length + 1} rows={7} />}
@@ -510,21 +496,20 @@ className="admin-search"
 {!loading && !error && (
 <div className="admin-workspace">
 <section className="roster-panel" aria-label="Member roster">
-<div className="panel-heading">
-<div>
-<span>Roster</span>
-<h2>Members</h2>
+<div className="operations-toolbar">
+<div className="search-shell">
+<span>Search</span>
+<input type="text" placeholder="Search by name, member ID, hero, availability..." value={search} onChange={(e) => setSearch(e.target.value)} className="admin-search" />
 </div>
-<p>{filteredSorted.length} shown</p>
-</div>
-  <div className="roster-toolbar">
+<button type="button" className="operations-secondary" onClick={() => setShowRallyPlanner((current) => !current)}>{showRallyPlanner ? 'Hide rallies' : 'Rally planner'}</button>
   <button type="button" className="export-xlsx-btn" onClick={handleExportXlsx}>
-  Export to Excel
+  Export
   </button>
   <button type="button" className="create-rally-btn" onClick={() => setShowAddMember(true)}>
   + Add Member
   </button>
-  </div>
+</div>
+<div className="operations-subtoolbar"><span>{filteredSorted.length} members found</span><div><button type="button" className="operations-secondary">Columns</button><button type="button" className="operations-secondary active" onClick={() => setCompactRows((current) => !current)}>Density: {compactRows ? 'Compact' : 'Comfortable'}</button></div></div>
   {showAddMember && (
   <div className="admin-drawer-overlay" role="presentation" onClick={() => setShowAddMember(false)}>
     <div className="admin-drawer" role="dialog" aria-modal="true" aria-labelledby="add-member-title" onClick={(e) => e.stopPropagation()}>
@@ -555,8 +540,8 @@ className="admin-search"
     </div>
   </div>
   )}
-<div className="admin-table-wrap">
-<table className="admin-table">
+<div className={`admin-table-wrap operations-table-wrap ${compactRows ? 'is-compact' : 'is-comfortable'}`}>
+<table className="admin-table operations-table">
 <thead>
 <tr>
 {COLUMNS.map((col) => (
@@ -565,7 +550,6 @@ className="admin-search"
 {sortKey === col.key ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''}
 </th>
 ))}
-<th>Actions</th>
 </tr>
 </thead>
 <tbody>
@@ -605,40 +589,12 @@ title="Drag to assign to a rally"
 <td><span className="unit-pill cavalry">{formatUnitLevel(row.cavalry_tier, row.cavalry_tg)}</span></td>
 <td><span className="unit-pill archer">{formatUnitLevel(row.archer_tier, row.archer_tg)}</span></td>
 <td>
-<div className="heroes-cell">
-<strong>{(row.heroes || []).length}</strong>
-<span>{(row.heroes || []).slice(0, 3).join(', ') || '-'}</span>
-</div>
-</td>
-<td>
-{row.power_profile ? (
-<div className="power-cell">
-<span>Gov {powerValue(row.power_profile, 'governor_gear')}</span>
-<span>Charms {powerValue(row.power_profile, 'charms')}</span>
-<span>Hero {powerValue(row.power_profile, 'hero_gear')}</span>
-<span>Pet {powerValue(row.power_profile, 'pet_power')}</span>
-<span>Masters {powerValue(row.power_profile, 'masters_power')}</span>
-</div>
-) : (
-<span className="missing-power-pill">No Player Profile</span>
-)}
-</td>
-<td>
 <span className={`availability-pill ${availabilityTone(row.availability)}`}>
 {row.availability || '-'}
 </span>
 </td>
-<td><span className="unit-pill">{row.current_alliance || '-'}</span></td>
-                  <td className="updated-cell">{row.updated_at ? new Date(row.updated_at).toLocaleString() : ''}</td>
 <td>
-<button
-type="button"
-className="delete-entry-btn"
-onClick={() => deleteMember(row)}
-disabled={deletingIds.includes(String(row.member_id))}
->
-{deletingIds.includes(String(row.member_id)) ? 'Removing...' : 'Remove'}
-</button>
+<span className={`operations-profile ${row.power_profile ? 'complete' : 'incomplete'}`}>{row.power_profile ? '100%' : '—'}</span>
 </td>
 </tr>
 ))}
@@ -676,7 +632,7 @@ disabled={deletingIds.includes(String(row.member_id))}
 </div>
 </aside>
 )}
-<aside className="rally-sidebar" aria-label="Rally planner">
+{showRallyPlanner && <aside className="rally-sidebar" aria-label="Rally planner">
 <div className="rally-sidebar-header">
 <div>
 <span>Planner</span>
@@ -841,7 +797,7 @@ x
 );
 })}
 </div>
-</aside>
+</aside>}
 </div>
 </div>
 )}

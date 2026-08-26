@@ -1018,7 +1018,7 @@ tr.row-dragging { opacity: 0.5; }
 .admin-shell.warroom-ledger .admin-search:focus { border-color: var(--gold); outline: 3px solid rgba(217,169,78,.12); }
 .admin-shell.warroom-ledger .admin-workspace { grid-template-columns: minmax(0, 1fr) 330px; gap: 16px; }
 .admin-shell.warroom-ledger .roster-panel { min-width: 0; }
-.admin-shell.warroom-ledger .panel-heading { display: flex; align-items: end; justify-content: space-between; margin-bottom: 8px; }
+.admin-shell.warroom-ledger .panel-heading { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 8px; }
 .admin-shell.warroom-ledger .panel-heading h2 { margin: 0; font-size: 18px; }
 .admin-shell.warroom-ledger .roster-toolbar { display: flex; gap: 9px; justify-content: flex-end; margin: -43px 0 10px; }
 .admin-shell.warroom-ledger .export-xlsx-btn,
@@ -1031,6 +1031,34 @@ tr.row-dragging { opacity: 0.5; }
 .admin-shell.warroom-ledger .admin-table tbody tr:hover { background: #101f31; }
 .admin-shell.warroom-ledger .admin-table tbody tr.admin-row-selected { background: linear-gradient(90deg, rgba(32,65,97,.72), rgba(14,29,45,.74)); box-shadow: inset 2px 0 var(--gold); }
 .admin-shell.warroom-ledger .unit-pill { border-radius: 6px; }
+.operations-toolbar { display: grid; grid-template-columns: minmax(260px, 1fr) auto auto auto; gap: 10px; margin-bottom: 12px; }
+.operations-toolbar .search-shell { min-width: 0; padding: 0; border: 0; background: transparent; }
+.operations-toolbar .admin-search { height: 44px; }
+.operations-toolbar .export-xlsx-btn,
+.operations-toolbar .create-rally-btn,
+.operations-secondary { height: 44px; margin: 0; padding: 0 16px; border: 1px solid #34465a; border-radius: 6px; background: #0b1624; color: #d7dce4; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.operations-toolbar .create-rally-btn { border-color: #d5a63f; background: linear-gradient(180deg, #f0c75d, #ca972c); color: #211906; }
+.operations-toolbar .export-xlsx-btn:hover,
+.operations-secondary:hover { border-color: var(--gold); color: var(--gold-bright); }
+.operations-subtoolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 38px; color: #95a0b0; font-size: 11px; }
+.operations-subtoolbar > div { display: flex; gap: 8px; }
+.operations-subtoolbar .operations-secondary { height: 34px; padding: 0 11px; }
+.operations-subtoolbar .operations-secondary.active { border-color: rgba(217,169,78,.52); color: var(--gold-bright); }
+.admin-shell.warroom-ledger .operations-table { width: 100%; min-width: 760px; table-layout: fixed; }
+.operations-table th:nth-child(1), .operations-table td:nth-child(1) { width: 19%; }
+.operations-table th:nth-child(2), .operations-table td:nth-child(2) { width: 15%; }
+.operations-table th:nth-child(3), .operations-table td:nth-child(3),
+.operations-table th:nth-child(4), .operations-table td:nth-child(4),
+.operations-table th:nth-child(5), .operations-table td:nth-child(5) { width: 13%; }
+.operations-table th:nth-child(6), .operations-table td:nth-child(6) { width: 17%; }
+.operations-table th:nth-child(7), .operations-table td:nth-child(7) { width: 10%; text-align: center; }
+.operations-table td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.operations-table .member-name-cell { min-width: 0; }
+.operations-table .member-name-row { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.operations-table-wrap.is-compact .operations-table td { height: 56px; padding-block: 8px; }
+.operations-table-wrap.is-comfortable .operations-table td { height: 70px; padding-block: 14px; }
+.operations-profile { display: inline-grid; place-items: center; width: 38px; height: 38px; border: 2px solid #566478; border-radius: 50%; color: #a7b0bc; font-size: 9px; font-weight: 800; }
+.operations-profile.complete { border-color: #72d368; color: #fff; }
 .admin-right-rail { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
 .member-inspector { position: sticky; top: 16px; border: 1px solid #26364a; border-radius: 8px; padding: 18px; background: linear-gradient(180deg, #0b1827, #08121e); box-shadow: 0 18px 50px rgba(0,0,0,.22); }
 .member-inspector-head { display: flex; justify-content: space-between; gap: 14px; padding-bottom: 17px; border-bottom: 1px solid #26364a; }
@@ -1057,7 +1085,7 @@ tr.row-dragging { opacity: 0.5; }
 
 @media (max-width: 1250px) {
   .admin-shell.warroom-ledger .admin-workspace { grid-template-columns: minmax(0, 1fr) 290px; }
-  .admin-shell.warroom-ledger .admin-table { min-width: 1180px; }
+  .admin-shell.warroom-ledger .operations-table { min-width: 760px; }
 }
 @media (max-width: 960px) {
   .admin-shell.warroom-ledger { grid-template-columns: 1fr; }
@@ -1070,10 +1098,14 @@ tr.row-dragging { opacity: 0.5; }
   .admin-shell.warroom-ledger .warroom-counters { margin-inline: 16px; grid-template-columns: repeat(3, 1fr); }
   .admin-shell.warroom-ledger .admin-content-body { padding-inline: 16px; }
   .member-inspector { position: static; }
+  .operations-toolbar { grid-template-columns: minmax(240px, 1fr) auto auto; }
+  .operations-toolbar .operations-secondary { display: none; }
 }
 @media (max-width: 620px) {
   .admin-shell.warroom-ledger .warroom-counters { grid-template-columns: repeat(2, 1fr); }
   .admin-shell.warroom-ledger .roster-toolbar { margin: 0 0 10px; justify-content: flex-start; }
+  .operations-toolbar { grid-template-columns: 1fr auto; }
+  .operations-toolbar .export-xlsx-btn { display: none; }
 }
 
 /* War Ledger (power profile) */
