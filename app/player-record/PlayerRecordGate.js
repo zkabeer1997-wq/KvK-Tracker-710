@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import MemberHub from '../../components/kingdom/world/MemberHub';
+import { Button, Field, Input } from '../../components/ui';
 
 export default function PlayerRecordGate({ banner }) {
   const [memberId, setMemberId] = useState('');
@@ -149,20 +150,18 @@ export default function PlayerRecordGate({ banner }) {
             <p className="k-narrative" style={{ margin: '0 0 16px' }}>
               Your PIN is stored as a one-way hash and cannot be shown again. An admin can reset it later if needed.
             </p>
-            <div className="k-field">
-              <span>Member ID</span>
+            <Field label="Member ID">
               <div className="k-input" style={{ display: 'flex', alignItems: 'center', minHeight: 44 }}>{verifiedMemberId}</div>
-            </div>
-            <div className="k-field">
-              <span>6-digit PIN</span>
+            </Field>
+            <Field label="6-digit PIN">
               <div className="k-input" style={{ display: 'flex', alignItems: 'center', minHeight: 44, letterSpacing: '.18em', fontWeight: 800 }}>{issuedPin}</div>
-            </div>
+            </Field>
             {status && <div className="status" role="status">{status}</div>}
             <div style={{ display: 'grid', gap: 10, marginTop: 14 }}>
               <button type="button" className="k-btn" onClick={copyCredentials}>{copied ? 'Credentials copied' : 'Copy credentials'}</button>
-              <button type="button" className="k-btn k-btn-sky gatehouse-submit" onClick={openGate} disabled={opening}>
+              <Button variant="sky" className="gatehouse-submit" onClick={openGate} disabled={opening}>
                 {opening ? 'Gate opening…' : 'I saved them — enter the kingdom'}
-              </button>
+              </Button>
             </div>
           </section>
         ) : (
@@ -170,39 +169,36 @@ export default function PlayerRecordGate({ banner }) {
             <div className="gatehouse-desk-grain" aria-hidden="true" />
 
             {firstTime && (
-              <label className="k-field" htmlFor="gate-member-name">
-                <span>Governor Name</span>
-                <input
+              <Field label="Governor Name" htmlFor="gate-member-name">
+                <Input
+                  tone="console"
                   id="gate-member-name"
-                  className="k-input"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   autoComplete="name"
                   maxLength={120}
                   required
                 />
-              </label>
+              </Field>
             )}
 
-            <label className="k-field" htmlFor="gate-member-id">
-              <span>Member ID</span>
-              <input
+            <Field label="Member ID" htmlFor="gate-member-id">
+              <Input
+                tone="console"
                 id="gate-member-id"
-                className="k-input"
                 value={memberId}
                 onChange={(e) => setMemberId(e.target.value)}
                 autoComplete="username"
                 maxLength={120}
                 required
               />
-            </label>
+            </Field>
 
             {!firstTime && (
-              <label className="k-field" htmlFor="gate-pin">
-                <span>PIN</span>
-                <input
+              <Field label="PIN" htmlFor="gate-pin">
+                <Input
+                  tone="console"
                   id="gate-pin"
-                  className="k-input"
                   type="password"
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
@@ -210,7 +206,7 @@ export default function PlayerRecordGate({ banner }) {
                   placeholder="Enter the PIN you originally set"
                   required
                 />
-              </label>
+              </Field>
             )}
 
             {status && (
@@ -219,9 +215,9 @@ export default function PlayerRecordGate({ banner }) {
               </div>
             )}
 
-            <button type="submit" className="k-btn k-btn-sky gatehouse-submit" disabled={loading || opening}>
+            <Button type="submit" variant="sky" className="gatehouse-submit" disabled={loading || opening}>
               {loading ? (firstTime ? 'Creating…' : 'Checking…') : opening ? 'Gate opening…' : firstTime ? 'Generate credentials' : 'Present Credentials'}
-            </button>
+            </Button>
 
             <button
               type="button"
