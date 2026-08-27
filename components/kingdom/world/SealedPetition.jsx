@@ -13,7 +13,7 @@ import Link from 'next/link';
  * through the crest -> document rolls -> courier carries it toward the
  * fortress. Skippable throughout; reduced motion jumps to the result.
  */
-export default function SealedPetition({ onClose, reducedMotion = false }) {
+export default function SealedPetition({ onClose, reducedMotion = false, intakePeriod, discordUsername }) {
   const [beat, setBeat] = useState(reducedMotion ? 4 : 0);
   const timers = useRef([]);
 
@@ -78,8 +78,10 @@ export default function SealedPetition({ onClose, reducedMotion = false }) {
         <span className="k-mark">Petition Received</span>
         <h2 id="sealed-title" className="k-display sealed-title">The Council Has Your Name</h2>
         <p className="k-narrative sealed-note">
-          Your petition is sealed and carried to the inner kingdom. Leadership
-          reviews every application before intake opens.
+          Your petition is sealed and carried to the inner kingdom for the{' '}
+          {intakePeriod ? <strong>{intakePeriod}</strong> : 'next'} intake window.
+          Leadership reviews every application before that window opens
+          {discordUsername ? <> and will reach you on Discord as <strong>{discordUsername}</strong></> : ''}.
         </p>
         <p className="k-narrative sealed-wink">We&rsquo;ll see you at the gates.</p>
         <div className="sealed-actions">

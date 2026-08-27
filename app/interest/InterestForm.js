@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import SealedPetition from '../../components/kingdom/world/SealedPetition';
 
 const MIGRATE_OPTIONS = [
@@ -30,26 +30,22 @@ const SPENDING_OPTIONS = [
 'F2P (pure skills, always on)',
 ];
 
+// One screen per Act instead of one long scroll - the same ~20 fields and
+// screenshot upload the admin review queue already relies on (see
+// app/api/admin-interest-status/route.js and the review UI at
+// /admin/dashboard/interest, both of which screen applicants on troop
+// level, TG, spending archetype, and commitment answers collected here).
+// Shortening what's COLLECTED would blind that review, which is a
+// recruiting-policy call, not a UI one - so this only changes how much is
+// on screen at once, matching the "5-6 fields, no account" feel of a short
+// funnel without dropping the vetting data behind it.
 const ACTS = [
-  { id: 'identity', num: 'I', label: 'Who Approaches' },
-  { id: 'intake', num: 'II', label: 'The Crossing' },
-  { id: 'troops', num: 'III', label: 'Strength of Arms' },
-  { id: 'commitment', num: 'IV', label: 'The Oath' },
-  { id: 'battle-report', num: 'V', label: 'Proof' },
+  { id: 'identity', num: 'I', label: 'Who Approaches', required: ['inGameName', 'playerId', 'discordUsername', 'currentServer', 'currentAlliance'] },
+  { id: 'intake', num: 'II', label: 'The Crossing', required: ['intakePeriod', 'migrateAlliance'] },
+  { id: 'troops', num: 'III', label: 'Strength of Arms', required: ['highestTroopLevel', 'currentTg', 'mysticTrialStages', 'totalPower'], requiresT11: true },
+  { id: 'commitment', num: 'IV', label: 'The Oath', required: ['activeCommit', 'willingSaveResources', 'participatesBattles', 'spendingArchetype', 'mainLanguage'] },
+  { id: 'battle-report', num: 'V', label: 'Proof', requiresScreenshot: true },
 ];
-
-function Act({ id, num, title, children }) {
-  return (
-    <section id={id} className="petition-act">
-      <header className="petition-act-head">
-        <span className="petition-act-num k-display">{num}</span>
-        <h2 className="petition-act-title k-display">{title}</h2>
-        <span className="petition-act-rule" aria-hidden="true" />
-      </header>
-      <div className="petition-act-body">{children}</div>
-    </section>
-  );
-}
 
 function Chapter({ id, title, children }) {
   return (
@@ -83,6 +79,10 @@ participatesBattles: '',
 spendingArchetype: '',
 mainLanguage: '',
 mainLanguageOther: '',
+// Honeypot - a real applicant never sees or fills this field (hidden via
+// CSS, not `type="hidden"`, since some bots skip inputs they detect as
+// hidden by type). Filled in => treat the submission as spam.
+website: '',
 };
 
 export default function InterestForm() {
@@ -93,11 +93,18 @@ const [isError, setIsError] = useState(false);
 const [loading, setLoading] = useState(false);
 const [sealed, setSealed] = useState(false);
 const [reducedMotion, setReducedMotion] = useState(false);
+const [step, setStep] = useState(0);
+const [confirmedInfo, setConfirmedInfo] = useState({});
+const renderedAt = useRef(Date.now());
 
 useEffect(() => {
   if (typeof window === 'undefined') return;
   setReducedMotion(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 }, []);
+
+useEffect(() => {
+  document.getElementById(ACTS[step].id)?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
+}, [step, reducedMotion]);
 
 function updateField(key, value) {
 setForm((current) => ({ ...current, [key]: value }));
@@ -110,46 +117,63 @@ return { ...current, t11: has ? current.t11.filter((o) => o !== option) : [...cu
 });
 }
 
+const FIELD_LABELS = {
+  inGameName: 'In-game name',
+  playerId: 'Player ID',
+  discordUsername: 'Discord username',
+  currentServer: 'Your current server',
+  currentAlliance: 'Your current alliance',
+  intakePeriod: 'Intake period',
+  migrateAlliance: 'Which alliance are you looking to migrate to',
+  highestTroopLevel: 'Current highest troop level',
+  currentTg: 'Current amount of TG',
+  mysticTrialStages: 'Current Mystic Trial total stages',
+  totalPower: 'Total Power',
+  activeCommit: 'Active commitment',
+  willingSaveResources: 'Willing to save resources',
+  participatesBattles: 'Participation in battles',
+  spendingArchetype: 'Spending archetype',
+  mainLanguage: 'Main language',
+};
+
+function validateStep(index) {
+  const act = ACTS[index];
+  for (const key of act.required || []) {
+    if (!String(form[key] || '').trim()) {
+      setIsError(true);
+      setStatus(`Please fill in: ${FIELD_LABELS[key]}.`);
+      return false;
+    }
+  }
+  if (act.requiresT11 && form.t11.length === 0) {
+    setIsError(true);
+    setStatus('Please select at least one T11 option.');
+    return false;
+  }
+  if (act.requiresScreenshot && screenshots.length === 0) {
+    setIsError(true);
+    setStatus('Please upload at least one screenshot.');
+    return false;
+  }
+  setIsError(false);
+  setStatus('');
+  return true;
+}
+
+function goNext() {
+  if (!validateStep(step)) return;
+  setStep((s) => Math.min(s + 1, ACTS.length - 1));
+}
+
+function goBack() {
+  setIsError(false);
+  setStatus('');
+  setStep((s) => Math.max(s - 1, 0));
+}
+
 async function handleSubmit(e) {
 e.preventDefault();
-setStatus('');
-setIsError(false);
-
-const required = [
-['inGameName', 'In-game name'],
-['playerId', 'Player ID'],
-['discordUsername', 'Discord username'],
-['currentServer', 'Your current server'],
-['currentAlliance', 'Your current alliance'],
-['migrateAlliance', 'Which alliance are you looking to migrate to'],
-['intakePeriod', 'Intake period'],
-['highestTroopLevel', 'Current highest troop level'],
-['currentTg', 'Current amount of TG'],
-['mysticTrialStages', 'Current Mystic Trial total stages'],
-['totalPower', 'Total Power'],
-['activeCommit', 'Active commitment'],
-['willingSaveResources', 'Willing to save resources'],
-['participatesBattles', 'Participation in battles'],
-['spendingArchetype', 'Spending archetype'],
-['mainLanguage', 'Main language'],
-];
-for (const [key, label] of required) {
-if (!String(form[key] || '').trim()) {
-setIsError(true);
-setStatus(`Please fill in: ${label}.`);
-return;
-}
-}
-if (form.t11.length === 0) {
-setIsError(true);
-setStatus('Please select at least one T11 option.');
-return;
-}
-if (screenshots.length === 0) {
-setIsError(true);
-setStatus('Please upload at least one screenshot.');
-return;
-}
+if (!validateStep(step)) return;
 
 setLoading(true);
 const body = new FormData();
@@ -180,6 +204,8 @@ body.append(
 form.mainLanguage === 'Other' ? `Other: ${form.mainLanguageOther}` : form.mainLanguage
 );
 screenshots.forEach((file) => body.append('screenshots', file));
+body.append('website', form.website);
+body.append('rendered_at', String(renderedAt.current));
 
 const response = await fetch('/api/interest', { method: 'POST', body });
 const result = await response.json().catch(() => ({}));
@@ -192,27 +218,66 @@ return;
 }
 setIsError(false);
 setStatus('');
+setConfirmedInfo({ intakePeriod: form.intakePeriod, discordUsername: form.discordUsername });
 setForm(initialForm);
 setScreenshots([]);
+setStep(0);
+renderedAt.current = Date.now();
 setSealed(true);
 }
+
+const isFinalStep = step === ACTS.length - 1;
 
 return (
 <>
 {sealed && (
-  <SealedPetition reducedMotion={reducedMotion} onClose={() => setSealed(false)} />
+  <SealedPetition
+    reducedMotion={reducedMotion}
+    onClose={() => setSealed(false)}
+    intakePeriod={confirmedInfo.intakePeriod}
+    discordUsername={confirmedInfo.discordUsername}
+  />
 )}
 <form className="public-form-card interest-petition" onSubmit={handleSubmit}>
 <nav className="petition-index" aria-label="Petition sections">
-  {ACTS.map((a) => (
-    <a key={a.id} href={`#${a.id}`} className="petition-index-item">
+  {ACTS.map((a, i) => (
+    <button
+      key={a.id}
+      type="button"
+      className={`petition-index-item ${i === step ? 'is-current' : ''} ${i < step ? 'is-done' : ''}`}
+      aria-current={i === step ? 'step' : undefined}
+      onClick={() => { if (i <= step || validateStep(step)) setStep(i); }}
+    >
       <span className="petition-index-num">{a.num}</span>
       {a.label}
-    </a>
+    </button>
   ))}
 </nav>
 
-<Act id="identity" num="I" title="Who Approaches">
+{/* Honeypot: visually hidden (not type="hidden" - some bots skip those),
+    off-screen, unreachable by tab order. A real applicant never sees or
+    fills it; the server treats a non-empty value as spam. */}
+<div className="petition-honeypot" aria-hidden="true">
+  <label htmlFor="website">Leave this field blank</label>
+  <input
+    id="website"
+    name="website"
+    type="text"
+    tabIndex={-1}
+    autoComplete="off"
+    value={form.website}
+    onChange={(e) => updateField('website', e.target.value)}
+  />
+</div>
+
+{step === 0 && (
+<section id="identity" className="petition-act">
+<header className="petition-act-head">
+<span className="petition-act-num k-display">I</span>
+<h2 className="petition-act-title k-display">Who Approaches</h2>
+<span className="petition-act-rule" aria-hidden="true" />
+</header>
+<div className="petition-act-body">
 <Chapter id="identity-fields" title="Identity">
 <div className="identity-grid">
 <label>In-game name<input value={form.inGameName} onChange={(e) => updateField('inGameName', e.target.value)} /></label>
@@ -222,10 +287,18 @@ return (
 <label>Your current alliance (prior to transfer)<input value={form.currentAlliance} onChange={(e) => updateField('currentAlliance', e.target.value)} /></label>
 </div>
 </Chapter>
+</div>
+</section>
+)}
 
-</Act>
-
-<Act id="intake" num="II" title="The Crossing">
+{step === 1 && (
+<section id="intake" className="petition-act">
+<header className="petition-act-head">
+<span className="petition-act-num k-display">II</span>
+<h2 className="petition-act-title k-display">The Crossing</h2>
+<span className="petition-act-rule" aria-hidden="true" />
+</header>
+<div className="petition-act-body">
 <Chapter id="intake-fields" title="Intake window">
 <div className="troop-section public-section">
 <div className="section-title-row"><span>Intake</span><h3>Which intake period are you applying for?</h3></div>
@@ -256,10 +329,18 @@ return (
 )}
 </div>
 </Chapter>
+</div>
+</section>
+)}
 
-</Act>
-
-<Act id="troops" num="III" title="Strength of Arms">
+{step === 2 && (
+<section id="troops" className="petition-act">
+<header className="petition-act-head">
+<span className="petition-act-num k-display">III</span>
+<h2 className="petition-act-title k-display">Strength of Arms</h2>
+<span className="petition-act-rule" aria-hidden="true" />
+</header>
+<div className="petition-act-body">
 <Chapter id="troops-fields" title="Troops">
 <div className="troop-section public-section">
 <div className="section-title-row"><span>Troops</span><h3>Current highest troop level (not TC)</h3></div>
@@ -313,10 +394,18 @@ return (
 <label>Your current number of transfer passes<input value={form.currentPasses} onChange={(e) => updateField('currentPasses', e.target.value)} /></label>
 </div>
 </Chapter>
+</div>
+</section>
+)}
 
-</Act>
-
-<Act id="commitment" num="IV" title="The Oath">
+{step === 3 && (
+<section id="commitment" className="petition-act">
+<header className="petition-act-head">
+<span className="petition-act-num k-display">IV</span>
+<h2 className="petition-act-title k-display">The Oath</h2>
+<span className="petition-act-rule" aria-hidden="true" />
+</header>
+<div className="petition-act-body">
 <Chapter id="commitment-fields" title="Commitment">
 <div className="troop-section public-section">
 <div className="section-title-row"><span>Commitment</span><h3>Are you able to actively commit to game, and participate in alliance events?</h3></div>
@@ -387,10 +476,18 @@ return (
 )}
 </div>
 </Chapter>
+</div>
+</section>
+)}
 
-</Act>
-
-<Act id="battle-report" num="V" title="Proof">
+{step === 4 && (
+<section id="battle-report" className="petition-act">
+<header className="petition-act-head">
+<span className="petition-act-num k-display">V</span>
+<h2 className="petition-act-title k-display">Proof</h2>
+<span className="petition-act-rule" aria-hidden="true" />
+</header>
+<div className="petition-act-body">
 <Chapter id="proof-fields" title="Battle report">
 <div className="troop-section public-section">
 <div className="section-title-row"><span>Screenshots</span><h3>Upload your most recent battle report</h3><p>Should show your in-game name, Gov Gears/charms, Hero Gears and Masters.</p></div>
@@ -398,11 +495,25 @@ return (
 <p className="file-hint">{screenshots.length > 0 ? `${screenshots.length} file(s) selected` : 'No files selected yet.'}</p>
 </div>
 </Chapter>
-
-</Act>
+</div>
+</section>
+)}
 
 {status && <div className={isError ? 'status error' : 'status'}>{status}</div>}
-<button type="submit" disabled={loading}>{loading ? 'Submitting...' : 'Submit Petition'}</button>
+
+<div className="petition-step-nav">
+  <span className="petition-step-count k-mark">Step {step + 1} of {ACTS.length}</span>
+  <div className="petition-step-actions">
+    {step > 0 && (
+      <button type="button" className="k-btn k-btn-quiet" onClick={goBack}>Back</button>
+    )}
+    {isFinalStep ? (
+      <button type="submit" className="k-btn k-btn-struck" disabled={loading}>{loading ? 'Submitting...' : 'Submit Petition'}</button>
+    ) : (
+      <button type="button" className="k-btn" onClick={goNext}>Continue</button>
+    )}
+  </div>
+</div>
 </form>
 </>
 );

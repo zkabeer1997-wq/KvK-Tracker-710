@@ -807,6 +807,35 @@
 .petition-group-title { display: block; color: var(--brass); }
 .petition-group-body { display: flex; flex-direction: column; gap: 14px; }
 
+/* ---- Wizard controls (PR 6) --------------------------------------
+   Petition index doubles as a step control: a bare-button nav rather
+   than in-page anchors, since only the current Act renders at a time.
+   is-current / is-done give a lightweight progress read without a
+   separate progress-bar component. */
+.petition-index-item.is-current { color: var(--gold-hot); border-color: var(--gold-aged); }
+.petition-index-item.is-done { color: var(--brass-bright); }
+.petition-index-item.is-done .petition-index-num::after { content: ' \2713'; }
+
+.petition-honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.petition-step-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 24px;
+  margin-top: 12px;
+  border-top: 1px solid var(--edge);
+}
+.petition-step-count { color: var(--t-muted); }
+.petition-step-actions { display: flex; gap: 10px; }
+
 /* ============================================================
    SEALED PETITION cinematic
    ============================================================ */

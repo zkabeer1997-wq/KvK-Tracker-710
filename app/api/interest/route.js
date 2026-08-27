@@ -1,9 +1,66 @@
 import { NextResponse } from 'next/server';
 import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
 
+// Best-effort in-memory rate limit: 5 submissions per 10 minutes per IP.
+// Honest limitation, not overclaimed: this Map lives in one warm serverless
+// instance's memory. Vercel can and does route requests to multiple
+// instances, and a cold start clears it, so this does not guarantee a
+// global cap under real distributed load - it only raises the cost of a
+// casual scripted flood on a single warm instance. A durable limiter needs
+// a shared store (e.g. Upstash Redis), which is a real infra dependency
+// this PR does not introduce unasked.
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+const RATE_LIMIT_MAX = 5;
+const rateLimitHits = new Map();
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const hits = (rateLimitHits.get(ip) || []).filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
+  hits.push(now);
+  rateLimitHits.set(ip, hits);
+  // Bound the map itself so a flood of distinct spoofed IPs cannot grow it
+  // without limit for the lifetime of the warm instance.
+  if (rateLimitHits.size > 5000) {
+    const oldestKey = rateLimitHits.keys().next().value;
+    rateLimitHits.delete(oldestKey);
+  }
+  return hits.length > RATE_LIMIT_MAX;
+}
+
+function clientIp(request) {
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) return forwarded.split(',')[0].trim();
+  return request.headers.get('x-real-ip') || 'unknown';
+}
+
+// A human reading and filling five paginated steps takes more than this;
+// a bot posting straight to the endpoint (or filling the form via script
+// with no render delay) typically does not.
+const MIN_FILL_TIME_MS = 3000;
+
 export async function POST(request) {
 try {
+const ip = clientIp(request);
+if (isRateLimited(ip)) {
+  return NextResponse.json({ error: 'Too many submissions. Please try again later.' }, { status: 429 });
+}
+
 const formData = await request.formData();
+
+// Honeypot: a real applicant never sees or fills this field (hidden via
+// CSS in InterestForm.js, not disabled/hidden by input type, since some
+// bots specifically skip those). A filled value means a bot filled every
+// field it could find. Return success without writing anything, so the
+// bot's script sees no signal to adjust its behavior.
+if (String(formData.get('website') || '').trim()) {
+  return NextResponse.json({ ok: true });
+}
+
+const renderedAt = Number(formData.get('rendered_at')) || 0;
+if (renderedAt && Date.now() - renderedAt < MIN_FILL_TIME_MS) {
+  return NextResponse.json({ ok: true });
+}
+
 const supabase = createAdminSupabaseClient();
 
 const screenshots = formData.getAll('screenshots').filter((f) => f && typeof f.arrayBuffer === 'function');
