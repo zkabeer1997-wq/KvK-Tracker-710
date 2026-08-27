@@ -15,6 +15,7 @@ const NAV_LINKS = [
   { href: '/alliances', label: 'Alliances' },
   { href: '/guides', label: 'Guides' },
   { href: '/events', label: 'Events' },
+  { href: '/rankings', label: 'Rankings' },
   { href: '/tools', label: 'Tools' },
   { href: '/player-record', label: 'Members' },
 ];

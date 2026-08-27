@@ -19,6 +19,7 @@ export default function SiteFooter() {
           <Link href="/alliances">Alliances</Link>
           <Link href="/guides">Guides</Link>
           <Link href="/events">Events</Link>
+          <Link href="/rankings">Rankings</Link>
           <Link href="/tools">Tools</Link>
           <Link href="/player-record">Members</Link>
           <Link href="/interest">Join K710</Link>

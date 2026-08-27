@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: '/admin/dashboard/flamedragon', label: 'Flamedragon Tyrant', match: '/admin/dashboard/flamedragon' },
   { href: '/admin/dashboard/events', label: 'Events', match: '/admin/dashboard/events' },
   { href: '/admin/dashboard/alliances', label: 'Alliances', match: '/admin/dashboard/alliances' },
+  { href: '/admin/dashboard/rankings', label: 'Rankings', match: '/admin/dashboard/rankings' },
 ];
 
 const MODE_KEY = 'k710-warroom-mode';
