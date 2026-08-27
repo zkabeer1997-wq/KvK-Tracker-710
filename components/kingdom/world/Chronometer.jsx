@@ -1,40 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { HUNTS, nextHunt, pad, toMinutes } from '../../../lib/bearHuntSchedule';
 
-/**
- * The real K710 Bear Hunt schedule. These are the operational times the
- * kingdom actually runs on, so the instrument is driven by production
- * data rather than decoration.
- */
-export const HUNTS = [
-  { band: '710', utc: '02:00' },
-  { band: 'RED', utc: '11:05' },
-  { band: 'SKY', utc: '12:00' },
-  { band: '710', utc: '13:00' },
-  { band: 'RED', utc: '19:00' },
-  { band: 'SKY', utc: '20:00' },
-  { band: 'RED', utc: '23:20' },
-];
-
-const toMinutes = (hhmm) => {
-  const [h, m] = hhmm.split(':').map(Number);
-  return h * 60 + m;
-};
-
-function pad(n) {
-  return String(n).padStart(2, '0');
-}
-
-export function nextHunt(nowMin) {
-  const sorted = [...HUNTS].sort((a, b) => toMinutes(a.utc) - toMinutes(b.utc));
-  const upcoming = sorted.find((h) => toMinutes(h.utc) > nowMin);
-  const target = upcoming || sorted[0];
-  const delta = upcoming
-    ? toMinutes(target.utc) - nowMin
-    : 1440 - nowMin + toMinutes(target.utc);
-  return { ...target, inMin: delta };
-}
+export { HUNTS, nextHunt };
 
 /**
  * A monumental brass instrument: 24-hour ring, alliance gemstones set at

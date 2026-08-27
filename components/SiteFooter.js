@@ -17,6 +17,7 @@ export default function SiteFooter() {
           <Link href="/">Home</Link>
           <Link href="/chronometer">About</Link>
           <Link href="/guides">Guides</Link>
+          <Link href="/events">Events</Link>
           <Link href="/tools">Tools</Link>
           <Link href="/player-record">Members</Link>
           <Link href="/interest">Join K710</Link>

@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { href: '/', label: 'Home' },
   { href: '/chronometer', label: 'About' },
   { href: '/guides', label: 'Guides' },
+  { href: '/events', label: 'Events' },
   { href: '/tools', label: 'Tools' },
   { href: '/player-record', label: 'Members' },
 ];
