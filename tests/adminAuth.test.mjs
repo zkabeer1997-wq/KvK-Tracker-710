@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {
   ADMIN_COOKIE_NAME,
-  computeAdminToken,
+  mintAdminToken,
   isValidAdminToken,
   isAdminRequest,
 } from '../lib/adminAuth.js';
@@ -17,30 +17,45 @@ function requestWithCookie(value) {
 
 process.env.ADMIN_PASSWORD = 'shared-rally-secret';
 
-const token = await computeAdminToken();
+const token = await mintAdminToken();
 
 assert.equal(typeof token, 'string');
-assert.equal(token.length, 64, 'token should be sha-256 hex');
-assert.equal(await computeAdminToken(), token, 'token should be deterministic');
+assert.ok(token.includes('.'), 'token should be payload.signature');
+
+// Two mints produce different tokens (a fresh nonce each time), unlike the
+// old sha256(password)-only scheme where every session was byte-identical.
+const secondToken = await mintAdminToken();
+assert.notEqual(token, secondToken, 'each mint should carry a fresh nonce');
 
 assert.equal(await isValidAdminToken(token), true);
+assert.equal(await isValidAdminToken(secondToken), true);
 assert.equal(await isValidAdminToken('wrong-token'), false);
 assert.equal(await isValidAdminToken(''), false);
 assert.equal(await isValidAdminToken(null), false);
 assert.equal(await isValidAdminToken(undefined), false);
 
-// Same length as a real token, so this exercises the comparison rather than
-// the length guard.
-assert.equal(await isValidAdminToken('0'.repeat(64)), false);
+// Tampering with the payload (still well-formed, wrong signature) is rejected.
+const [payload] = token.split('.');
+assert.equal(await isValidAdminToken(`${payload}.0`.padEnd(token.length, '0')), false);
 
 assert.equal(await isAdminRequest(requestWithCookie(token)), true);
 assert.equal(await isAdminRequest(requestWithCookie('nope')), false);
 assert.equal(await isAdminRequest(requestWithCookie()), false, 'missing cookie should be rejected');
+
+// An expired token (payload claims an exp in the past, signed correctly) is rejected.
+{
+  const enc = new TextEncoder();
+  const expiredPayload = Buffer.from(JSON.stringify({ nonce: 'x', exp: Date.now() - 1000 }), 'utf8').toString('base64url');
+  const sigBuffer = await crypto.subtle.digest('SHA-256', enc.encode(`tff-admin-session-v2:${expiredPayload}:${process.env.ADMIN_PASSWORD}`));
+  const signature = Array.from(new Uint8Array(sigBuffer)).map((b) => b.toString(16).padStart(2, '0')).join('');
+  assert.equal(await isValidAdminToken(`${expiredPayload}.${signature}`), false, 'expired token should be rejected');
+}
 
 // Fail closed: with no ADMIN_PASSWORD configured, nothing authenticates —
 // not even a token that was valid a moment ago.
 delete process.env.ADMIN_PASSWORD;
 assert.equal(await isValidAdminToken(token), false, 'must fail closed when ADMIN_PASSWORD is unset');
 assert.equal(await isAdminRequest(requestWithCookie(token)), false);
+assert.equal(await mintAdminToken(), null, 'must not mint a token when ADMIN_PASSWORD is unset');
 
 console.log('adminAuth tests passed');

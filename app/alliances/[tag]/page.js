@@ -26,7 +26,7 @@ async function loadAlliance(tagParam) {
   const supabase = createAdminSupabaseClient();
   const { data, error } = await supabase
     .from('alliances')
-    .select('*')
+    .select('tag, name, blurb, leader_player_id, timezone_focus, recruiting_status, language, roster_size')
     .eq('tag', String(tagParam || '').toUpperCase())
     .eq('active', true)
     .maybeSingle();

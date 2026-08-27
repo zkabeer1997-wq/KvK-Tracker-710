@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseAdminClient } from '../../../lib/supabaseAdmin';
-import { createMemberToken, MEMBER_COOKIE_NAME } from '../../../lib/memberAuth';
+import { createMemberToken, MEMBER_COOKIE_NAME, MEMBER_TOKEN_TTL_MS } from '../../../lib/memberAuth';
 
 export async function POST(request) {
   let body;
@@ -50,7 +50,7 @@ export async function POST(request) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 60 * 60 * 12,
+      maxAge: MEMBER_TOKEN_TTL_MS / 1000,
     });
     return response;
   } catch (error) {

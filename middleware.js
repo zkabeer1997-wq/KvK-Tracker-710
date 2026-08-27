@@ -1,16 +1,70 @@
 import { NextResponse } from 'next/server';
-import { ADMIN_COOKIE_NAME, computeAdminToken } from './lib/adminAuth';
+import { isAdminRequest } from './lib/adminAuth';
+import { readMemberSession } from './lib/memberAuth';
+
+// An explicit allowlist, not a denylist: the matcher below covers every
+// route in either protected set, and any route added to Waves 2-4 that
+// isn't listed here simply isn't matched at all - Next.js only runs
+// middleware on matched routes, so an unlisted route silently passes
+// through with no gate. That's still a real gap (a route added later has
+// to be added here too), but it's a narrower one than a single hand-rolled
+// regex that has to positively identify every public path; this way, the
+// two lists below are the only places "does this route need a session"
+// is decided.
+//
+// /player-record itself (the Gatehouse login/register screen) and
+// /tools/* are deliberately NOT in ADMIN or MEMBER prefixes below:
+// the Gatehouse is where an unauthenticated visitor is supposed to land,
+// and the economy tools in /tools are meant to work for anonymous
+// visitors with manual entry, not just logged-in members (see PR 12).
+const ADMIN_PREFIXES = ['/admin/dashboard'];
+const MEMBER_PREFIXES = [
+  '/forms',
+  '/player-record/form',
+  '/power-profile',
+  '/flamedragon',
+  '/prep-phase-backpack',
+];
 
 export const config = {
-matcher: ['/admin/dashboard', '/admin/dashboard/:path*'],
+  matcher: [
+    '/admin/dashboard',
+    '/admin/dashboard/:path*',
+    '/forms',
+    '/forms/:path*',
+    '/player-record/form',
+    '/player-record/form/:path*',
+    '/power-profile',
+    '/power-profile/:path*',
+    '/flamedragon',
+    '/flamedragon/:path*',
+    '/prep-phase-backpack',
+    '/prep-phase-backpack/:path*',
+  ],
 };
 
-export async function middleware(request) {
-const cookie = request.cookies.get(ADMIN_COOKIE_NAME);
-const expected = await computeAdminToken();
-if (!cookie || !expected || cookie.value !== expected) {
-const loginUrl = new URL('/admin/login', request.url);
-return NextResponse.redirect(loginUrl);
+function matchesPrefix(pathname, prefixes) {
+  return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
-return NextResponse.next();
+
+export async function middleware(request) {
+  const { pathname } = request.nextUrl;
+
+  if (matchesPrefix(pathname, ADMIN_PREFIXES)) {
+    if (!(await isAdminRequest(request))) {
+      const loginUrl = new URL('/admin/login', request.url);
+      return NextResponse.redirect(loginUrl);
+    }
+    return NextResponse.next();
+  }
+
+  if (matchesPrefix(pathname, MEMBER_PREFIXES)) {
+    const session = await readMemberSession(request);
+    if (!session) {
+      return NextResponse.redirect(new URL('/player-record', request.url));
+    }
+    return NextResponse.next();
+  }
+
+  return NextResponse.next();
 }
