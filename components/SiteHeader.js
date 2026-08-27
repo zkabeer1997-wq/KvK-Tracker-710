@@ -4,14 +4,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
-// The real, currently-live route surface. `about` points at /chronometer
-// because that page already carries the kingdom-identity/doctrine/alliance
-// content an "About" link conventionally means - it gets its own /about
-// route in Wave 3 (PR 10); update the href here when that lands, not the
-// label.
+// The real, currently-live route surface. /about (PR 10) is the
+// canonical "About Kingdom 710" destination; /chronometer keeps its own
+// deeper recruitment-narrative treatment (full hunt windows, the transfer
+// march) and stays reachable from the Gate's "Request Entry" road and
+// from a link on /about itself, without occupying the main nav slot.
 const NAV_LINKS = [
   { href: '/', label: 'Home' },
-  { href: '/chronometer', label: 'About' },
+  { href: '/about', label: 'About' },
   { href: '/alliances', label: 'Alliances' },
   { href: '/guides', label: 'Guides' },
   { href: '/events', label: 'Events' },

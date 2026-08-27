@@ -15,7 +15,7 @@ export default function SiteFooter() {
         </div>
         <nav className="site-footer-links" aria-label="Footer">
           <Link href="/">Home</Link>
-          <Link href="/chronometer">About</Link>
+          <Link href="/about">About</Link>
           <Link href="/alliances">Alliances</Link>
           <Link href="/guides">Guides</Link>
           <Link href="/events">Events</Link>
