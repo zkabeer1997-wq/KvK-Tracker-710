@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server';
 import { isAdminRequest } from '../../../../lib/adminAuth';
 import { createAdminSupabaseClient } from '../../../../lib/adminSupabase';
 
-export async function PATCH(request, { params }) {
+export async function PATCH(request, { params: paramsPromise }) {
   if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {
+    const params = await paramsPromise;
     const body = await request.json();
     const updates = {};
     if (body.content !== undefined) updates.content = body.content;
@@ -28,11 +29,12 @@ export async function PATCH(request, { params }) {
   }
 }
 
-export async function DELETE(request, { params }) {
+export async function DELETE(request, { params: paramsPromise }) {
   if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {
+    const params = await paramsPromise;
     const supabase = createAdminSupabaseClient();
     const { error } = await supabase
     .from('content_blocks')

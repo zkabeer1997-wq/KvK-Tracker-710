@@ -1,7 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
 
-export const runtime = 'edge';
 export const alt = 'Kingdom 710 Guide';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
@@ -25,7 +24,8 @@ async function loadTitleAndCategory(slug) {
 // portal plan's rule against copying any visual asset. Same dark/gold
 // palette as the console surface's existing look.
 export default async function Image({ params }) {
-  const guide = await loadTitleAndCategory(params.slug);
+  const { slug } = await params;
+  const guide = await loadTitleAndCategory(slug);
   const title = guide?.title || 'Kingdom Guide';
   const category = guide?.category || 'K710 Library';
 

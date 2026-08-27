@@ -50,7 +50,8 @@ async function loadPublishedGuides() {
 }
 
 export async function generateMetadata({ params }) {
-  const slug = typeof params?.slug === 'string' ? params.slug : '';
+  const resolvedParams = await params;
+  const slug = typeof resolvedParams?.slug === 'string' ? resolvedParams.slug : '';
   try {
     const supabase = createAdminSupabaseClient();
     const { data } = await supabase
@@ -76,7 +77,8 @@ export async function generateMetadata({ params }) {
 // client-side in GuideArticle via useSearchParams() instead of being
 // threaded through here as a server prop.
 export default async function GuidePage({ params }) {
-  const slug = typeof params?.slug === 'string' ? params.slug : '';
+  const resolvedParams = await params;
+  const slug = typeof resolvedParams?.slug === 'string' ? resolvedParams.slug : '';
 
   let guide = null;
   let prev = null;
@@ -113,7 +115,6 @@ export default async function GuidePage({ params }) {
       {jsonLd && (
         <script
           type="application/ld+json"
-          // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}

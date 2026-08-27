@@ -35,9 +35,10 @@ async function loadAlliance(tagParam) {
 }
 
 export async function generateMetadata({ params }) {
-  const canonical = `/alliances/${String(params.tag || '').toLowerCase()}`;
+  const { tag } = await params;
+  const canonical = `/alliances/${String(tag || '').toLowerCase()}`;
   try {
-    const alliance = await loadAlliance(params.tag);
+    const alliance = await loadAlliance(tag);
     if (!alliance) return { title: 'Alliance | K710', alternates: { canonical } };
     return { title: `${alliance.name} — K710`, description: alliance.blurb || undefined, alternates: { canonical } };
   } catch {
@@ -46,9 +47,10 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function AlliancePage({ params }) {
+  const { tag } = await params;
   let alliance = null;
   try {
-    alliance = await loadAlliance(params.tag);
+    alliance = await loadAlliance(tag);
   } catch (error) {
     console.error('alliance page load failed', error);
     // A genuinely missing alliance (bad slug) and a Supabase hiccup are

@@ -42,24 +42,26 @@ async function loadEvent(slug) {
 }
 
 export async function generateMetadata({ params }) {
+  const { slug } = await params;
   try {
-    const event = await loadEvent(params.slug);
-    if (!event) return { title: 'Event | K710', alternates: { canonical: `/events/${params.slug}` } };
+    const event = await loadEvent(slug);
+    if (!event) return { title: 'Event | K710', alternates: { canonical: `/events/${slug}` } };
     return {
       title: event.title,
       description: event.description || undefined,
       openGraph: { title: event.title, description: event.description || undefined },
-      alternates: { canonical: `/events/${params.slug}` },
+      alternates: { canonical: `/events/${slug}` },
     };
   } catch {
-    return { title: 'Event | K710', alternates: { canonical: `/events/${params.slug}` } };
+    return { title: 'Event | K710', alternates: { canonical: `/events/${slug}` } };
   }
 }
 
 export default async function EventPage({ params }) {
+  const { slug } = await params;
   let event = null;
   try {
-    event = await loadEvent(params.slug);
+    event = await loadEvent(slug);
   } catch (error) {
     console.error('event page load failed', error);
     // Same reasoning as the alliance detail page: a Supabase hiccup here
@@ -92,7 +94,6 @@ export default async function EventPage({ params }) {
     <main className="theme-realm event-page">
       <script
         type="application/ld+json"
-        // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <div className="event-page-inner">

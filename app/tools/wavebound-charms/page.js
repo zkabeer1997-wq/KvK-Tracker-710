@@ -14,13 +14,13 @@ const jsonLd = toolSoftwareApplicationJsonLd({
   path: '/tools/wavebound-charms',
 });
 
-export default function WaveboundCharmsPage({ searchParams }) {
+export default async function WaveboundCharmsPage({ searchParams: searchParamsPromise }) {
+  const searchParams = await searchParamsPromise;
   const memberId = typeof searchParams?.member_id === 'string' ? searchParams.member_id : '';
   const query = memberId ? `?member_id=${encodeURIComponent(memberId)}` : '';
 
   return (
     <main className="armory wavebound-tool-page">
-      {/* eslint-disable-next-line react/no-danger */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="armory-atmos" aria-hidden="true" />
       <span className="armory-rack-l" aria-hidden="true" />

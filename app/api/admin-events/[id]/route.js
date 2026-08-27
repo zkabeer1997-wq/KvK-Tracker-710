@@ -13,10 +13,11 @@ async function requireAdmin(request) {
   return null;
 }
 
-export async function PUT(request, { params }) {
+export async function PUT(request, { params: paramsPromise }) {
   const unauthorized = await requireAdmin(request);
   if (unauthorized) return unauthorized;
 
+  const params = await paramsPromise;
   const id = params?.id;
   if (!id) return NextResponse.json({ error: 'Missing event id.' }, { status: 400 });
 
@@ -86,10 +87,11 @@ export async function PUT(request, { params }) {
   return NextResponse.json({ event: data });
 }
 
-export async function DELETE(request, { params }) {
+export async function DELETE(request, { params: paramsPromise }) {
   const unauthorized = await requireAdmin(request);
   if (unauthorized) return unauthorized;
 
+  const params = await paramsPromise;
   const id = params?.id;
   if (!id) return NextResponse.json({ error: 'Missing event id.' }, { status: 400 });
 

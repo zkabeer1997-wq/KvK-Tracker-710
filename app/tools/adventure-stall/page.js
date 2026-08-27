@@ -14,11 +14,11 @@ const jsonLd = toolSoftwareApplicationJsonLd({
   path: '/tools/adventure-stall',
 });
 
-export default function AdventureStallPage({ searchParams }) {
+export default async function AdventureStallPage({ searchParams: searchParamsPromise }) {
+  const searchParams = await searchParamsPromise;
   const memberId = typeof searchParams?.member_id === 'string' ? searchParams.member_id : '';
   const query = memberId ? `?member_id=${encodeURIComponent(memberId)}` : '';
   return <main className="armory as-page">
-    {/* eslint-disable-next-line react/no-danger */}
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     <div className="armory-atmos" aria-hidden="true"/><span className="armory-rack-l" aria-hidden="true"/><span className="armory-rack-r" aria-hidden="true"/>
     <div className="armory-inner as-inner">

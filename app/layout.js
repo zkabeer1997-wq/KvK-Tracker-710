@@ -82,7 +82,6 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${cinzel.variable} ${inter.variable} ${jetbrains.variable} ${cormorant.variable}`}>
       <body className="theme-console">
-        {/* eslint-disable-next-line react/no-danger */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
         <LanguageProvider>
           <FilipinoTagalogOptions />

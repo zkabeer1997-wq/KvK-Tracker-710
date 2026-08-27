@@ -2,10 +2,11 @@ import { NextResponse } from 'next/server';
 import { isAdminRequest } from '../../../../lib/adminAuth';
 import { createAdminSupabaseClient } from '../../../../lib/adminSupabase';
 
-export async function DELETE(request, { params }) {
+export async function DELETE(request, { params: paramsPromise }) {
 if (!(await isAdminRequest(request))) {
 return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 }
+const params = await paramsPromise;
 const memberId = params.memberId;
 if (!memberId) {
 return NextResponse.json({ error: 'Member ID is required' }, { status: 400 });

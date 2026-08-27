@@ -5,7 +5,7 @@ import { readMemberSession } from './lib/memberAuth';
 // An explicit allowlist, not a denylist: the matcher below covers every
 // route in either protected set, and any route added to Waves 2-4 that
 // isn't listed here simply isn't matched at all - Next.js only runs
-// middleware on matched routes, so an unlisted route silently passes
+// this proxy on matched routes, so an unlisted route silently passes
 // through with no gate. That's still a real gap (a route added later has
 // to be added here too), but it's a narrower one than a single hand-rolled
 // regex that has to positively identify every public path; this way, the
@@ -47,7 +47,7 @@ function matchesPrefix(pathname, prefixes) {
   return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 
-export async function middleware(request) {
+export async function proxy(request) {
   const { pathname } = request.nextUrl;
 
   if (matchesPrefix(pathname, ADMIN_PREFIXES)) {

@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ADMIN_COOKIE_NAME, TOKEN_TTL_MS, mintAdminToken } from '../../../lib/adminAuth';
 
-export const runtime = 'edge';
-
 export async function POST(request) {
   const body = await request.json();
   const password = body.password;

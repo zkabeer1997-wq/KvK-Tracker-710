@@ -1,6 +1,6 @@
 # K710 Hub
 
-Kingdom 710's Kingshot portal and operations hub — Next.js 14 (App Router) +
+Kingdom 710's Kingshot portal and operations hub — Next.js 16 (App Router) +
 Supabase.
 
 Public surface: the Gate, kingdom guides, and the transfer registry.

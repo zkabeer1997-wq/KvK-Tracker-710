@@ -12,10 +12,11 @@ async function requireAdmin(request) {
   return null;
 }
 
-export async function PUT(request, { params }) {
+export async function PUT(request, { params: paramsPromise }) {
   const unauthorized = await requireAdmin(request);
   if (unauthorized) return unauthorized;
 
+  const params = await paramsPromise;
   const tag = params?.tag;
   if (!tag) return NextResponse.json({ error: 'Missing alliance tag.' }, { status: 400 });
 
@@ -65,10 +66,11 @@ export async function PUT(request, { params }) {
   return NextResponse.json({ alliance: data });
 }
 
-export async function DELETE(request, { params }) {
+export async function DELETE(request, { params: paramsPromise }) {
   const unauthorized = await requireAdmin(request);
   if (unauthorized) return unauthorized;
 
+  const params = await paramsPromise;
   const tag = params?.tag;
   if (!tag) return NextResponse.json({ error: 'Missing alliance tag.' }, { status: 400 });
 

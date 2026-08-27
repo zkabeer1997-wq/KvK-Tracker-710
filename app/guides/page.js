@@ -27,7 +27,8 @@ async function loadGuides() {
 }
 
 export default async function GuidesPage({ searchParams }) {
-  const memberId = typeof searchParams?.member_id === 'string' ? searchParams.member_id : '';
+  const resolvedSearchParams = await searchParams;
+  const memberId = typeof resolvedSearchParams?.member_id === 'string' ? resolvedSearchParams.member_id : '';
   const query = memberId ? `?member_id=${encodeURIComponent(memberId)}` : '';
   const backHref = memberId ? `/player-record?member_id=${encodeURIComponent(memberId)}` : '/player-record';
 

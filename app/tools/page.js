@@ -7,7 +7,8 @@ export const metadata = {
   alternates: { canonical: '/tools' },
 };
 
-export default function ToolsPage({ searchParams }) {
+export default async function ToolsPage({ searchParams: searchParamsPromise }) {
+  const searchParams = await searchParamsPromise;
   const memberId = typeof searchParams?.member_id === 'string' ? searchParams.member_id : '';
   const backHref = memberId ? `/player-record?member_id=${encodeURIComponent(memberId)}` : '/player-record';
   return <main className="armory tools-workshop">

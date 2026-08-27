@@ -4,7 +4,8 @@ import { buildIcsCalendar } from '../../../../../lib/ics';
 
 const SLUG_RE = /^[a-z0-9-]{1,80}$/;
 
-export async function GET(request, { params }) {
+export async function GET(request, { params: paramsPromise }) {
+  const params = await paramsPromise;
   const slug = params?.slug;
   if (!SLUG_RE.test(slug || '')) {
     return NextResponse.json({ error: 'Invalid event.' }, { status: 400 });

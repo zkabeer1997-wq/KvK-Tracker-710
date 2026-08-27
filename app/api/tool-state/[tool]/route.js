@@ -6,10 +6,11 @@ function validToolKey(tool) {
   return typeof tool === 'string' && /^[a-z0-9-]{1,64}$/.test(tool);
 }
 
-export async function GET(request, { params }) {
+export async function GET(request, { params: paramsPromise }) {
   const session = await readMemberSession(request);
   if (!session) return NextResponse.json({ error: 'Member login required.' }, { status: 401 });
 
+  const params = await paramsPromise;
   const tool = params?.tool;
   if (!validToolKey(tool)) return NextResponse.json({ error: 'Invalid tool.' }, { status: 400 });
 
@@ -30,10 +31,11 @@ export async function GET(request, { params }) {
   }
 }
 
-export async function PUT(request, { params }) {
+export async function PUT(request, { params: paramsPromise }) {
   const session = await readMemberSession(request);
   if (!session) return NextResponse.json({ error: 'Member login required.' }, { status: 401 });
 
+  const params = await paramsPromise;
   const tool = params?.tool;
   if (!validToolKey(tool)) return NextResponse.json({ error: 'Invalid tool.' }, { status: 400 });
 

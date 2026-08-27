@@ -9,7 +9,8 @@ function validSlug(slug) {
   return typeof slug === 'string' && /^[a-z0-9-]{1,80}$/.test(slug);
 }
 
-export async function GET(request, { params }) {
+export async function GET(request, { params: paramsPromise }) {
+  const params = await paramsPromise;
   const slug = params?.slug;
   if (!validSlug(slug)) {
     return NextResponse.json({ error: 'Invalid guide.' }, { status: 400 });
@@ -39,11 +40,12 @@ export async function GET(request, { params }) {
   }
 }
 
-export async function PUT(request, { params }) {
+export async function PUT(request, { params: paramsPromise }) {
   if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: 'Admin login required.' }, { status: 401 });
   }
 
+  const params = await paramsPromise;
   const slug = params?.slug;
   if (!validSlug(slug)) {
     return NextResponse.json({ error: 'Invalid guide.' }, { status: 400 });

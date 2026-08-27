@@ -13,10 +13,11 @@ async function requireAdmin(request) {
 // The only field a snapshot can change after creation is `published` — a
 // visibility flag, not a correction. The `rows`/`metric`/`source` data
 // itself stays append-only; see the note in ../route.js.
-export async function PATCH(request, { params }) {
+export async function PATCH(request, { params: paramsPromise }) {
   const unauthorized = await requireAdmin(request);
   if (unauthorized) return unauthorized;
 
+  const params = await paramsPromise;
   const id = params?.id;
   if (!id) return NextResponse.json({ error: 'Missing snapshot id.' }, { status: 400 });
 
@@ -45,10 +46,11 @@ export async function PATCH(request, { params }) {
   return NextResponse.json({ snapshot: data });
 }
 
-export async function DELETE(request, { params }) {
+export async function DELETE(request, { params: paramsPromise }) {
   const unauthorized = await requireAdmin(request);
   if (unauthorized) return unauthorized;
 
+  const params = await paramsPromise;
   const id = params?.id;
   if (!id) return NextResponse.json({ error: 'Missing snapshot id.' }, { status: 400 });
 
