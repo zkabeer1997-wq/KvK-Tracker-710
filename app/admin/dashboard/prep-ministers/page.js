@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminShell from '../../../../components/admin/AdminShell';
 import TableSkeleton from '../../../../components/admin/TableSkeleton';
+import { Button, Field, Input, Select, Table } from '../../../../components/ui';
 import { schedule, OPEN_SPOT } from '../prepScheduler.mjs';
 
 const COLUMNS = [
@@ -213,36 +214,33 @@ export default function AdminPrepMinistersPage() {
             <div><span>Showing</span><strong>{visibleRows.length}</strong></div>
           </div>
           <div className="admin-filter-bar">
-            <label className="admin-filter-field">
-              Search (name or Member ID) &mdash; use % as wildcard
-              <input className="narrow" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. Legend%" />
-            </label>
-            <label className="admin-filter-field">Construction?
-              <select value={consFilter} onChange={(e) => setConsFilter(e.target.value)}><option value="">All</option><option value="Yes">Yes</option><option value="No">No</option></select>
-            </label>
-            <label className="admin-filter-field">Research?
-              <select value={resFilter} onChange={(e) => setResFilter(e.target.value)}><option value="">All</option><option value="Yes">Yes</option><option value="No">No</option></select>
-            </label>
-            <label className="admin-filter-field">Troop Training?
-              <select value={ttFilter} onChange={(e) => setTtFilter(e.target.value)}><option value="">All</option><option value="Yes">Yes</option><option value="No">No</option></select>
-            </label>
-            <button type="button" onClick={handleGenerate} className="logout-btn">Generate</button>
-            <button type="button" onClick={exportExcel} className="logout-btn">Export to Excel</button>
+            <Field label="Search (name or Member ID) — use % as wildcard">
+              <Input tone="console" className="narrow" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. Legend%" />
+            </Field>
+            <Field label="Construction?">
+              <Select tone="console" value={consFilter} onChange={(e) => setConsFilter(e.target.value)}><option value="">All</option><option value="Yes">Yes</option><option value="No">No</option></Select>
+            </Field>
+            <Field label="Research?">
+              <Select tone="console" value={resFilter} onChange={(e) => setResFilter(e.target.value)}><option value="">All</option><option value="Yes">Yes</option><option value="No">No</option></Select>
+            </Field>
+            <Field label="Troop Training?">
+              <Select tone="console" value={ttFilter} onChange={(e) => setTtFilter(e.target.value)}><option value="">All</option><option value="Yes">Yes</option><option value="No">No</option></Select>
+            </Field>
+            <Button variant="quiet" onClick={handleGenerate}>Generate</Button>
+            <Button variant="quiet" onClick={exportExcel}>Export to Excel</Button>
             {saveStatus && (<span className="prep-save-status">{saveStatus === 'saving' ? 'Saving…' : saveStatus === 'saved' ? 'Saved' : 'Save failed'}</span>)}
           </div>
           {loading && <TableSkeleton columns={COLUMNS.length} rows={7} />}
           {error && <div className="status error">{error}</div>}
           {!loading && !error && (
-            <div className="admin-table-wrap">
-              <table className="admin-table">
-                <thead><tr>{COLUMNS.map((col) => (<th key={col.key}>{col.label}</th>))}</tr></thead>
-                <tbody>
-                  {visibleRows.map((row) => (
-                    <tr key={row.id}>{COLUMNS.map((col) => (<td key={col.key}>{col.key === 'created_at' ? cellValue(row, col.key) : (<input className="admin-cell-input" value={cellValue(row, col.key)} onChange={(e) => updateCell(row.id, col.key, e.target.value)} />)}</td>))}</tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table>
+              <thead><tr>{COLUMNS.map((col) => (<th key={col.key}>{col.label}</th>))}</tr></thead>
+              <tbody>
+                {visibleRows.map((row) => (
+                  <tr key={row.id}>{COLUMNS.map((col) => (<td key={col.key}>{col.key === 'created_at' ? cellValue(row, col.key) : (<input className="admin-cell-input" value={cellValue(row, col.key)} onChange={(e) => updateCell(row.id, col.key, e.target.value)} />)}</td>))}</tr>
+                ))}
+              </tbody>
+            </Table>
           )}
           {result && (
             <div className="prep-results">

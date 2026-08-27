@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminShell from '../../../../components/admin/AdminShell';
 import TableSkeleton from '../../../../components/admin/TableSkeleton';
+import { Button, Input, Table } from '../../../../components/ui';
 
 // Columns used for search, sort, and CSV export (keeps every field).
 const COLUMNS = [
@@ -218,52 +219,50 @@ export default function AdminFlamedragonPage() {
       title="Flamedragon Tyrant"
       subtitle="K710 command board"
       onLogout={handleLogout}
-      actions={<button type="button" onClick={exportCsv} className="logout-btn">Export CSV</button>}
+      actions={<Button variant="quiet" onClick={exportCsv}>Export CSV</Button>}
     >
         <p className="admin-page-lead">Availability, levels, and heroes submitted through the public Flamedragon Tyrant form.</p>
         <div className="admin-toolbar">
-          <input
+          <Input
+            tone="console"
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by name, ID, alliance, availability..."
-            className="admin-search"
           />
           <span className="admin-count">{visibleRows.length} of {rows.length}</span>
         </div>
 
         {error && <div className="status error">{error}</div>}
 
-        <div className="admin-table-wrap">
-          {loading ? (
-            <TableSkeleton columns={TABLE_COLUMNS.length} rows={7} />
-          ) : (
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  {TABLE_COLUMNS.map((col) => (
-                    <th key={col.key} onClick={() => toggleSort(col.key)}>
-                      {col.label}{sortKey === col.key ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {visibleRows.length === 0 ? (
-                  <tr><td colSpan={TABLE_COLUMNS.length}>No submissions yet.</td></tr>
-                ) : (
-                  visibleRows.map((row) => (
-                    <tr key={row.member_id}>
-                      {TABLE_COLUMNS.map((col) => (
-                        <td key={col.key}>{renderCell(row, col.key)}</td>
-                      ))}
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          )}
-        </div>
+        {loading ? (
+          <TableSkeleton columns={TABLE_COLUMNS.length} rows={7} />
+        ) : (
+          <Table>
+            <thead>
+              <tr>
+                {TABLE_COLUMNS.map((col) => (
+                  <th key={col.key} onClick={() => toggleSort(col.key)}>
+                    {col.label}{sortKey === col.key ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {visibleRows.length === 0 ? (
+                <tr><td colSpan={TABLE_COLUMNS.length}>No submissions yet.</td></tr>
+              ) : (
+                visibleRows.map((row) => (
+                  <tr key={row.member_id}>
+                    {TABLE_COLUMNS.map((col) => (
+                      <td key={col.key}>{renderCell(row, col.key)}</td>
+                    ))}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </Table>
+        )}
     </AdminShell>
   );
 }

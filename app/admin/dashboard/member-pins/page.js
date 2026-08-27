@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import AdminShell from '../../../../components/admin/AdminShell';
 import ConfirmDialog from '../../../../components/admin/ConfirmDialog';
 import TableSkeleton from '../../../../components/admin/TableSkeleton';
-import styles from './page.module.css';
+import { Button, Callout, Field, Input, Panel, Table, Tag } from '../../../../components/ui';
 
 const EMPTY_MEMBER = { name: '', memberId: '', pin: '' };
 
@@ -195,9 +195,9 @@ export default function AdminMemberPinsPage() {
       subtitle="Access control"
       onLogout={handleLogout}
       actions={(
-        <button type="button" className="logout-btn" onClick={showCreate ? closeCreate : openCreate}>
+        <Button variant="quiet" onClick={showCreate ? closeCreate : openCreate}>
           {showCreate ? 'Cancel' : 'Create member'}
-        </button>
+        </Button>
       )}
       counters={[
         { label: 'Members', value: rows.length },
@@ -205,81 +205,67 @@ export default function AdminMemberPinsPage() {
         { label: 'Need reset', value: needsResetCount },
       ]}
     >
-      <section className={styles.notice}>
-        <div>
-          <span className={styles.noticeKicker}>Secure by design</span>
-          <h2>Existing PINs cannot be viewed.</h2>
-          <p>
-            Member PINs are stored as one-way hashes. Create a member with an initial 6-digit PIN,
-            or reset an existing member to a replacement PIN that is revealed here once for private copying.
-          </p>
-        </div>
-      </section>
+      <Callout tone="info" title="Existing PINs cannot be viewed." className="admin-page-callout">
+        Member PINs are stored as one-way hashes. Create a member with an initial 6-digit PIN,
+        or reset an existing member to a replacement PIN that is revealed here once for private copying.
+      </Callout>
 
       {showCreate && (
-        <form className={styles.createPanel} onSubmit={createMember}>
-          <div className={styles.createHeader}>
-            <div>
-              <span className={styles.noticeKicker}>New roster access</span>
-              <h2>Create member + PIN</h2>
-              <p>Adds the member to Player Records with a secure initial PIN. Troop and hero details can be filled in later.</p>
-            </div>
-          </div>
-          <div className={styles.createGrid}>
-            <label className={styles.field}>
-              <span>Name</span>
-              <input
-                value={newMember.name}
-                onChange={(event) => setCreateField('name', event.target.value)}
-                maxLength={120}
-                autoComplete="off"
-                placeholder="In-game name"
-                required
-              />
-            </label>
-            <label className={styles.field}>
-              <span>Member ID</span>
-              <input
-                value={newMember.memberId}
-                onChange={(event) => setCreateField('memberId', event.target.value)}
-                maxLength={120}
-                autoComplete="off"
-                placeholder="Member ID"
-                required
-              />
-            </label>
-            <label className={styles.field}>
-              <span>6-digit PIN</span>
-              <div className={styles.pinInputRow}>
-                <input
-                  value={newMember.pin}
-                  onChange={(event) => setCreateField('pin', event.target.value.replace(/\D/g, '').slice(0, 6))}
-                  inputMode="numeric"
-                  pattern="[0-9]{6}"
-                  maxLength={6}
-                  autoComplete="new-password"
-                  className={styles.pinInput}
-                  placeholder="000000"
+        <Panel eyebrow="New roster access" title="Create member + PIN" description="Adds the member to Player Records with a secure initial PIN. Troop and hero details can be filled in later." className="admin-page-panel">
+          <form onSubmit={createMember} className="member-pin-create-form">
+            {error && <Callout tone="danger">{error}</Callout>}
+            <div className="member-pin-create-grid">
+              <Field label="Name">
+                <Input
+                  tone="console"
+                  value={newMember.name}
+                  onChange={(event) => setCreateField('name', event.target.value)}
+                  maxLength={120}
+                  autoComplete="off"
+                  placeholder="In-game name"
                   required
                 />
-                <button type="button" className={styles.generateButton} onClick={regeneratePin}>
-                  Generate
-                </button>
-              </div>
-            </label>
-          </div>
-          <div className={styles.createActions}>
-            <button type="button" className={styles.secondaryButton} onClick={closeCreate} disabled={creating}>Cancel</button>
-            <button type="submit" className={styles.primaryButton} disabled={creating}>
-              {creating ? 'Creating...' : 'Create member'}
-            </button>
-          </div>
-        </form>
+              </Field>
+              <Field label="Member ID">
+                <Input
+                  tone="console"
+                  value={newMember.memberId}
+                  onChange={(event) => setCreateField('memberId', event.target.value)}
+                  maxLength={120}
+                  autoComplete="off"
+                  placeholder="Member ID"
+                  required
+                />
+              </Field>
+              <Field label="6-digit PIN">
+                <div className="member-pin-input-row">
+                  <Input
+                    tone="console"
+                    value={newMember.pin}
+                    onChange={(event) => setCreateField('pin', event.target.value.replace(/\D/g, '').slice(0, 6))}
+                    inputMode="numeric"
+                    pattern="[0-9]{6}"
+                    maxLength={6}
+                    autoComplete="new-password"
+                    className="member-pin-input"
+                    placeholder="000000"
+                    required
+                  />
+                  <Button variant="quiet" onClick={regeneratePin}>Generate</Button>
+                </div>
+              </Field>
+            </div>
+            <div className="member-pin-create-actions">
+              <Button variant="quiet" onClick={closeCreate} disabled={creating}>Cancel</Button>
+              <Button type="submit" disabled={creating}>{creating ? 'Creating...' : 'Create member'}</Button>
+            </div>
+          </form>
+        </Panel>
       )}
 
       <div className="admin-toolbar">
-        <input
-          className="admin-search"
+        <Input
+          tone="console"
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
@@ -290,70 +276,58 @@ export default function AdminMemberPinsPage() {
       </div>
 
       {status && <div className="status">{status}</div>}
-      {error && <div className="status error">{error}</div>}
 
-      <div className="admin-table-wrap">
-        {loading ? (
-          <TableSkeleton columns={4} rows={8} />
-        ) : (
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Member</th>
-                <th>Member ID</th>
-                <th>PIN</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visibleRows.length === 0 ? (
-                <tr><td colSpan="4">No members found.</td></tr>
-              ) : visibleRows.map((row) => {
-                const memberId = String(row.member_id);
-                const revealedPin = revealedPins[memberId];
-                const resetting = resettingId === memberId;
-                return (
-                  <tr key={memberId}>
-                    <td><strong>{row.name || '-'}</strong></td>
-                    <td><span className="member-id-cell">{memberId}</span></td>
-                    <td>
-                      {revealedPin ? (
-                        <div className={styles.revealBox}>
-                          <div>
-                            <span className={styles.revealLabel}>New PIN · shown once</span>
-                            <code className={styles.pinCode}>{revealedPin}</code>
-                          </div>
-                          <button
-                            type="button"
-                            className={styles.copyButton}
-                            onClick={() => copyPin(memberId, revealedPin)}
-                          >
-                            {copiedId === memberId ? 'Copied' : 'Copy'}
-                          </button>
+      {loading ? (
+        <TableSkeleton columns={4} rows={8} />
+      ) : (
+        <Table>
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Member ID</th>
+              <th>PIN</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visibleRows.length === 0 ? (
+              <tr><td colSpan="4">No members found.</td></tr>
+            ) : visibleRows.map((row) => {
+              const memberId = String(row.member_id);
+              const revealedPin = revealedPins[memberId];
+              const resetting = resettingId === memberId;
+              return (
+                <tr key={memberId}>
+                  <td><strong>{row.name || '-'}</strong></td>
+                  <td><span className="member-id-cell">{memberId}</span></td>
+                  <td>
+                    {revealedPin ? (
+                      <div className="member-pin-reveal">
+                        <div>
+                          <span className="member-pin-reveal-label">New PIN · shown once</span>
+                          <code className="member-pin-code">{revealedPin}</code>
                         </div>
-                      ) : (
-                        <span className={row.pin_status === 'secured' ? styles.securedBadge : styles.resetBadge}>
-                          {row.pin_status === 'secured' ? 'Protected · hidden' : 'Needs reset'}
-                        </span>
-                      )}
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        className="logout-btn"
-                        disabled={resetting}
-                        onClick={() => setConfirmRow(row)}
-                      >
-                        {resetting ? 'Resetting...' : 'Reset PIN'}
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </div>
+                        <Button variant="quiet" onClick={() => copyPin(memberId, revealedPin)}>
+                          {copiedId === memberId ? 'Copied' : 'Copy'}
+                        </Button>
+                      </div>
+                    ) : (
+                      <Tag tone={row.pin_status === 'secured' ? 'success' : 'accent'}>
+                        {row.pin_status === 'secured' ? 'Protected · hidden' : 'Needs reset'}
+                      </Tag>
+                    )}
+                  </td>
+                  <td>
+                    <Button variant="quiet" disabled={resetting} onClick={() => setConfirmRow(row)}>
+                      {resetting ? 'Resetting...' : 'Reset PIN'}
+                    </Button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </Table>
+      )}
 
       <ConfirmDialog
         open={Boolean(confirmRow)}
@@ -364,6 +338,21 @@ export default function AdminMemberPinsPage() {
         onCancel={() => setConfirmRow(null)}
         onConfirm={() => confirmRow && performReset(confirmRow)}
       />
+
+      <style>{`
+        .admin-page-callout{margin-bottom:18px}
+        .admin-page-panel{margin-bottom:20px}
+        .member-pin-create-form{display:flex;flex-direction:column;gap:14px}
+        .member-pin-create-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(220px,0.85fr);gap:14px}
+        .member-pin-input-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+        .member-pin-input{font-family:var(--font-mono-loaded),ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:800;letter-spacing:.16em}
+        .member-pin-create-actions{display:flex;justify-content:flex-end;gap:9px}
+        .member-pin-reveal{display:flex;align-items:center;gap:12px;width:fit-content;max-width:100%;padding:8px 10px 8px 12px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface)}
+        .member-pin-reveal-label{display:block;margin-bottom:2px;font-size:.64rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.7}
+        .member-pin-code{font-family:var(--font-mono-loaded),ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1rem;font-weight:800;letter-spacing:.16em}
+        @media(max-width:900px){.member-pin-create-grid{grid-template-columns:1fr 1fr}.member-pin-create-grid>:last-child{grid-column:1/-1}}
+        @media(max-width:720px){.member-pin-create-grid{grid-template-columns:1fr}.member-pin-create-grid>:last-child{grid-column:auto}.member-pin-input-row{grid-template-columns:1fr}.member-pin-create-actions{align-items:stretch;flex-direction:column-reverse}.member-pin-reveal{align-items:flex-start;flex-direction:column}}
+      `}</style>
     </AdminShell>
   );
 }

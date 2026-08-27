@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import AdminShell from '../../../components/admin/AdminShell';
 import ConfirmDialog from '../../../components/admin/ConfirmDialog';
 import TableSkeleton from '../../../components/admin/TableSkeleton';
+import { Button, Input, Table } from '../../../components/ui';
 import { useEscapeToClose } from '../../../lib/useEscapeToClose';
 import {
 RALLY_STORAGE_KEY,
@@ -430,16 +431,13 @@ counters={[
 { label: 'Rallies', value: rallyCount },
 ]}
 actions={(
-<>
-<button
-type="button"
+<Button
+variant="quiet"
 onClick={clearTestData}
-className="clear-test-data-btn"
 disabled={deletingIds.includes('__test_data__')}
 >
 {deletingIds.includes('__test_data__') ? 'Clearing...' : 'Clear test data'}
-</button>
-</>
+</Button>
 )}
 >
 <ConfirmDialog
@@ -483,7 +481,8 @@ onCancel={() => setConfirmState(null)}
 <div className="admin-actions">
 <div className="search-shell">
 <span>Search</span>
-<input
+<Input
+tone="console"
 type="text"
 placeholder="Search by name, member ID, hero, availability..."
 value={search}
@@ -507,12 +506,12 @@ className="admin-search"
 <p>{filteredSorted.length} shown</p>
 </div>
   <div className="roster-toolbar">
-  <button type="button" className="export-xlsx-btn" onClick={handleExportXlsx}>
+  <Button variant="quiet" onClick={handleExportXlsx}>
   Export to Excel
-  </button>
-  <button type="button" className="create-rally-btn" onClick={() => setShowAddMember(true)}>
+  </Button>
+  <Button onClick={() => setShowAddMember(true)}>
   + Add Member
-  </button>
+  </Button>
   </div>
   {showAddMember && (
   <div className="admin-drawer-overlay" role="presentation" onClick={() => setShowAddMember(false)}>
@@ -525,27 +524,26 @@ className="admin-search"
      {addMemberError && <div className="status error">{addMemberError}</div>}
       {addMemberStatus && <div className="status">{addMemberStatus}</div>}
         <div className="add-member-grid">
-        <input type="text" placeholder="Name" value={newMember.name} onChange={(e) => setNewMember({ ...newMember, name: e.target.value })} />
-        <input type="text" placeholder="Member ID" value={newMember.member_id} onChange={(e) => setNewMember({ ...newMember, member_id: e.target.value })} />
-        <input type="text" placeholder="Infantry tier" value={newMember.infantry_tier} onChange={(e) => setNewMember({ ...newMember, infantry_tier: e.target.value })} />
-        <input type="text" placeholder="Infantry TG" value={newMember.infantry_tg} onChange={(e) => setNewMember({ ...newMember, infantry_tg: e.target.value })} />
-        <input type="text" placeholder="Cavalry tier" value={newMember.cavalry_tier} onChange={(e) => setNewMember({ ...newMember, cavalry_tier: e.target.value })} />
-        <input type="text" placeholder="Cavalry TG" value={newMember.cavalry_tg} onChange={(e) => setNewMember({ ...newMember, cavalry_tg: e.target.value })} />
-        <input type="text" placeholder="Archer tier" value={newMember.archer_tier} onChange={(e) => setNewMember({ ...newMember, archer_tier: e.target.value })} />
-      <input type="text" placeholder="Archer TG" value={newMember.archer_tg} onChange={(e) => setNewMember({ ...newMember, archer_tg: e.target.value })} />
-      <input type="text" placeholder="Heroes (comma separated)" value={newMember.heroes} onChange={(e) => setNewMember({ ...newMember, heroes: e.target.value })} />
-      <input type="text" placeholder="Availability" value={newMember.availability} onChange={(e) => setNewMember({ ...newMember, availability: e.target.value })} />
-      <input type="text" placeholder="Alliance" value={newMember.current_alliance} onChange={(e) => setNewMember({ ...newMember, current_alliance: e.target.value })} />
+        <Input tone="console" type="text" placeholder="Name" value={newMember.name} onChange={(e) => setNewMember({ ...newMember, name: e.target.value })} />
+        <Input tone="console" type="text" placeholder="Member ID" value={newMember.member_id} onChange={(e) => setNewMember({ ...newMember, member_id: e.target.value })} />
+        <Input tone="console" type="text" placeholder="Infantry tier" value={newMember.infantry_tier} onChange={(e) => setNewMember({ ...newMember, infantry_tier: e.target.value })} />
+        <Input tone="console" type="text" placeholder="Infantry TG" value={newMember.infantry_tg} onChange={(e) => setNewMember({ ...newMember, infantry_tg: e.target.value })} />
+        <Input tone="console" type="text" placeholder="Cavalry tier" value={newMember.cavalry_tier} onChange={(e) => setNewMember({ ...newMember, cavalry_tier: e.target.value })} />
+        <Input tone="console" type="text" placeholder="Cavalry TG" value={newMember.cavalry_tg} onChange={(e) => setNewMember({ ...newMember, cavalry_tg: e.target.value })} />
+        <Input tone="console" type="text" placeholder="Archer tier" value={newMember.archer_tier} onChange={(e) => setNewMember({ ...newMember, archer_tier: e.target.value })} />
+      <Input tone="console" type="text" placeholder="Archer TG" value={newMember.archer_tg} onChange={(e) => setNewMember({ ...newMember, archer_tg: e.target.value })} />
+      <Input tone="console" type="text" placeholder="Heroes (comma separated)" value={newMember.heroes} onChange={(e) => setNewMember({ ...newMember, heroes: e.target.value })} />
+      <Input tone="console" type="text" placeholder="Availability" value={newMember.availability} onChange={(e) => setNewMember({ ...newMember, availability: e.target.value })} />
+      <Input tone="console" type="text" placeholder="Alliance" value={newMember.current_alliance} onChange={(e) => setNewMember({ ...newMember, current_alliance: e.target.value })} />
       </div>
-      <button type="submit" className="add-member-submit" disabled={addingMember}>
+      <Button type="submit" disabled={addingMember}>
     {addingMember ? 'Adding...' : 'Add member'}
-    </button>
+    </Button>
       </form>
     </div>
   </div>
   )}
-<div className="admin-table-wrap">
-<table className="admin-table">
+<Table>
 <thead>
 <tr>
 {COLUMNS.map((col) => (
@@ -628,9 +626,8 @@ disabled={deletingIds.includes(String(row.member_id))}
 </tr>
 ))}
 </tbody>
-</table>
+</Table>
 {filteredSorted.length === 0 && <p>No results found.</p>}
-</div>
 </section>
 <aside className="rally-sidebar" aria-label="Rally planner">
 <div className="rally-sidebar-header">

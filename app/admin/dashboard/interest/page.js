@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import AdminShell from '../../../../components/admin/AdminShell';
 import StatusBadge from '../../../../components/admin/StatusBadge';
 import TableSkeleton from '../../../../components/admin/TableSkeleton';
+import { Button, Field, Input, Select, Table } from '../../../../components/ui';
 import { useEscapeToClose } from '../../../../lib/useEscapeToClose';
 
 const COMPACT_COLUMNS = [
@@ -417,38 +418,34 @@ export default function AdminInterestPage() {
             </div>
           </div>
           <div className="admin-filter-bar">
-            <label className="admin-filter-field">
-              Search (Name, server, player ID, alliance) — use % as wildcard
-              <input className="narrow" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. Legend%" />
-            </label>
-            <label className="admin-filter-field">
-              Intake period
-              <select value={intakeFilter} onChange={(e) => setIntakeFilter(e.target.value)}>
+            <Field label="Search (Name, server, player ID, alliance) — use % as wildcard">
+              <Input tone="console" className="narrow" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. Legend%" />
+            </Field>
+            <Field label="Intake period">
+              <Select tone="console" value={intakeFilter} onChange={(e) => setIntakeFilter(e.target.value)}>
                 <option value="">All</option>
                 {intakeOptions.map((opt) => (<option key={opt} value={opt}>{opt}</option>))}
-              </select>
-            </label>
-            <label className="admin-filter-field">
-              Migrating to
-              <select value={migrateFilter} onChange={(e) => setMigrateFilter(e.target.value)}>
+              </Select>
+            </Field>
+            <Field label="Migrating to">
+              <Select tone="console" value={migrateFilter} onChange={(e) => setMigrateFilter(e.target.value)}>
                 <option value="">All</option>
                 {migrateOptions.map((opt) => (<option key={opt} value={opt}>{opt}</option>))}
-              </select>
-            </label>
-            <label className="admin-filter-field">
-              Current server
-              <select value={serverFilter} onChange={(e) => setServerFilter(e.target.value)}>
+              </Select>
+            </Field>
+            <Field label="Current server">
+              <Select tone="console" value={serverFilter} onChange={(e) => setServerFilter(e.target.value)}>
                 <option value="">All</option>
                 {serverOptions.map((opt) => (<option key={opt} value={opt}>{opt}</option>))}
-              </select>
-            </label>
-            <button type="button" onClick={exportExcel} className="logout-btn">Export to Excel</button>
+              </Select>
+            </Field>
+            <Button variant="quiet" onClick={exportExcel}>Export to Excel</Button>
           </div>
           {loading && <TableSkeleton columns={COMPACT_COLUMNS.length + 1} rows={7} />}
           {error && <div className="status error">{error}</div>}
           {!loading && !error && (
-            <div className="admin-table-wrap">
-              <table className="admin-table admin-compact-table">
+            <>
+              <Table className="admin-compact-table">
                 <thead>
                   <tr>
                     <th>Status</th>
@@ -473,9 +470,9 @@ export default function AdminInterestPage() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </Table>
               {visibleRows.length === 0 && <p>No interest submissions match your filters.</p>}
-            </div>
+            </>
           )}
 
           {selectedRow && (
