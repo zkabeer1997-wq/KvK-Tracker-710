@@ -12,11 +12,12 @@ import { readMemberSession } from './lib/memberAuth';
 // two lists below are the only places "does this route need a session"
 // is decided.
 //
-// /player-record itself (the Gatehouse login/register screen) and
-// /tools/* are deliberately NOT in ADMIN or MEMBER prefixes below:
-// the Gatehouse is where an unauthenticated visitor is supposed to land,
-// and the economy tools in /tools are meant to work for anonymous
-// visitors with manual entry, not just logged-in members (see PR 12).
+// /player-record itself (the Gatehouse login/register screen) is
+// deliberately NOT in ADMIN or MEMBER prefixes below: it's where an
+// unauthenticated visitor is supposed to land. Guides, Events, Rankings,
+// and Tools are member-gated (full lock, including sub-pages) per a
+// later decision to trade their public/SEO surface for members-only
+// access; see the plan addendum for the reasoning.
 const ADMIN_PREFIXES = ['/admin/dashboard'];
 const MEMBER_PREFIXES = [
   '/forms',
@@ -24,6 +25,10 @@ const MEMBER_PREFIXES = [
   '/power-profile',
   '/flamedragon',
   '/prep-phase-backpack',
+  '/guides',
+  '/events',
+  '/rankings',
+  '/tools',
 ];
 
 export const config = {
@@ -40,6 +45,14 @@ export const config = {
     '/flamedragon/:path*',
     '/prep-phase-backpack',
     '/prep-phase-backpack/:path*',
+    '/guides',
+    '/guides/:path*',
+    '/events',
+    '/events/:path*',
+    '/rankings',
+    '/rankings/:path*',
+    '/tools',
+    '/tools/:path*',
   ],
 };
 
@@ -61,7 +74,9 @@ export async function proxy(request) {
   if (matchesPrefix(pathname, MEMBER_PREFIXES)) {
     const session = await readMemberSession(request);
     if (!session) {
-      return NextResponse.redirect(new URL('/player-record', request.url));
+      const loginUrl = new URL('/player-record', request.url);
+      loginUrl.searchParams.set('next', pathname + request.nextUrl.search);
+      return NextResponse.redirect(loginUrl);
     }
     return NextResponse.next();
   }

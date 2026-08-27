@@ -1,25 +1,16 @@
 import Link from 'next/link';
 import AdventureStallOptimizer from '../AdventureStallOptimizer';
-import { toolSoftwareApplicationJsonLd } from '../../../lib/toolJsonLd';
 
 export const metadata = {
   title: 'Adventure Stall Optimizer | K710',
   description: 'Build your Adventure Stall reward cart and find the lowest-cost Shell pack combination across the event days remaining.',
-  alternates: { canonical: '/tools/adventure-stall' },
 };
-
-const jsonLd = toolSoftwareApplicationJsonLd({
-  name: 'Adventure Stall Optimizer',
-  description: 'Build your Adventure Stall reward cart and find the lowest-cost Shell pack combination across the event days remaining.',
-  path: '/tools/adventure-stall',
-});
 
 export default async function AdventureStallPage({ searchParams: searchParamsPromise }) {
   const searchParams = await searchParamsPromise;
   const memberId = typeof searchParams?.member_id === 'string' ? searchParams.member_id : '';
   const query = memberId ? `?member_id=${encodeURIComponent(memberId)}` : '';
   return <main className="armory as-page">
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     <div className="armory-atmos" aria-hidden="true"/><span className="armory-rack-l" aria-hidden="true"/><span className="armory-rack-r" aria-hidden="true"/>
     <div className="armory-inner as-inner">
       <div className="as-nav"><Link href={`/tools${query}`}>← Tools &amp; Calculators</Link><span className="k-mark">Special Event Shops</span></div>

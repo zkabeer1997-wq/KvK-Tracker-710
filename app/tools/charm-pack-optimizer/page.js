@@ -1,18 +1,10 @@
 import Link from 'next/link';
 import CharmPackOptimizer from '../CharmPackOptimizer';
-import { toolSoftwareApplicationJsonLd } from '../../../lib/toolJsonLd';
 
 export const metadata = {
   title: 'Charm Pack Optimizer',
   description: 'Plan all 18 Governor Charm upgrades and find the cheapest weekly pack schedule to hit your target levels.',
-  alternates: { canonical: '/tools/charm-pack-optimizer' },
 };
-
-const jsonLd = toolSoftwareApplicationJsonLd({
-  name: 'Charm Pack Optimizer',
-  description: 'Plan all 18 Governor Charm upgrades and find the cheapest weekly pack schedule to hit your target levels.',
-  path: '/tools/charm-pack-optimizer',
-});
 
 export default async function CharmPackOptimizerPage({ searchParams: searchParamsPromise }) {
   const searchParams = await searchParamsPromise;
@@ -21,7 +13,6 @@ export default async function CharmPackOptimizerPage({ searchParams: searchParam
 
   return (
     <main className="armory charm-pack-page">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="armory-atmos" aria-hidden="true" /><span className="armory-rack-l" aria-hidden="true" /><span className="armory-rack-r" aria-hidden="true" />
       <div className="armory-inner charm-pack-inner">
         <div className="charm-pack-nav"><Link href={`/tools${query}`}>← Tools &amp; Calculators</Link><span className="k-mark">Governor Charms</span></div>

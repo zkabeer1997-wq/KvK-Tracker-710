@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server';
 import { createAdminSupabaseClient } from '../../../../../lib/adminSupabase';
 import { buildIcsCalendar } from '../../../../../lib/ics';
+import { readMemberSession } from '../../../../../lib/memberAuth';
 
 const SLUG_RE = /^[a-z0-9-]{1,80}$/;
 
 export async function GET(request, { params: paramsPromise }) {
+  const session = await readMemberSession(request);
+  if (!session) {
+    return NextResponse.json({ error: 'Member login required.' }, { status: 401 });
+  }
+
   const params = await paramsPromise;
   const slug = params?.slug;
   if (!SLUG_RE.test(slug || '')) {

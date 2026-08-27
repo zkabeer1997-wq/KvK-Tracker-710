@@ -2,10 +2,19 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import MemberHub from '../../components/kingdom/world/MemberHub';
 import { Button, Field, Input } from '../../components/ui';
 
-export default function PlayerRecordGate({ banner }) {
+// Only an internal path is a safe redirect target - "//evil.com" is
+// protocol-relative and browsers will happily follow it off-site.
+function isSafeNext(next) {
+  return typeof next === 'string' && next.startsWith('/') && !next.startsWith('//');
+}
+
+export default function PlayerRecordGate({ banner, next }) {
+  const router = useRouter();
+  const safeNext = isSafeNext(next) ? next : null;
   const [memberId, setMemberId] = useState('');
   const [name, setName] = useState('');
   const [pin, setPin] = useState('');
@@ -27,12 +36,20 @@ export default function PlayerRecordGate({ banner }) {
 
   function openGate() {
     if (reduced) {
-      setUnlocked(true);
+      if (safeNext) {
+        router.push(safeNext);
+      } else {
+        setUnlocked(true);
+      }
       return;
     }
     setOpening(true);
     window.setTimeout(() => {
-      setUnlocked(true);
+      if (safeNext) {
+        router.push(safeNext);
+      } else {
+        setUnlocked(true);
+      }
       setOpening(false);
     }, 1500);
   }

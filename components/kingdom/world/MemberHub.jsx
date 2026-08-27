@@ -31,6 +31,20 @@ const destinations = [
     description: 'Strategy, event, and kingdom reference guides.',
     href: (id) => `/guides?member_id=${id}`,
   },
+  {
+    key: 'events',
+    kicker: 'The War Calendar',
+    title: 'Events',
+    description: 'Bear Hunt windows, KvK, Championship, and Swordland, in your local time.',
+    href: (id) => `/events?member_id=${id}`,
+  },
+  {
+    key: 'rankings',
+    kicker: 'The Honor Roll',
+    title: 'Rankings',
+    description: 'Kingdom, alliance, and player rankings with trend deltas.',
+    href: (id) => `/rankings?member_id=${id}`,
+  },
 ];
 
 function KingdomCrest() {
@@ -91,6 +105,32 @@ function StationSigil({ type }) {
           <path className="sigil-crown" d="M31 43 L35 29 L46 38 L55 27 L64 43 Z" strokeWidth="4.5" />
           <path d="M34 51 H62" strokeWidth="4" />
           <path d="M42 61 H54 V70 H42 Z" strokeWidth="4" />
+        </g>
+      </svg>
+    );
+  }
+
+  if (type === 'events') {
+    return (
+      <svg className="station-sigil station-sigil-events" viewBox="0 0 96 96" aria-hidden="true">
+        <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="20" y="24" width="56" height="52" rx="4" strokeWidth="5" />
+          <path d="M20 38 H76" strokeWidth="5" />
+          <path d="M32 16 V30 M64 16 V30" strokeWidth="5" />
+          <circle className="sigil-mark" cx="35" cy="52" r="4.5" fill="currentColor" stroke="none" />
+          <circle className="sigil-mark" cx="52" cy="52" r="4.5" fill="currentColor" stroke="none" />
+          <circle className="sigil-mark" cx="35" cy="65" r="4.5" fill="currentColor" stroke="none" />
+        </g>
+      </svg>
+    );
+  }
+
+  if (type === 'rankings') {
+    return (
+      <svg className="station-sigil station-sigil-rankings" viewBox="0 0 96 96" aria-hidden="true">
+        <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M48 16 L58 34 L78 37 L63 51 L67 71 L48 61 L29 71 L33 51 L18 37 L38 34 Z" strokeWidth="4.5" />
+          <path className="sigil-mark" d="M40 71 L34 84 L48 78 L62 84 L56 71" strokeWidth="4" />
         </g>
       </svg>
     );
@@ -190,7 +230,13 @@ export default function MemberHub({ memberId }) {
         .member-station-guides .member-relic-face{background:linear-gradient(90deg,#2b2419,#665337 48%,#241e16)}
         .member-station-guides .member-sigil-medallion{color:#d6b86f}
         .member-station-guides:hover :global(.sigil-page),.member-station-guides:focus-visible :global(.sigil-page){filter:drop-shadow(0 0 5px rgba(242,203,112,.5));transform:translateY(-1px)}
-        :global(.sigil-hammer),:global(.sigil-seal),:global(.sigil-crown),:global(.sigil-page){transition:transform var(--t-ui) var(--ease-cine),filter var(--t-ui) ease,color var(--t-ui) ease}
+        .member-station-events .member-relic-face{background:linear-gradient(90deg,#242c30,#4c6266 48%,#1f2729)}
+        .member-station-events .member-sigil-medallion{color:#b9d2c9}
+        .member-station-events:hover :global(.sigil-mark),.member-station-events:focus-visible :global(.sigil-mark){filter:drop-shadow(0 0 4px rgba(185,210,201,.55))}
+        .member-station-rankings .member-relic-face{background:linear-gradient(90deg,#2e2419,#6e5636 48%,#261e15)}
+        .member-station-rankings .member-sigil-medallion{color:#e3bd6a}
+        .member-station-rankings:hover :global(.sigil-mark),.member-station-rankings:focus-visible :global(.sigil-mark){filter:drop-shadow(0 0 5px rgba(239,205,112,.5))}
+        :global(.sigil-hammer),:global(.sigil-seal),:global(.sigil-crown),:global(.sigil-page),:global(.sigil-mark){transition:transform var(--t-ui) var(--ease-cine),filter var(--t-ui) ease,color var(--t-ui) ease}
         .member-plaque{margin-top:10px}
         @media(max-width:1000px){.member-chambers-inner{padding-top:112px}.member-relic-wrap{height:210px}.member-hall{row-gap:22px}.member-chambers-head{margin-bottom:20px}}
         @media(max-width:560px){.member-chambers-inner{padding-top:92px}.member-chambers-title{font-size:22px}.member-chambers-lede{font-size:15px}.member-relic-wrap{height:170px}.member-relic{width:150px}.member-sigil-medallion{width:72px;height:72px}.station-sigil{width:68px;height:68px}}

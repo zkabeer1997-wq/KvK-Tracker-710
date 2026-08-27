@@ -1,18 +1,10 @@
 import Link from 'next/link';
 import WaveboundCharmOptimizer from '../WaveboundCharmOptimizer';
-import { toolSoftwareApplicationJsonLd } from '../../../lib/toolJsonLd';
 
 export const metadata = {
   title: 'Wavebound Charm Merge Optimizer',
   description: 'Calculate the Tidal Treasure merges needed to reach a target Charm level, modeling the 75% Exquisite / 25% Majestic merge outcome.',
-  alternates: { canonical: '/tools/wavebound-charms' },
 };
-
-const jsonLd = toolSoftwareApplicationJsonLd({
-  name: 'Wavebound Charm Merge Optimizer',
-  description: 'Calculate the Tidal Treasure merges needed to reach a target Charm level, modeling the 75% Exquisite / 25% Majestic merge outcome.',
-  path: '/tools/wavebound-charms',
-});
 
 export default async function WaveboundCharmsPage({ searchParams: searchParamsPromise }) {
   const searchParams = await searchParamsPromise;
@@ -21,7 +13,6 @@ export default async function WaveboundCharmsPage({ searchParams: searchParamsPr
 
   return (
     <main className="armory wavebound-tool-page">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="armory-atmos" aria-hidden="true" />
       <span className="armory-rack-l" aria-hidden="true" />
       <span className="armory-rack-r" aria-hidden="true" />

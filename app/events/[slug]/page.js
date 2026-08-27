@@ -45,15 +45,14 @@ export async function generateMetadata({ params }) {
   const { slug } = await params;
   try {
     const event = await loadEvent(slug);
-    if (!event) return { title: 'Event | K710', alternates: { canonical: `/events/${slug}` } };
+    if (!event) return { title: 'Event | K710' };
     return {
       title: event.title,
       description: event.description || undefined,
       openGraph: { title: event.title, description: event.description || undefined },
-      alternates: { canonical: `/events/${slug}` },
     };
   } catch {
-    return { title: 'Event | K710', alternates: { canonical: `/events/${slug}` } };
+    return { title: 'Event | K710' };
   }
 }
 
@@ -78,24 +77,8 @@ export default async function EventPage({ params }) {
   }
   if (!event) notFound();
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Event',
-    name: event.title,
-    description: event.description || undefined,
-    startDate: event.starts_at,
-    endDate: event.ends_at || undefined,
-    eventAttendanceMode: 'https://schema.org/OnlineEventAttendanceMode',
-    eventStatus: 'https://schema.org/EventScheduled',
-    organizer: { '@type': 'Organization', name: 'Kingdom 710' },
-  };
-
   return (
     <main className="theme-realm event-page">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
       <div className="event-page-inner">
         <Link href="/events" className="event-back">← Events</Link>
         <Tag tone="accent">{KIND_LABEL[event.kind] || event.kind}</Tag>

@@ -4,7 +4,6 @@ import ToolsDirectory from './ToolsDirectory';
 export const metadata = {
   title: 'K710 Tools & Calculators',
   description: 'Economy optimizers for Kingdom 710 — Governor Charm pack planning, Wavebound Voyage merging, Flamedragon Tyrant, and Adventure Stall shop math.',
-  alternates: { canonical: '/tools' },
 };
 
 export default async function ToolsPage({ searchParams: searchParamsPromise }) {
