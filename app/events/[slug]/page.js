@@ -56,7 +56,23 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function EventPage({ params }) {
-  const event = await loadEvent(params.slug);
+  let event = null;
+  try {
+    event = await loadEvent(params.slug);
+  } catch (error) {
+    console.error('event page load failed', error);
+    // Same reasoning as the alliance detail page: a Supabase hiccup here
+    // is a different situation from a genuinely missing event, and
+    // shouldn't be silently relabeled as a 404 via notFound().
+    return (
+      <main className="theme-realm event-page" style={{ minHeight: '100vh', padding: '56px 24px', background: 'var(--color-bg)', color: 'var(--color-ink)' }}>
+        <div className="event-page-inner" style={{ maxWidth: 700, margin: '0 auto' }}>
+          <Link href="/events" className="event-back">← Events</Link>
+          <p className="event-description" style={{ marginTop: 16 }}>This event could not be loaded right now.</p>
+        </div>
+      </main>
+    );
+  }
   if (!event) notFound();
 
   const jsonLd = {

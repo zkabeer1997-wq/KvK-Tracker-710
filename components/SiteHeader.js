@@ -12,6 +12,7 @@ import { useState } from 'react';
 const NAV_LINKS = [
   { href: '/', label: 'Home' },
   { href: '/chronometer', label: 'About' },
+  { href: '/alliances', label: 'Alliances' },
   { href: '/guides', label: 'Guides' },
   { href: '/events', label: 'Events' },
   { href: '/tools', label: 'Tools' },
