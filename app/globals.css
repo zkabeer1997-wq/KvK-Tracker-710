@@ -398,6 +398,13 @@ button[type="submit"]:not(.k-btn):disabled { opacity: 0.5; cursor: not-allowed; 
 .site-footer-links { display: flex; gap: 18px; flex-wrap: wrap; }
 .site-footer-links a { display: inline-flex; align-items: center; min-height: 44px; padding: 4px 2px; color: var(--text-dim); text-decoration: none; font-size: 12.5px; font-weight: 600; }
 .site-footer-links a:hover { color: var(--gold-bright); }
+.site-footer-support {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px;
+  padding: 8px 16px; border: 1px solid var(--gold); border-radius: 999px;
+  color: var(--gold-bright); text-decoration: none; font-size: 12.5px; font-weight: 700;
+  letter-spacing: 0.02em; white-space: nowrap; transition: background-color .16s, color .16s;
+}
+.site-footer-support:hover { background: var(--gold); color: var(--ink); }
 @media (max-width: 640px) { .site-footer-inner { flex-direction: column; align-items: flex-start; } }
 
 /* Editable content blocks */

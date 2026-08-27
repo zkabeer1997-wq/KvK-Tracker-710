@@ -1,5 +1,9 @@
 import Link from 'next/link';
 
+// PLACEHOLDER — swap for the kingdom's real Ko-fi/Buy Me a Coffee page
+// before this ships to real visitors. This is not a live donation link.
+const SUPPORT_URL = 'https://ko-fi.com/k710hub';
+
 export default function SiteFooter() {
   return (
     <footer className="site-footer">
@@ -25,6 +29,14 @@ export default function SiteFooter() {
           <Link href="/interest">Join K710</Link>
           <Link href="/admin">Admin</Link>
         </nav>
+        <Link
+          href={SUPPORT_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="site-footer-support"
+        >
+          ☕ Support K710 Hub
+        </Link>
       </div>
     </footer>
   );
