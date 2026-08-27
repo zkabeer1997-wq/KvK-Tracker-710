@@ -7,6 +7,7 @@ export const metadata = {
   title: 'Chronometer Chamber',
   description:
     'The unbroken watch of Kingdom 710 — three alliances, seven Bear Hunt windows, continuous coverage across every timezone.',
+  alternates: { canonical: '/chronometer' },
 };
 
 // Recruitment copy still lives in content_blocks (page = 'home') and stays

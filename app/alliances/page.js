@@ -5,6 +5,7 @@ import { PageHeader, Card, Tag, EmptyState } from '../../components/ui';
 export const metadata = {
   title: 'Alliances',
   description: 'The three alliances of Kingdom 710 — 710, RED, and SKY. Roster size, timezone coverage, and recruiting status for each.',
+  alternates: { canonical: '/alliances' },
 };
 
 const STATUS_LABEL = { open: 'Recruiting', selective: 'Selective', closed: 'Closed' };

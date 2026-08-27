@@ -9,6 +9,7 @@ export const metadata = {
   title: { absolute: 'Kingdom 710 — Three Alliances. One Kingdom.' },
   description:
     'Kingdom 710 is a KvK-first Kingshot kingdom run across three coordinated alliances, with Bear Hunt coverage in every timezone and real war-room tooling.',
+  alternates: { canonical: '/' },
 };
 
 // Real content, server-rendered - the fix for the thing the whole portal

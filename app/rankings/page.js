@@ -5,6 +5,7 @@ import { PageHeader, Card, Tag, EmptyState, Table } from '../../components/ui';
 export const metadata = {
   title: 'Rankings',
   description: 'Kingdom, alliance, and player rankings for Kingdom 710 — ranked by a stated metric, dated, credited to a source, with trend deltas between snapshots.',
+  alternates: { canonical: '/rankings' },
 };
 
 // Rankings only change when an admin posts a new snapshot, so there's no

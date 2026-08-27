@@ -5,6 +5,7 @@ import InterestForm from './InterestForm';
 export const metadata = {
   title: 'The Registry',
   description: 'Petition the registry to transfer into Kingdom 710.',
+  alternates: { canonical: '/interest' },
 };
 
 export default async function InterestPage() {

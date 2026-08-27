@@ -7,6 +7,7 @@ import { Button, Card } from '../../components/ui';
 export const metadata = {
   title: 'About',
   description: 'About Kingdom 710 — a KvK-first Kingshot kingdom run across three coordinated alliances.',
+  alternates: { canonical: '/about' },
 };
 
 const DOCTRINE_KEYS = [

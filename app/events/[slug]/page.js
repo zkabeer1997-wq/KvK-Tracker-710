@@ -44,14 +44,15 @@ async function loadEvent(slug) {
 export async function generateMetadata({ params }) {
   try {
     const event = await loadEvent(params.slug);
-    if (!event) return { title: 'Event | K710' };
+    if (!event) return { title: 'Event | K710', alternates: { canonical: `/events/${params.slug}` } };
     return {
       title: event.title,
       description: event.description || undefined,
       openGraph: { title: event.title, description: event.description || undefined },
+      alternates: { canonical: `/events/${params.slug}` },
     };
   } catch {
-    return { title: 'Event | K710' };
+    return { title: 'Event | K710', alternates: { canonical: `/events/${params.slug}` } };
   }
 }
 

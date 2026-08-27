@@ -1,15 +1,25 @@
 import Link from 'next/link';
 import FlamedragonShopOptimizer from '../FlamedragonShopOptimizer';
+import { toolSoftwareApplicationJsonLd } from '../../../lib/toolJsonLd';
 
 export const metadata = {
   title: 'Flamedragon Tyrant Shop Optimizer | K710',
   description: 'Build a Dragon’s Caravan reward cart and find the cheapest Dragon Essence pack combination to buy it, plus a value guide for every shop item.',
+  alternates: { canonical: '/tools/flamedragon-shop' },
 };
+
+const jsonLd = toolSoftwareApplicationJsonLd({
+  name: 'Flamedragon Tyrant Shop Optimizer',
+  description: 'Build a Dragon’s Caravan reward cart and find the cheapest Dragon Essence pack combination to buy it, plus a value guide for every shop item.',
+  path: '/tools/flamedragon-shop',
+});
 
 export default function FlamedragonShopPage({ searchParams }) {
   const memberId = typeof searchParams?.member_id === 'string' ? searchParams.member_id : '';
   const query = memberId ? `?member_id=${encodeURIComponent(memberId)}` : '';
   return <main className="armory ft-shop-page">
+    {/* eslint-disable-next-line react/no-danger */}
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     <div className="armory-atmos" aria-hidden="true"/><span className="armory-rack-l" aria-hidden="true"/><span className="armory-rack-r" aria-hidden="true"/>
     <div className="armory-inner ft-shop-inner">
       <div className="ft-shop-nav"><Link href={`/tools${query}`}>← Tools &amp; Calculators</Link><span className="k-mark">Special Event Shops</span></div>

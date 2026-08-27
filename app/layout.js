@@ -43,7 +43,12 @@ const cormorant = Cormorant_Garamond({
   variable: '--font-narrative-loaded',
 });
 
+// The canonical production URL - every page's canonical tag and OG image
+// URL resolves against this. k710hub.vercel.app is the address named
+// throughout the portal plan itself; there's no purchased vanity domain
+// to point at instead.
 export const metadata = {
+  metadataBase: new URL('https://k710hub.vercel.app'),
   title: {
     default: 'K710 Hub',
     template: '%s · K710 Hub',
@@ -64,10 +69,21 @@ export const viewport = {
   initialScale: 1,
 };
 
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Kingdom 710',
+  alternateName: 'K710',
+  url: 'https://k710hub.vercel.app',
+  description: 'Kingdom 710 — a KvK-first Kingshot kingdom run across three coordinated alliances: 710, RED, and SKY.',
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${cinzel.variable} ${inter.variable} ${jetbrains.variable} ${cormorant.variable}`}>
       <body className="theme-console">
+        {/* eslint-disable-next-line react/no-danger */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
         <LanguageProvider>
           <FilipinoTagalogOptions />
           <SiteChrome>{children}</SiteChrome>

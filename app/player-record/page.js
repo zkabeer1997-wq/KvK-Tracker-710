@@ -4,6 +4,7 @@ import PlayerRecordGate from './PlayerRecordGate';
 
 export const metadata = {
 title: 'K710 KvK Availability',
+alternates: { canonical: '/player-record' },
 };
 
 export default async function PlayerRecordPage() {

@@ -6,6 +6,7 @@ import BearHuntSchedule from './BearHuntSchedule';
 export const metadata = {
   title: 'Events',
   description: 'Kingdom 710 event calendar — Bear Hunt windows, KvK, Championship, and Swordland, in your local time.',
+  alternates: { canonical: '/events' },
 };
 
 // Static generation alone would freeze "upcoming" at build time forever -

@@ -58,14 +58,15 @@ export async function generateMetadata({ params }) {
       .select('title, description, is_published')
       .eq('slug', slug)
       .maybeSingle();
-    if (!data || !data.is_published) return { title: 'Kingdom Guide | K710' };
+    if (!data || !data.is_published) return { title: 'Kingdom Guide | K710', alternates: { canonical: `/guides/${slug}` } };
     return {
       title: data.title,
       description: data.description || undefined,
       openGraph: { title: data.title, description: data.description || undefined },
+      alternates: { canonical: `/guides/${slug}` },
     };
   } catch {
-    return { title: 'Kingdom Guide | K710' };
+    return { title: 'Kingdom Guide | K710', alternates: { canonical: `/guides/${slug}` } };
   }
 }
 

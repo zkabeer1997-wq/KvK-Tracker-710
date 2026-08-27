@@ -35,12 +35,13 @@ async function loadAlliance(tagParam) {
 }
 
 export async function generateMetadata({ params }) {
+  const canonical = `/alliances/${String(params.tag || '').toLowerCase()}`;
   try {
     const alliance = await loadAlliance(params.tag);
-    if (!alliance) return { title: 'Alliance | K710' };
-    return { title: `${alliance.name} — K710`, description: alliance.blurb || undefined };
+    if (!alliance) return { title: 'Alliance | K710', alternates: { canonical } };
+    return { title: `${alliance.name} — K710`, description: alliance.blurb || undefined, alternates: { canonical } };
   } catch {
-    return { title: 'Alliance | K710' };
+    return { title: 'Alliance | K710', alternates: { canonical } };
   }
 }
 

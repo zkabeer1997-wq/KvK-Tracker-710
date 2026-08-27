@@ -3,6 +3,7 @@ import GateExperience from '../../components/kingdom/world/GateExperience';
 export const metadata = {
   title: 'The Gate',
   description: 'Enter Kingdom 710 through the Gate — choose your road into the realm.',
+  alternates: { canonical: '/gate' },
 };
 
 // The full cinematic that used to live at "/". It still renders with no
