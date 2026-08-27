@@ -1,45 +1,22 @@
-import { unstable_noStore as noStore } from 'next/cache';
 import { createAdminSupabaseClient } from '../../lib/adminSupabase';
+import GuidesDirectory from './GuidesDirectory';
 
 export const metadata = {
   title: 'K710 Guides',
   description: 'Kingdom 710 strategy, event, and member guides.',
 };
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-export const fetchCache = 'force-no-store';
-
-function GuideIcon({ index }) {
-  const marks = ['I', 'II', 'III', 'IV', 'V', 'VI'];
-  return (
-    <span className="guide-device" aria-hidden="true">
-      <svg className="guide-book" viewBox="0 0 120 120">
-        <defs>
-          <linearGradient id={`guideLeather${index}`} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#6e5430" />
-            <stop offset="55%" stopColor="#382818" />
-            <stop offset="100%" stopColor="#1c160f" />
-          </linearGradient>
-        </defs>
-        <path d="M27 18 H88 C95 18 100 23 100 30 V92 C100 98 95 102 89 102 H27 C22 102 18 98 18 93 V27 C18 22 22 18 27 18 Z" fill={`url(#guideLeather${index})`} stroke="#b78c42" strokeWidth="2.5" />
-        <path d="M29 25 H88 C91 25 93 27 93 30 V91 C93 94 91 96 88 96 H29 Z" fill="none" stroke="rgba(226,190,110,.42)" strokeWidth="1.5" />
-        <path d="M29 18 V102" stroke="#c69a4b" strokeWidth="5" opacity=".55" />
-        <path d="M43 42 H80 M43 55 H80 M43 68 H72" stroke="#d6bc82" strokeWidth="3" strokeLinecap="round" opacity=".65" />
-        <circle cx="61" cy="82" r="11" fill="#21180f" stroke="#c9a44e" strokeWidth="2" />
-        <text x="61" y="86" textAnchor="middle" fontFamily="Georgia, serif" fontSize="11" fill="#e7c978">{marks[index % marks.length]}</text>
-      </svg>
-      <span className="guide-device-glow" />
-    </span>
-  );
-}
-
+// Static now, not force-dynamic: guides change when an admin saves one, and
+// PUT /api/guides/[slug] already calls revalidatePath('/guides') on every
+// save (app/api/guides/[slug]/route.js), so there is no window where a
+// visitor sees stale content - the previous force-dynamic + noStore() paid
+// a Supabase round trip on every single request for content that changes
+// on the order of "whenever an admin edits a guide."
 async function loadGuides() {
-  noStore();
   const supabase = createAdminSupabaseClient();
   const { data, error } = await supabase
     .from('kingdom_guides')
-    .select('slug, title, category, description, position, updated_at')
+    .select('slug, title, category, description, body, position, updated_at')
     .eq('is_published', true)
     .order('position', { ascending: true })
     .order('title', { ascending: true });
@@ -49,8 +26,6 @@ async function loadGuides() {
 }
 
 export default async function GuidesPage({ searchParams }) {
-  noStore();
-
   const memberId = typeof searchParams?.member_id === 'string' ? searchParams.member_id : '';
   const query = memberId ? `?member_id=${encodeURIComponent(memberId)}` : '';
   const backHref = memberId ? `/player-record?member_id=${encodeURIComponent(memberId)}` : '/player-record';
@@ -80,36 +55,20 @@ export default async function GuidesPage({ searchParams }) {
         {loadError ? (
           <div className="guides-error k-narrative">{loadError}</div>
         ) : (
-          <div className="guides-directory" role="list">
-            {guides.map((guide, index) => (
-              <a key={guide.slug} href={`/guides/${guide.slug}${query}`} className="guide-entry" role="listitem">
-                <GuideIcon index={index} />
-                <span className="guide-entry-copy">
-                  <span className="k-mark guide-category">{guide.category}</span>
-                  <strong className="k-display">{guide.title}</strong>
-                  <span className="k-narrative guide-description">{guide.description}</span>
-                </span>
-                <span className="guide-entry-meta">
-                  <span>Read Guide</span>
-                  <b aria-hidden="true">→</b>
-                </span>
-              </a>
-            ))}
-          </div>
+          <GuidesDirectory guides={guides} query={query} backHref={backHref} />
         )}
-
-        <div className="guides-ledger">
-          <span className="k-mark">Library Ledger</span>
-          <p className="k-narrative">Guide titles and text are stored in Supabase. Admin renames are persisted to the same record used by this directory.</p>
-        </div>
-
-        <a href={backHref} className="guides-back">← Return to member hall</a>
       </div>
 
       <style>{`
         .guides-library{color:var(--parchment)}
         .guides-library-inner{width:min(1040px,100%)}
         .guides-library-head{margin-bottom:clamp(34px,6vh,62px)}
+        .guides-toolbar{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--edge)}
+        .guides-search{max-width:340px;flex:1 1 260px}
+        .guides-categories{display:flex;flex-wrap:wrap;gap:8px}
+        .guides-category-tab{padding:8px 14px;border:1px solid var(--edge);background:transparent;color:var(--t-muted);font-family:var(--font-body);font-size:12px;font-weight:700;letter-spacing:.04em;border-radius:999px;cursor:pointer;transition:border-color .16s,color .16s,background .16s}
+        .guides-category-tab:hover{border-color:var(--gold-aged);color:var(--parchment)}
+        .guides-category-tab.is-active{border-color:var(--gold-aged);background:rgba(201,164,78,.14);color:var(--gold-hot)}
         .guides-directory{border-top:1px solid var(--edge)}
         .guide-entry{display:grid;grid-template-columns:150px minmax(0,1fr) 112px;gap:26px;align-items:center;min-height:190px;padding:26px 6px;text-decoration:none;color:inherit;border-bottom:1px solid var(--edge);transition:background var(--t-ui) ease,padding var(--t-ui) var(--ease-cine)}
         .guide-entry:hover,.guide-entry:focus-visible{background:rgba(201,164,78,.055);padding-inline:18px;outline:none}
@@ -122,6 +81,7 @@ export default async function GuidesPage({ searchParams }) {
         .guide-category{color:var(--brass);font-size:10px;margin-bottom:8px}
         .guide-entry-copy strong{font-size:clamp(19px,2.5vw,28px);letter-spacing:.07em;color:var(--parchment)}
         .guide-description{margin-top:9px;color:var(--parchment-dim);font-size:15px;line-height:1.55;max-width:62ch}
+        .guide-entry-sub{margin-top:8px;color:var(--t-muted);font-family:var(--font-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}
         .guide-entry-meta{display:flex;flex-direction:column;align-items:flex-end;gap:12px;color:var(--brass);font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
         .guide-entry-meta b{font-size:24px;font-family:var(--font-body);font-weight:400;color:var(--gold-hot)}
         .guides-ledger{margin-top:38px;padding-top:22px;border-top:1px solid rgba(201,164,78,.16);max-width:66ch}
@@ -129,7 +89,7 @@ export default async function GuidesPage({ searchParams }) {
         .guides-back{display:inline-block;margin-top:34px;color:var(--brass);font-family:var(--font-body);font-size:12px;text-decoration:none;letter-spacing:.06em}
         .guides-back:hover{color:var(--gold-hot)}
         .guides-error{padding:28px 0;border-block:1px solid var(--edge);color:var(--parchment-dim)}
-        @media(max-width:700px){.guide-entry{grid-template-columns:92px minmax(0,1fr);gap:18px;padding-block:22px}.guide-entry-meta{grid-column:2;align-items:flex-start;flex-direction:row}.guide-device{height:104px}.guide-book{width:92px;height:92px}.guide-device-glow{width:70px;height:70px}.guide-entry:hover,.guide-entry:focus-visible{padding-inline:8px}.guides-library-inner{padding-top:86px}}
+        @media(max-width:700px){.guide-entry{grid-template-columns:92px minmax(0,1fr);gap:18px;padding-block:22px}.guide-entry-meta{grid-column:2;align-items:flex-start;flex-direction:row}.guide-device{height:104px}.guide-book{width:92px;height:92px}.guide-device-glow{width:70px;height:70px}.guide-entry:hover,.guide-entry:focus-visible{padding-inline:8px}.guides-library-inner{padding-top:86px}.guides-toolbar{flex-direction:column;align-items:stretch}}
         @media(prefers-reduced-motion:reduce){.guide-entry,.guide-book,.guide-device-glow{transition:none}}
       `}</style>
     </main>
