@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import GovernorGearOcr from '../../components/GovernorGearOcr';
 import {
 CHARM_LEVEL_OPTIONS,
 CHARM_SLOTS,
@@ -55,6 +56,24 @@ const next = { ...current, [key]: value };
 setForm((currentForm) => ({ ...currentForm, governor_gear: serializeGovernorGearSelections(next) }));
 return next;
 });
+}
+
+/** Apply OCR results for gear and/or charms in one pass. */
+function applyPowerDataScan({ gear, charms: charmSelections }) {
+if (gear && Object.keys(gear).length) {
+setGovernorGear((current) => {
+const next = { ...current, ...gear };
+setForm((currentForm) => ({ ...currentForm, governor_gear: serializeGovernorGearSelections(next) }));
+return next;
+});
+}
+if (charmSelections && Object.keys(charmSelections).length) {
+setCharms((current) => {
+const next = { ...current, ...charmSelections };
+setForm((currentForm) => ({ ...currentForm, charms: serializeCharmSelections(next) }));
+return next;
+});
+}
 }
 
 function updateCharm(key, value) {
@@ -200,9 +219,12 @@ Player profile on file - Governor Gear: {onFile.governor_gear || '-'} / Charms: 
 
 <div className="ledger-block">
   <div className="ledger-block-head">
-    <span className="ledger-block-kicker">Governor Armory</span>
-    <h3>Governor Gear</h3>
+    <span className="ledger-block-kicker">Power Data</span>
+    <h3>Governor Gear &amp; Charms</h3>
+    <p>Upload a screenshot to auto-fill gear pieces and charm levels, then verify the dropdowns.</p>
   </div>
+  <GovernorGearOcr onApply={applyPowerDataScan} />
+  <h4 className="power-subheader">Governor Gear</h4>
   <div className="ledger-gear-grid">
     {GOVERNOR_GEAR_SLOTS.map((slot) => (
       <label key={slot.key} className="ledger-select">
@@ -219,13 +241,8 @@ Player profile on file - Governor Gear: {onFile.governor_gear || '-'} / Charms: 
       </label>
     ))}
   </div>
-</div>
-
-<div className="ledger-block">
-  <div className="ledger-block-head">
-    <span className="ledger-block-kicker">Talisman Case</span>
-    <h3>Charms</h3>
-  </div>
+  <h4 className="power-subheader">Charms</h4>
+  <p className="hint" style={{ marginTop: 0 }}>Levels 1–22 (Kingshot Optimizer charm reference).</p>
   <div className="ledger-charm-grid">
     {CHARM_SLOTS.map((slot) => (
       <label key={slot.key} className="ledger-select">
