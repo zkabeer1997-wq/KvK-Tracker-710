@@ -4,18 +4,58 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-const NAV_ITEMS = [
-  { href: '/admin/dashboard', label: 'Player Records', match: '/admin/dashboard' },
-  { href: '/admin/dashboard/member-pins', label: 'Member PINs', match: '/admin/dashboard/member-pins' },
-  { href: '/admin/dashboard/interest', label: 'Transfer Requests', match: '/admin/dashboard/interest' },
-  { href: '/admin/dashboard/prep-ministers', label: 'Prep Ministers', match: '/admin/dashboard/prep-ministers' },
-  { href: '/admin/dashboard/flamedragon', label: 'Flamedragon Tyrant', match: '/admin/dashboard/flamedragon' },
-  { href: '/admin/dashboard/events', label: 'Events', match: '/admin/dashboard/events' },
-  { href: '/admin/dashboard/guides', label: 'Guides', match: '/admin/dashboard/guides' },
-  { href: '/admin/dashboard/alliances', label: 'Alliances', match: '/admin/dashboard/alliances' },
+const NAV_SECTIONS = [
+  {
+    id: 'dashboard',
+    label: 'Dashboard Panel',
+    items: [
+      { href: '/admin/dashboard/overview', label: 'Dashboard', match: '/admin/dashboard/overview' },
+    ],
+  },
+  {
+    id: 'website',
+    label: 'Website Management',
+    items: [
+      { href: '/admin/dashboard/guides', label: 'Guides', match: '/admin/dashboard/guides' },
+      { href: '/admin/dashboard/events', label: 'Events', match: '/admin/dashboard/events' },
+      { href: '/admin/dashboard/alliances', label: 'Alliances', match: '/admin/dashboard/alliances' },
+    ],
+  },
+  {
+    id: 'member',
+    label: 'Member and Transfer Management',
+    items: [
+      { href: '/admin/dashboard/member-pins', label: 'Member PINs', match: '/admin/dashboard/member-pins' },
+      { href: '/admin/dashboard/interest', label: 'Transfer Requests', match: '/admin/dashboard/interest' },
+    ],
+  },
+  {
+    id: 'kvk',
+    label: 'KvK Management',
+    items: [
+      { href: '/admin/dashboard/prep-ministers', label: 'Prep Ministers', match: '/admin/dashboard/prep-ministers' },
+      { href: '/admin/dashboard', label: 'Player Records', match: '/admin/dashboard' },
+    ],
+  },
+  {
+    id: 'flamedragon',
+    label: 'Flamedragon Management',
+    items: [
+      { href: '/admin/dashboard/flamedragon', label: 'Flamedragon Tyrant', match: '/admin/dashboard/flamedragon' },
+    ],
+  },
 ];
 
 const MODE_KEY = 'k710-warroom-mode';
+const SIDEBAR_KEY = 'k710-admin-sidebar-collapsed';
+const SECTIONS_KEY = 'k710-admin-nav-sections';
+
+function isNavActive(pathname, match) {
+  if (match === '/admin/dashboard') {
+    return pathname === '/admin/dashboard';
+  }
+  return pathname === match || pathname.startsWith(match + '/');
+}
 
 /**
  * THE WAR ROOM
@@ -32,15 +72,49 @@ const MODE_KEY = 'k710-warroom-mode';
 export default function AdminShell({ title, subtitle, actions, onLogout, counters = [], children }) {
   const pathname = usePathname();
   const [mode, setMode] = useState('ledger');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [openSections, setOpenSections] = useState(() =>
+    Object.fromEntries(NAV_SECTIONS.map((s) => [s.id, true])),
+  );
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(MODE_KEY);
-      if (saved === 'command' || saved === 'ledger') setMode(saved);
+      const savedMode = localStorage.getItem(MODE_KEY);
+      if (savedMode === 'command' || savedMode === 'ledger') setMode(savedMode);
+
+      const savedSidebar = localStorage.getItem(SIDEBAR_KEY);
+      if (savedSidebar === '1') setSidebarCollapsed(true);
+
+      const savedSections = localStorage.getItem(SECTIONS_KEY);
+      if (savedSections) {
+        const parsed = JSON.parse(savedSections);
+        if (parsed && typeof parsed === 'object') {
+          setOpenSections((prev) => ({ ...prev, ...parsed }));
+        }
+      }
     } catch {
       /* private mode */
     }
   }, []);
+
+  // Auto-open the section that contains the active page
+  useEffect(() => {
+    const activeSection = NAV_SECTIONS.find((section) =>
+      section.items.some((item) => isNavActive(pathname, item.match)),
+    );
+    if (activeSection) {
+      setOpenSections((prev) => {
+        if (prev[activeSection.id]) return prev;
+        const next = { ...prev, [activeSection.id]: true };
+        try {
+          localStorage.setItem(SECTIONS_KEY, JSON.stringify(next));
+        } catch {
+          /* private mode */
+        }
+        return next;
+      });
+    }
+  }, [pathname]);
 
   function choose(next) {
     setMode(next);
@@ -51,56 +125,137 @@ export default function AdminShell({ title, subtitle, actions, onLogout, counter
     }
   }
 
+  function toggleSidebar() {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(SIDEBAR_KEY, next ? '1' : '0');
+      } catch {
+        /* private mode */
+      }
+      return next;
+    });
+  }
+
+  function toggleSection(id) {
+    setOpenSections((prev) => {
+      const next = { ...prev, [id]: !prev[id] };
+      try {
+        localStorage.setItem(SECTIONS_KEY, JSON.stringify(next));
+      } catch {
+        /* private mode */
+      }
+      return next;
+    });
+  }
+
   return (
-    <div className={`admin-shell warroom-${mode}`}>
+    <div className={`admin-shell warroom-${mode}${sidebarCollapsed ? ' admin-sidebar-is-collapsed' : ''}`}>
       <div className="warroom-atmos" aria-hidden="true" />
 
-      <aside className="admin-sidebar">
-        <div className="admin-sidebar-brand">
-          <svg viewBox="0 0 40 40" fill="none" aria-hidden="true">
-            <path d="M20 3 L35 8 V19 C35 28 29 34 20 37 C11 34 5 28 5 19 V8 Z" stroke="currentColor" strokeWidth="1.6" />
-          </svg>
-          <div>
-            <span className="admin-sidebar-brand-k">K710</span>
-            <span className="admin-sidebar-brand-sub">War Room</span>
+      <aside className={`admin-sidebar${sidebarCollapsed ? ' is-collapsed' : ''}`}>
+        <div className="admin-sidebar-top">
+          <div className="admin-sidebar-brand">
+            <svg viewBox="0 0 40 40" fill="none" aria-hidden="true">
+              <path d="M20 3 L35 8 V19 C35 28 29 34 20 37 C11 34 5 28 5 19 V8 Z" stroke="currentColor" strokeWidth="1.6" />
+            </svg>
+            {!sidebarCollapsed && (
+              <div>
+                <span className="admin-sidebar-brand-k">K710</span>
+                <span className="admin-sidebar-brand-sub">War Room</span>
+              </div>
+            )}
           </div>
+          <button
+            type="button"
+            className="admin-sidebar-toggle"
+            onClick={toggleSidebar}
+            aria-expanded={!sidebarCollapsed}
+            aria-label={sidebarCollapsed ? 'Expand menu' : 'Collapse menu'}
+            title={sidebarCollapsed ? 'Expand menu' : 'Collapse menu'}
+          >
+            <span className="admin-sidebar-toggle-arrow" aria-hidden="true">
+              {sidebarCollapsed ? '»' : '«'}
+            </span>
+          </button>
         </div>
 
         <nav className="admin-sidebar-nav" aria-label="War room sections">
-          {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.match;
+          {NAV_SECTIONS.map((section) => {
+            const isOpen = openSections[section.id] !== false;
+            const sectionHasActive = section.items.some((item) => isNavActive(pathname, item.match));
             return (
-              <Link key={item.href} href={item.href} className={isActive ? 'active' : ''} aria-current={isActive ? 'page' : undefined}>
-                {item.label}
-              </Link>
+              <div
+                key={section.id}
+                className={`admin-nav-section${sectionHasActive ? ' has-active' : ''}${isOpen ? ' is-open' : ''}`}
+              >
+                <button
+                  type="button"
+                  className="admin-nav-section-header"
+                  onClick={() => toggleSection(section.id)}
+                  aria-expanded={isOpen}
+                  title={section.label}
+                >
+                  <span className="admin-nav-section-label">{section.label}</span>
+                  {!sidebarCollapsed && (
+                    <span className="admin-nav-section-chevron" aria-hidden="true">
+                      {isOpen ? '▾' : '▸'}
+                    </span>
+                  )}
+                </button>
+                {(isOpen || sidebarCollapsed) && (
+                  <div className="admin-nav-section-items" role="group" aria-label={section.label}>
+                    {section.items.map((item) => {
+                      const isActive = isNavActive(pathname, item.match);
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className={isActive ? 'active' : ''}
+                          aria-current={isActive ? 'page' : undefined}
+                          title={item.label}
+                        >
+                          {sidebarCollapsed ? item.label.charAt(0) : item.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             );
           })}
         </nav>
 
         <div className="admin-sidebar-bottom">
-          <div className="warroom-modes" role="group" aria-label="War room view">
-            <button
-              type="button"
-              className="warroom-mode"
-              data-on={mode === 'command'}
-              aria-pressed={mode === 'command'}
-              onClick={() => choose('command')}
-            >
-              Command
-            </button>
-            <button
-              type="button"
-              className="warroom-mode"
-              data-on={mode === 'ledger'}
-              aria-pressed={mode === 'ledger'}
-              onClick={() => choose('ledger')}
-            >
-              Ledger
-            </button>
-          </div>
-          <Link href="/" className="admin-sidebar-view-site">View Public Site</Link>
+          {!sidebarCollapsed && (
+            <div className="warroom-modes" role="group" aria-label="War room view">
+              <button
+                type="button"
+                className="warroom-mode"
+                data-on={mode === 'command'}
+                aria-pressed={mode === 'command'}
+                onClick={() => choose('command')}
+              >
+                Command
+              </button>
+              <button
+                type="button"
+                className="warroom-mode"
+                data-on={mode === 'ledger'}
+                aria-pressed={mode === 'ledger'}
+                onClick={() => choose('ledger')}
+              >
+                Ledger
+              </button>
+            </div>
+          )}
+          <Link href="/" className="admin-sidebar-view-site" title="View Public Site">
+            {sidebarCollapsed ? 'Site' : 'View Public Site'}
+          </Link>
           {onLogout && (
-            <button type="button" className="admin-sidebar-logout" onClick={onLogout}>Log Out</button>
+            <button type="button" className="admin-sidebar-logout" onClick={onLogout} title="Log Out">
+              {sidebarCollapsed ? 'Out' : 'Log Out'}
+            </button>
           )}
         </div>
       </aside>

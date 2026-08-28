@@ -1,6 +1,7 @@
 import './tokens.css';
 import '../components/ui/primitives.css';
 import './globals.css';
+import './admin-panel.css';
 import './kingdom.css';
 import './i18n.css';
 import { Cinzel, Inter, JetBrains_Mono, Cormorant_Garamond } from 'next/font/google';
