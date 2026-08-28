@@ -5,15 +5,10 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { SUPPORT_URL } from '../lib/supportLink';
 
-// The real, currently-live route surface. /about (PR 10) is the
-// canonical "About Kingdom 710" destination; /chronometer keeps its own
-// deeper recruitment-narrative treatment (full hunt windows, the transfer
-// march) and stays reachable from the Gate's "Request Entry" road and
-// from a link on /about itself, without occupying the main nav slot.
 const NAV_LINKS = [
   { href: '/', label: 'Home' },
   { href: '/about', label: 'About' },
-  { href: '/alliances', label: 'Alliances' },
+  { href: '/timeline', label: 'Timeline' },
   { href: '/guides', label: 'Guides' },
   { href: '/events', label: 'Events' },
   { href: '/tools', label: 'Tools' },
@@ -24,9 +19,6 @@ export default function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  // Guides/tools/admin have detail routes below them (/guides/[slug],
-  // /tools/*, /admin/*); highlight the parent nav item on those too, not
-  // just an exact path match.
   function isActive(href) {
     if (href === '/') return pathname === '/';
     return pathname === href || pathname.startsWith(`${href}/`);
