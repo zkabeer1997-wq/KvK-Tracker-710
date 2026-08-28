@@ -3,6 +3,7 @@ import HomeEditableText from '../components/HomeEditableText';
 import { getHomeContent, checkIsAdmin } from '../lib/homeContent';
 import { HUNTS } from '../lib/bearHuntSchedule';
 import Chronometer from '../components/kingdom/world/Chronometer';
+import HomeForgeIntro from '../components/kingdom/world/HomeForgeIntro';
 import { Button, Tag } from '../components/ui';
 
 export const metadata = {
@@ -44,6 +45,8 @@ export default async function HomePage() {
 
   return (
     <main className="theme-realm home-page">
+      <HomeForgeIntro />
+
       <section className="home-command-hero">
         <div className="home-gate-art" aria-hidden="true">
           <span className="home-gate-tower home-gate-tower-left" />
