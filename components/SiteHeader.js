@@ -45,7 +45,7 @@ export default function SiteHeader() {
               {link.label}
             </Link>
           ))}
-          <Link href="/interest" className="site-nav-cta">Join K710</Link>
+          <Link href="/chronometer" className="site-nav-cta">Join K710</Link>
           <Link href="/admin" className="site-nav-admin">Admin</Link>
           <Link href={SUPPORT_URL} target="_blank" rel="noopener noreferrer" className="site-nav-support">
             ☕ Support K710 Hub
@@ -72,7 +72,7 @@ export default function SiteHeader() {
               {link.label}
             </Link>
           ))}
-          <Link href="/interest" onClick={() => setOpen(false)} className="site-nav-cta">Join K710</Link>
+          <Link href="/chronometer" onClick={() => setOpen(false)} className="site-nav-cta">Join K710</Link>
           <Link href="/admin" onClick={() => setOpen(false)} className="site-nav-admin">Admin</Link>
           <Link
             href={SUPPORT_URL}

@@ -22,7 +22,7 @@ export default function SiteFooter() {
           <Link href="/events">Events</Link>
           <Link href="/tools">Tools</Link>
           <Link href="/player-record">Members</Link>
-          <Link href="/interest">Join K710</Link>
+          <Link href="/chronometer">Join K710</Link>
           <Link href="/admin">Admin</Link>
         </nav>
         <Link

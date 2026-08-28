@@ -66,7 +66,7 @@ export default async function HomePage() {
           <h1 className="home-hero-title">{field('hero-title', { as: 'span' })}</h1>
           <p className="home-hero-sub">{field('hero-sub', { as: 'span', multiline: true })}</p>
           <div className="home-hero-actions">
-            <Button href="/interest" variant="struck">Join K710</Button>
+            <Button href="/chronometer" variant="struck">Join K710</Button>
             <Button href="/player-record" variant="quiet">Member Login</Button>
           </div>
           <Chronometer />
@@ -112,14 +112,6 @@ export default async function HomePage() {
         </Link>
       </section>
 
-      {/* ---- Events teaser ---- */}
-      <section className="home-section home-events">
-        <Card className="home-events-card">
-          <h2 className="home-section-title">{field('events-title')}</h2>
-          <p className="home-section-sub">{field('events-body', { multiline: true })}</p>
-        </Card>
-      </section>
-
       {/* ---- Command deck (members) ---- */}
       <section className="home-section">
         <header className="home-section-head">
@@ -143,7 +135,7 @@ export default async function HomePage() {
         <p className="home-section-sub">
           Bring your name, your strength, and your intent. The council reviews every petition.
         </p>
-        <Button href="/interest" variant="struck">Approach the Registry</Button>
+        <Button href="/chronometer" variant="struck">Approach the Registry</Button>
       </section>
     </main>
   );
