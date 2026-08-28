@@ -259,7 +259,7 @@ const STATIONS = [
 
 const DEPTHS = [0.9, 1, 1, 0.9];
 
-export default function MusterHall({ memberId }) {
+export default function MusterHall({ memberId, closedKeys = [] }) {
   const [hot, setHot] = useState(null);
   const encoded = encodeURIComponent(memberId);
 
@@ -294,6 +294,7 @@ export default function MusterHall({ memberId }) {
         <nav className="hall" aria-label="Muster hall stations">
           {STATIONS.map((s, i) => {
             const Art = s.art;
+            const isClosed = closedKeys.includes(s.key);
             return (
               <Link
                 key={s.key}
@@ -301,6 +302,7 @@ export default function MusterHall({ memberId }) {
                 className="hall-station"
                 style={{ '--depth': DEPTHS[i] }}
                 data-hot={hot === s.key}
+                data-closed={isClosed}
                 onMouseEnter={() => setHot(s.key)}
                 onMouseLeave={() => setHot((h) => (h === s.key ? null : h))}
                 onFocus={() => setHot(s.key)}
@@ -313,7 +315,8 @@ export default function MusterHall({ memberId }) {
                 <span className="hall-plaque">
                   <span className="k-mark hall-kicker">{s.kicker}</span>
                   <span className="k-display hall-title">{s.title}</span>
-                  <span className="k-narrative hall-line">{s.line}</span>
+                  <span className="k-narrative hall-line">{isClosed ? 'Closed for now.' : s.line}</span>
+                  {isClosed && <span className="hall-closed-tag">Closed</span>}
                 </span>
               </Link>
             );

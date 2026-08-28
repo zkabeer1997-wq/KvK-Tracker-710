@@ -1,21 +1,27 @@
-'use client';
-
 import { Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import PrepBackpackForm from './PrepBackpackForm';
+import { checkIsAdmin } from '../../lib/contentBlocks';
+import { getFormGate } from '../../lib/formGates.mjs';
+import FormClosedNotice from '../../components/FormClosedNotice';
+import PrepBackpackClient from './PrepBackpackClient';
 
-function PrepBackpackInner() {
-  const searchParams = useSearchParams();
-  const memberId = searchParams.get('member_id') || '';
-  return <PrepBackpackForm initialMemberId={memberId} />;
-}
+export default async function PrepBackpackPage() {
+  const [isAdmin, gate] = await Promise.all([checkIsAdmin(), getFormGate('prep')]);
 
-export default function PrepBackpackPage() {
+  if (gate.is_open === false && !isAdmin) {
+    return (
+      <main className="page public-page">
+        <div className="public-shell single-form prep-wide">
+          <FormClosedNotice message={gate.message} />
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="page public-page">
       <div className="public-shell single-form prep-wide">
         <Suspense fallback={null}>
-          <PrepBackpackInner />
+          <PrepBackpackClient />
         </Suspense>
       </div>
     </main>

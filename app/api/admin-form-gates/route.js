@@ -1,0 +1,63 @@
+import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
+import { isAdminRequest } from '../../../lib/adminAuth';
+import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
+import { FORM_GATE_KEYS, getFormGates } from '../../../lib/formGates.mjs';
+
+const ROUTE_BY_KEY = {
+  lead: '/power-profile',
+  joiner: '/player-record/form',
+  prep: '/prep-phase-backpack',
+  dragon: '/flamedragon',
+};
+
+async function requireAdmin(request) {
+  if (!(await isAdminRequest(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  return null;
+}
+
+export async function GET(request) {
+  const unauthorized = await requireAdmin(request);
+  if (unauthorized) return unauthorized;
+
+  const gates = await getFormGates();
+  return NextResponse.json({ gates: FORM_GATE_KEYS.map((key) => gates[key]) });
+}
+
+export async function PATCH(request) {
+  const unauthorized = await requireAdmin(request);
+  if (unauthorized) return unauthorized;
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 });
+  }
+
+  const formKey = String(body.form_key || '');
+  if (!FORM_GATE_KEYS.includes(formKey)) {
+    return NextResponse.json({ error: 'Unknown form key.' }, { status: 400 });
+  }
+
+  const supabase = createAdminSupabaseClient();
+  const { data, error } = await supabase
+    .from('form_gates')
+    .upsert({
+      form_key: formKey,
+      is_open: body.is_open !== false,
+      message: body.message ? String(body.message) : '',
+      updated_at: new Date().toISOString(),
+    })
+    .select('*')
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  revalidatePath('/forms');
+  revalidatePath(ROUTE_BY_KEY[formKey]);
+
+  return NextResponse.json({ gate: data });
+}
