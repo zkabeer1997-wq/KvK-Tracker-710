@@ -35,7 +35,7 @@ export default function GovernorGearOcr({ onApply }) {
     <div className={`gear-ocr-panel ${state}`}>
       <div>
         <strong>Scan Governor Gear</strong>
-        <p>Upload the full, uncropped Governor Profile screen. PNG, JPEG, or WebP; up to 8 MB.</p>
+        <p>Upload the full, uncropped Governor Profile screen. The preview uses Kingshot Optimizer's OCR service. PNG, JPEG, or WebP; up to 8 MB.</p>
       </div>
       <input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={scan} hidden />
       <button type="button" className="gear-ocr-button" onClick={() => inputRef.current?.click()} disabled={state === 'loading'}>
