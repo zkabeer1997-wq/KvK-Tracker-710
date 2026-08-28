@@ -1,8 +1,6 @@
 import Link from 'next/link';
 
-// PLACEHOLDER — swap for the kingdom's real Ko-fi/Buy Me a Coffee page
-// before this ships to real visitors. This is not a live donation link.
-const SUPPORT_URL = 'https://ko-fi.com/k710hub';
+const SUPPORT_URL = 'https://ko-fi.com/zenzen710';
 
 export default function SiteFooter() {
   return (
