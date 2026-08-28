@@ -9,17 +9,14 @@ export const metadata = {
     'Kingdom 710 event calendar — Bear Hunt windows, KvK, Championship, and Swordland, with live countdowns in your local time.',
 };
 
-// Revalidate so newly published admin events appear without a redeploy.
 export const revalidate = 300;
 
 async function loadUpcomingEvents() {
   const supabase = createAdminSupabaseClient();
-  // Include events that started in the last day so live/just-ended still show;
-  // prefer not-yet-ended when ends_at is set.
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const { data, error } = await supabase
     .from('events')
-    .select('slug, title, kind, description, starts_at, ends_at')
+    .select('slug, title, kind, description, body_md, starts_at, ends_at')
     .eq('published', true)
     .gte('starts_at', cutoff)
     .order('starts_at', { ascending: true });
@@ -54,7 +51,7 @@ export default async function EventsPage() {
         <section className="events-section">
           <h2 className="events-section-title">Upcoming events</h2>
           <p className="events-section-lede">
-            Published from the Admin Panel. Each card shows a countdown, full timings, and the short description set by leadership.
+            Published from the Admin Panel. Tap a card for full details without leaving this page.
           </p>
           {loadError ? (
             <Card className="events-error">{loadError}</Card>

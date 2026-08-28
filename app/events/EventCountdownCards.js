@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import { useEffect, useId, useState } from 'react';
 
 const KIND_LABEL = {
   kvk: 'KvK',
@@ -53,6 +52,16 @@ function useNow(tickMs = 1000) {
   return now;
 }
 
+function eventStatus(event, now = Date.now()) {
+  const startMs = new Date(event.starts_at).getTime();
+  const endMs = event.ends_at ? new Date(event.ends_at).getTime() : null;
+  const notStarted = now < startMs;
+  const inProgress = !notStarted && (endMs == null || now < endMs);
+  if (inProgress) return { status: 'live', startMs, endMs, notStarted, inProgress };
+  if (!notStarted) return { status: 'ended', startMs, endMs, notStarted, inProgress };
+  return { status: 'upcoming', startMs, endMs, notStarted, inProgress };
+}
+
 function CountdownBlock({ targetMs, label, live }) {
   const parts = splitDuration(targetMs - Date.now());
   const done = targetMs <= Date.now();
@@ -71,38 +80,36 @@ function CountdownBlock({ targetMs, label, live }) {
   );
 }
 
-function EventCard({ event }) {
+function EventBody({ body }) {
+  if (!body) return null;
+  // Admin body is markdown-ish plain text; render as paragraphs without a full MD dep here.
+  const blocks = String(body).trim().split(/\n{2,}/);
+  return (
+    <div className="ev-body">
+      {blocks.map((block, i) => (
+        <p key={i}>{block.split('\n').map((line, j) => (j === 0 ? line : [<br key={j} />, line]))}</p>
+      ))}
+    </div>
+  );
+}
+
+function EventDetailPanel({ event }) {
   useNow(1000);
-  const startMs = new Date(event.starts_at).getTime();
-  const endMs = event.ends_at ? new Date(event.ends_at).getTime() : null;
-  const now = Date.now();
-  const notStarted = now < startMs;
-  const inProgress = !notStarted && (endMs == null || now < endMs);
+  const { status, startMs, endMs, notStarted, inProgress } = eventStatus(event);
   const range = formatRange(event.starts_at, event.ends_at);
 
-  let status = 'upcoming';
-  if (inProgress) status = 'live';
-  else if (!notStarted) status = 'ended';
-
   return (
-    <article className={`ev-card ev-card-${status}`}>
+    <>
       <div className="ev-card-top">
         <span className="ev-kind">{KIND_LABEL[event.kind] || event.kind}</span>
         <span className={`ev-status ev-status-${status}`}>
           {status === 'live' ? 'Live now' : status === 'ended' ? 'Ended' : 'Upcoming'}
         </span>
       </div>
+      <h3 className="ev-card-title">{event.title}</h3>
 
-      <h3 className="ev-card-title">
-        <Link href={`/events/${event.slug}`}>{event.title}</Link>
-      </h3>
-
-      {notStarted && (
-        <CountdownBlock targetMs={startMs} label="Starts in" />
-      )}
-      {inProgress && endMs && (
-        <CountdownBlock targetMs={endMs} label="Ends in" live />
-      )}
+      {notStarted && <CountdownBlock targetMs={startMs} label="Starts in" />}
+      {inProgress && endMs && <CountdownBlock targetMs={endMs} label="Ends in" live />}
       {inProgress && !endMs && (
         <div className="ev-countdown ev-countdown-live">
           <span className="ev-countdown-label">In progress</span>
@@ -126,35 +133,131 @@ function EventCard({ event }) {
         </div>
       ) : null}
 
+      <EventBody body={event.body_md} />
+
       <div className="ev-card-actions">
-        <Link href={`/events/${event.slug}`} className="ev-link-detail">
-          Event details →
-        </Link>
         <a href={`/api/events/${event.slug}/ics`} className="ev-link-ics">
           📅 Add to calendar
         </a>
       </div>
+    </>
+  );
+}
+
+function EventCard({ event, onOpen }) {
+  useNow(1000);
+  const { status, startMs, endMs, notStarted, inProgress } = eventStatus(event);
+  const range = formatRange(event.starts_at, event.ends_at);
+
+  return (
+    <article className={`ev-card ev-card-${status}`}>
+      <button type="button" className="ev-card-hit" onClick={() => onOpen(event)} aria-label={`Open details for ${event.title}`}>
+        <div className="ev-card-top">
+          <span className="ev-kind">{KIND_LABEL[event.kind] || event.kind}</span>
+          <span className={`ev-status ev-status-${status}`}>
+            {status === 'live' ? 'Live now' : status === 'ended' ? 'Ended' : 'Upcoming'}
+          </span>
+        </div>
+
+        <h3 className="ev-card-title">{event.title}</h3>
+
+        {notStarted && <CountdownBlock targetMs={startMs} label="Starts in" />}
+        {inProgress && endMs && <CountdownBlock targetMs={endMs} label="Ends in" live />}
+        {inProgress && !endMs && (
+          <div className="ev-countdown ev-countdown-live">
+            <span className="ev-countdown-label">In progress</span>
+          </div>
+        )}
+
+        <div className="ev-timings">
+          <div className="ev-timing-row">
+            <span className="ev-timing-label">Your local time</span>
+            <span className="ev-timing-value">{range.local}</span>
+          </div>
+          <div className="ev-timing-row">
+            <span className="ev-timing-label">UTC</span>
+            <span className="ev-timing-value muted">{range.utc}</span>
+          </div>
+        </div>
+
+        {event.description ? (
+          <div className="ev-desc-box">
+            <p>{event.description}</p>
+          </div>
+        ) : null}
+
+        <span className="ev-open-hint">Tap for full details</span>
+      </button>
     </article>
   );
 }
 
+function EventModal({ event, onClose }) {
+  const titleId = useId();
+
+  useEffect(() => {
+    if (!event) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    function onKey(e) {
+      if (e.key === 'Escape') onClose();
+    }
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [event, onClose]);
+
+  if (!event) return null;
+
+  return (
+    <div className="ev-modal-root" role="presentation">
+      <button type="button" className="ev-modal-backdrop" aria-label="Close event details" onClick={onClose} />
+      <div
+        className="ev-modal-sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+      >
+        <div className="ev-modal-handle" aria-hidden="true" />
+        <div className="ev-modal-head">
+          <h2 id={titleId} className="ev-modal-title-sr">{event.title}</h2>
+          <button type="button" className="ev-modal-close" onClick={onClose} aria-label="Close">
+            ✕
+          </button>
+        </div>
+        <div className="ev-modal-body">
+          <EventDetailPanel event={event} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /**
- * @param {{ events: Array<{ slug: string, title: string, kind: string, description?: string, starts_at: string, ends_at?: string }> }}
+ * @param {{ events: Array<{ slug: string, title: string, kind: string, description?: string, body_md?: string, starts_at: string, ends_at?: string }> }}
  */
 export default function EventCountdownCards({ events }) {
+  const [open, setOpen] = useState(null);
+
   if (!events?.length) return null;
 
   return (
     <div className="ev-cards">
       {events.map((event) => (
-        <EventCard key={event.slug} event={event} />
+        <EventCard key={event.slug} event={event} onOpen={setOpen} />
       ))}
+
+      <EventModal event={open} onClose={() => setOpen(null)} />
 
       <style>{`
         .ev-cards{display:flex;flex-direction:column;gap:18px}
-        .ev-card{padding:22px 24px;border:1px solid var(--color-border);border-radius:var(--radius-lg);background:var(--color-surface);display:flex;flex-direction:column;gap:14px;transition:border-color .16s,box-shadow .16s}
+        .ev-card{border:1px solid var(--color-border);border-radius:var(--radius-lg);background:var(--color-surface);transition:border-color .16s,box-shadow .16s,transform .16s}
         .ev-card:hover{border-color:var(--color-accent)}
         .ev-card-live{border-color:rgba(62,207,142,.45);box-shadow:0 0 0 1px rgba(62,207,142,.15)}
+        .ev-card-hit{display:flex;flex-direction:column;gap:14px;width:100%;padding:22px 24px;margin:0;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer;font:inherit;border-radius:inherit}
+        .ev-card-hit:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}
         .ev-card-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
         .ev-kind{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:4px 10px;border-radius:999px;background:rgba(180,140,255,.14);color:var(--color-accent-strong)}
         .ev-status{font-size:12px;font-weight:700}
@@ -162,8 +265,6 @@ export default function EventCountdownCards({ events }) {
         .ev-status-live{color:#3ecf8e}
         .ev-status-ended{color:var(--color-ink-muted)}
         .ev-card-title{margin:0;font-family:var(--font-display);font-size:clamp(20px,3vw,26px);line-height:1.2}
-        .ev-card-title a{color:inherit;text-decoration:none}
-        .ev-card-title a:hover{color:var(--color-accent-strong)}
         .ev-countdown{display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-radius:12px;background:var(--color-surface-alt);border:1px solid var(--color-border)}
         .ev-countdown-live{border-color:rgba(62,207,142,.35)}
         .ev-countdown-label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--color-ink-muted);font-weight:700}
@@ -178,14 +279,32 @@ export default function EventCountdownCards({ events }) {
         .ev-timing-value.muted{font-weight:500;color:var(--color-ink-muted);font-size:12.5px}
         .ev-desc-box{padding:12px 14px;border-radius:10px;background:rgba(0,0,0,.12);border:1px solid var(--color-border)}
         .ev-desc-box p{margin:0;font-size:14px;line-height:1.55;color:var(--color-ink-muted)}
+        .ev-body{display:flex;flex-direction:column;gap:10px;font-size:14.5px;line-height:1.6;color:var(--color-ink)}
+        .ev-body p{margin:0}
         .ev-card-actions{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding-top:2px}
-        .ev-link-detail{font-size:13px;font-weight:700;color:var(--color-accent-strong);text-decoration:none}
-        .ev-link-detail:hover{text-decoration:underline}
-        .ev-link-ics{font-size:12.5px;color:var(--color-ink-muted);text-decoration:none}
-        .ev-link-ics:hover{color:var(--color-accent-strong)}
+        .ev-link-ics{font-size:13px;font-weight:700;color:var(--color-accent-strong);text-decoration:none}
+        .ev-link-ics:hover{text-decoration:underline}
+        .ev-open-hint{font-size:12.5px;font-weight:700;color:var(--color-accent-strong)}
+
+        .ev-modal-root{position:fixed;inset:0;z-index:80;display:flex;align-items:flex-end;justify-content:center}
         @media (min-width:720px){
+          .ev-modal-root{align-items:center;padding:24px}
           .ev-timing-row{flex-direction:row;justify-content:space-between;align-items:baseline;gap:12px}
         }
+        .ev-modal-backdrop{position:absolute;inset:0;border:0;padding:0;margin:0;cursor:pointer;background:rgba(4,8,16,.72);backdrop-filter:blur(4px)}
+        .ev-modal-sheet{position:relative;z-index:1;width:min(560px,100%);max-height:min(88vh,900px);overflow:auto;background:var(--color-surface);border:1px solid var(--color-border);border-radius:20px 20px 0 0;padding:12px 20px 28px;box-shadow:0 -12px 40px rgba(0,0,0,.35);animation:ev-sheet-in .22s ease-out}
+        @media (min-width:720px){
+          .ev-modal-sheet{border-radius:16px;padding:20px 24px 28px;animation:ev-panel-in .2s ease-out}
+          .ev-modal-handle{display:none}
+        }
+        .ev-modal-handle{width:40px;height:4px;border-radius:999px;background:var(--color-border);margin:4px auto 10px}
+        .ev-modal-head{display:flex;justify-content:flex-end;margin-bottom:4px}
+        .ev-modal-title-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+        .ev-modal-close{border:1px solid var(--color-border);background:var(--color-surface-alt);color:var(--color-ink);width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:14px;line-height:1}
+        .ev-modal-close:hover{border-color:var(--color-accent)}
+        .ev-modal-body{display:flex;flex-direction:column;gap:14px}
+        @keyframes ev-sheet-in{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}
+        @keyframes ev-panel-in{from{transform:scale(.97);opacity:0}to{transform:scale(1);opacity:1}}
       `}</style>
     </div>
   );
