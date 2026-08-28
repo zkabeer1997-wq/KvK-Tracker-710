@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: '/admin/dashboard/prep-ministers', label: 'Prep Ministers', match: '/admin/dashboard/prep-ministers' },
   { href: '/admin/dashboard/flamedragon', label: 'Flamedragon Tyrant', match: '/admin/dashboard/flamedragon' },
   { href: '/admin/dashboard/events', label: 'Events', match: '/admin/dashboard/events' },
+  { href: '/admin/dashboard/guides', label: 'Guides', match: '/admin/dashboard/guides' },
   { href: '/admin/dashboard/alliances', label: 'Alliances', match: '/admin/dashboard/alliances' },
 ];
 
