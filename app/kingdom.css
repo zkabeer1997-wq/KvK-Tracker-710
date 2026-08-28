@@ -1515,121 +1515,44 @@
    surface to a warmer display face is still open, see PR 2's notes.
    ============================================================ */
 
-.home-page { background: var(--color-bg); color: var(--color-ink); }
+.home-page { background: #eee8dc; color: var(--color-ink); overflow: hidden; }
+.home-command-hero { position: relative; min-height: 720px; padding: clamp(56px, 8vw, 108px) clamp(20px, 5vw, 72px) 0; background: #070910; color: var(--hero-ink); isolation: isolate; }
+.home-command-hero::after { content: ''; position: absolute; inset: 0; z-index: -1; background: radial-gradient(ellipse 65% 70% at 71% 42%, transparent 30%, rgba(4,5,10,.42) 75%), linear-gradient(90deg, rgba(4,5,10,.94) 0%, rgba(4,5,10,.58) 47%, rgba(4,5,10,.18) 100%); }
+.home-gate-art { position: absolute; inset: 0; z-index: -2; overflow: hidden; background: var(--gate-fallback-gradient); opacity: .9; }
+.home-gate-tower { position: absolute; bottom: 80px; width: 12%; height: 62%; background: linear-gradient(90deg, #090b12, #181a22 52%, #07080c); box-shadow: 0 -8px 0 #08090e; }
+.home-gate-tower::before { content: ''; position: absolute; inset: -24px -8px auto; height: 30px; background: linear-gradient(90deg, #07080c 0 14%, transparent 14% 28%, #07080c 28% 43%, transparent 43% 57%, #07080c 57% 72%, transparent 72% 86%, #07080c 86%); }
+.home-gate-tower-left { left: 58%; }.home-gate-tower-right { right: 4%; }
+.home-gate-arch { position: absolute; right: 12%; bottom: 80px; width: 29%; height: 48%; border: clamp(34px, 5vw, 72px) solid #10121a; border-bottom: 0; border-radius: 48% 48% 0 0; box-shadow: inset 0 0 50px #020308, 0 -15px 50px rgba(229,146,56,.08); }
+.home-gate-road { position: absolute; right: 8%; bottom: -12%; width: 39%; height: 62%; background: linear-gradient(90deg, transparent, rgba(218,164,86,.14), transparent); clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%); }
+.home-command-wrap { position: relative; width: min(1280px, 100%); margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(360px, .85fr); align-items: center; gap: clamp(44px, 7vw, 100px); }
+.home-hero-copy { max-width: 680px; display: flex; flex-direction: column; align-items: flex-start; gap: 20px; }
+.home-hero-copy .k-mark { color: var(--gold-hot); }
+.home-hero-title { margin: 0; font: 800 clamp(40px, 5.4vw, 76px)/1.02 var(--font-display); letter-spacing: -.03em; text-transform: uppercase; text-wrap: balance; color: var(--hero-ink); text-shadow: 0 4px 24px rgba(0,0,0,.58); }
+.home-hero-sub { max-width: 62ch; margin: 0; font: 500 clamp(18px, 1.6vw, 22px)/1.55 var(--font-narrative); color: var(--hero-ink-muted); text-wrap: pretty; }
+.home-status-line { display: inline-flex; align-items: center; gap: 9px; font: 700 11px/1 var(--font-body); letter-spacing: .11em; text-transform: uppercase; color: #e9d9bd; }
+.home-status-pulse { width: 8px; height: 8px; border-radius: 50%; background: #7db978; box-shadow: 0 0 0 4px rgba(125,185,120,.14); }
+.home-hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 4px; }
+.home-hero-actions .ui-btn-quiet { color: var(--hero-ink); border-color: rgba(255,246,228,.42); }.home-hero-actions .ui-btn-quiet:hover { color: #fff; border-color: var(--hero-ink); background: rgba(255,255,255,.09); }
+.home-watch { width: min(100%, 450px); justify-self: end; padding: 18px 22px 20px; background: rgba(8,10,18,.72); border-top: 1px solid rgba(230,201,141,.42); border-bottom: 1px solid rgba(230,201,141,.24); }
+.home-watch-heading { display: flex; justify-content: space-between; gap: 16px; font: 700 10px/1 var(--font-body); letter-spacing: .14em; text-transform: uppercase; color: var(--brass-bright); }.home-watch-heading a { color: #c8c0b1; letter-spacing: .03em; text-transform: none; text-decoration: none; }
+.home-watch .chrono { margin: 14px auto 0; max-width: 390px; }.home-watch .chrono-dial { width: min(100%, 300px); }.home-watch .chrono-rail { margin-top: -8px; }.home-watch .chrono-read { padding: 10px 12px; }.home-watch .chrono-utc { font-size: clamp(17px,2vw,23px); }
+.home-hunt-strip { position: relative; width: min(1280px, calc(100% + clamp(40px,10vw,144px))); margin: 54px auto 0; min-height: 68px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 22px; padding: 14px clamp(20px,3vw,34px); background: #11141f; border-top: 1px solid rgba(201,164,78,.3); }
+.home-hunt-label,.home-hunt-zone { font: 700 10px/1.2 var(--font-body); letter-spacing: .13em; text-transform: uppercase; color: #a9a28f; }.home-hunt-times { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px; font: 600 12px/1.2 var(--font-mono); color: #ded7ca; }.home-hunt-times b { color: var(--brass-bright); }.home-hunt-times [data-band='RED'] b { color: #da7b89; }.home-hunt-times [data-band='SKY'] b { color: #82aee9; }
+.home-paths { display: grid; grid-template-columns: 1fr 1fr; width: min(1180px, calc(100% - 40px)); margin: -1px auto 0; background: #f7f4ed; border-bottom: 1px solid #c9bea9; }
+.home-path { min-height: 250px; padding: clamp(32px,4vw,54px); display: flex; flex-direction: column; align-items: flex-start; color: #1b1a18; text-decoration: none; transition: background 220ms var(--ease-cine), color 220ms var(--ease-cine); }.home-path + .home-path { border-left: 1px solid #c9bea9; }.home-path-index { margin-bottom: auto; font: 700 11px/1 var(--font-body); letter-spacing: .1em; text-transform: uppercase; color: #6c6253; }.home-path strong { margin-top: 38px; font: 800 clamp(23px,2.8vw,36px)/1.1 var(--font-display); letter-spacing: -.02em; text-wrap: balance; }.home-path > span:not(.home-path-index) { max-width: 47ch; margin-top: 10px; color: #615b51; line-height: 1.5; }.home-path i { margin-top: 20px; font: 700 13px/1 var(--font-body); color: #7c5b1b; font-style: normal; }.home-path:hover { background: #1b2130; color: #fff5e1; }.home-path:hover span,.home-path:hover i { color: #d9cdb6; }
+.home-doctrine-section,.home-alliance-section,.home-operations-section { width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: clamp(78px,10vw,132px) 0; }
+.home-doctrine-section { display: grid; grid-template-columns: minmax(270px,.8fr) minmax(0,1.2fr); gap: clamp(50px,8vw,120px); }.home-doctrine-intro { align-self: start; position: sticky; top: 110px; }.home-doctrine-intro .k-mark,.home-alliance-heading .k-mark,.home-operations-heading .k-mark { color: #785d24; }.home-doctrine-intro h2,.home-alliance-heading h2,.home-operations-heading h2 { margin: 13px 0 18px; font: 800 clamp(30px,4vw,50px)/1.08 var(--font-display); letter-spacing: -.03em; text-transform: uppercase; text-wrap: balance; }.home-doctrine-intro p,.home-alliance-heading p,.home-operations-heading p { max-width: 56ch; margin: 0; color: #514d46; font-size: 16px; line-height: 1.65; }.home-doctrine-intro a,.home-section-more { display: inline-block; margin-top: 26px; color: #6d511a; font-weight: 700; font-size: 13px; text-decoration: none; }
+.home-doctrine-list { border-top: 1px solid #bcb19d; }.home-doctrine-list article { display: grid; grid-template-columns: 54px 1fr; gap: 24px; padding: 34px 0; border-bottom: 1px solid #bcb19d; }.home-doctrine-list article > span { font: 700 12px/1 var(--font-mono); color: #8a6b2d; }.home-doctrine-list h3 { margin: 0 0 9px; font: 700 clamp(20px,2.3vw,28px)/1.2 var(--font-display); letter-spacing: -.015em; }.home-doctrine-list p { margin: 0; color: #575149; line-height: 1.65; max-width: 60ch; }
+.home-alliance-section { border-top: 1px solid #bcb19d; }.home-alliance-heading { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: end; margin-bottom: 48px; }.home-alliance-heading h2 { margin-bottom: 0; }.home-alliance-banners { display: flex; flex-direction: column; }.home-alliance-banner { --band:#9b792f; display: grid; grid-template-columns: 100px 1fr minmax(210px,.45fr); gap: 30px; align-items: center; min-height: 152px; padding: 24px 30px; color: #f3ead7; background: #151821; border-bottom: 1px solid rgba(255,255,255,.12); box-shadow: inset 6px 0 0 var(--band); }.home-alliance-banner[data-band='RED'] { --band:#a3283c; background:#1d151b; }.home-alliance-banner[data-band='SKY'] { --band:#3f74bd; background:#131b28; }.home-alliance-sigil { display: flex; justify-content: center; }.home-alliance-copy h3 { margin: 0 0 7px; font: 800 24px/1 var(--font-display); }.home-alliance-copy p { margin:0; color:#c6c0b5; line-height:1.5; }.home-alliance-times { padding-left: 28px; border-left: 1px solid rgba(255,255,255,.16); display:flex; flex-direction:column; gap:5px; }.home-alliance-times span,.home-alliance-times small { color:#9f9b92; font:700 10px/1 var(--font-body); letter-spacing:.12em; text-transform:uppercase; }.home-alliance-times strong { font:600 15px/1.4 var(--font-mono); color:#f0dfb8; }
+.home-section-more { display:block; text-align:right; }.home-section-more:hover,.home-doctrine-intro a:hover { text-decoration:underline; }
+.home-operations-section { display:grid; grid-template-columns:minmax(240px,.55fr) 1fr; gap:clamp(44px,7vw,100px); padding-top:40px; }.home-operations-heading h2 { margin-bottom:14px; }.home-deck { border-top:1px solid #a89d8a; }.home-deck-item { display:grid; grid-template-columns:72px 1fr 30px; align-items:center; gap:18px; min-height:90px; padding:18px 12px; border-bottom:1px solid #a89d8a; color:#1c1a17; text-decoration:none; transition:padding 200ms var(--ease-cine), background 200ms var(--ease-cine); }.home-deck-item:hover { padding-inline:20px; background:#f8f4e9; }.home-deck-mark { font:700 10px/1 var(--font-body); letter-spacing:.12em; text-transform:uppercase; color:#74571d; }.home-deck-copy { display:flex; flex-direction:column; gap:5px; }.home-deck-copy strong { font:700 18px/1.2 var(--font-display); }.home-deck-copy small { font:600 11px/1.2 var(--font-body); letter-spacing:.07em; text-transform:uppercase; color:#696259; }.home-deck-arrow { font-size:20px; color:#886621; transition:transform 200ms var(--ease-cine); }.home-deck-item:hover .home-deck-arrow { transform:translate(3px,-3px); }.home-deck-featured { background:#e6dcc8; }
+.home-transfer-panel { width:min(1280px,calc(100% - 40px)); margin:0 auto clamp(40px,6vw,80px); padding:clamp(40px,6vw,72px); display:grid; grid-template-columns:1fr auto; gap:50px; align-items:end; background:#10131c; color:#f4ead5; border-top:3px solid var(--gold-aged); }.home-transfer-panel h2 { max-width:760px; margin:18px 0 12px; font:800 clamp(30px,4vw,52px)/1.08 var(--font-display); letter-spacing:-.03em; text-transform:uppercase; text-wrap:balance; }.home-transfer-panel p { max-width:65ch; margin:0; color:#c4bdae; line-height:1.6; }.home-transfer-actions { display:flex; flex-direction:column; align-items:center; gap:18px; }.home-transfer-actions a:not(.ui-btn) { color:#d9cba9; font-size:13px; font-weight:700; }
 
-.home-hero {
-  position: relative;
-  overflow: hidden;
-  min-height: 640px;
-  display: flex;
-  align-items: center;
-  padding: var(--space-10) var(--space-6);
+@media (max-width: 960px) {
+  .home-command-wrap { grid-template-columns:1fr; }.home-hero-copy { max-width:760px; }.home-watch { justify-self:start; width:min(100%,600px); }.home-watch .chrono { max-width:440px; }.home-hunt-strip { grid-template-columns:1fr auto; }.home-hunt-label { display:none; }
+  .home-doctrine-section { grid-template-columns:1fr; }.home-doctrine-intro { position:static; max-width:700px; }.home-operations-section { grid-template-columns:1fr; }.home-alliance-heading { grid-template-columns:1fr; gap:18px; }.home-transfer-panel { grid-template-columns:1fr; align-items:start; }.home-transfer-actions { align-items:flex-start; }
 }
-.home-hero-content {
-  position: relative;
-  z-index: 1;
-  max-width: 720px;
-  margin: 0 auto;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-4);
+@media (max-width: 680px) {
+  .home-command-hero { min-height:0; padding:48px 18px 0; }.home-gate-art { opacity:.55; }.home-gate-tower-left { left:54%; }.home-gate-arch { right:-4%; width:55%; }.home-watch { padding:16px 10px 18px; }.home-watch-heading { padding-inline:8px; }.home-watch .chrono-dial { width:min(100%,270px); }.home-watch .chrono-rail { flex-direction:column; }.home-watch .chrono-rail-div { width:100%; height:1px; }.home-hunt-strip { width:calc(100% + 36px); margin:38px -18px 0; grid-template-columns:1fr auto; padding:15px 18px; }.home-hunt-times { justify-content:flex-start; gap:8px 13px; }.home-paths { grid-template-columns:1fr; width:100%; }.home-path + .home-path { border-left:0; border-top:1px solid #c9bea9; }.home-path { min-height:220px; padding:30px 24px; }.home-doctrine-section,.home-alliance-section,.home-operations-section { width:calc(100% - 36px); padding:68px 0; }.home-doctrine-list article { grid-template-columns:38px 1fr; gap:12px; }.home-alliance-banner { grid-template-columns:64px 1fr; gap:18px; padding:24px 18px; }.home-alliance-times { grid-column:2; padding:16px 0 0; border-left:0; border-top:1px solid rgba(255,255,255,.16); }.home-deck-item { grid-template-columns:58px 1fr 24px; }.home-transfer-panel { width:100%; margin:0; padding:48px 22px; }.home-hero-actions .ui-btn { width:100%; min-height:48px; }
 }
-.home-hero-content .k-mark { color: var(--gold-hot); }
-.home-hero-title {
-  margin: 0;
-  font-family: var(--font-display);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  font-weight: 800;
-  font-size: clamp(32px, 6vw, var(--text-4xl));
-  color: var(--hero-ink);
-  text-shadow: 0 4px 24px rgba(0,0,0,0.55);
-}
-.home-hero-sub {
-  margin: 0;
-  font-family: var(--font-narrative);
-  font-size: var(--text-lg);
-  line-height: 1.6;
-  color: var(--hero-ink-muted);
-  text-shadow: 0 2px 12px rgba(0,0,0,0.5);
-  max-width: 60ch;
-}
-.home-hero-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; justify-content: center; margin-top: var(--space-2); }
-
-/* .ui-btn-quiet's color comes from --color-ink, which is correct
-   everywhere else on this page (dark text on the light cream ground) but
-   wrong here: the hero's local background is always the dark Gate scene,
-   regardless of theme, so quiet-variant buttons went dark-on-dark and
-   disappeared. Caught by screenshotting the actual homepage, the same way
-   PR 3's button/input bugs were - the fix is the same shape: an override
-   scoped to where the ground actually differs from what the component
-   assumed, using --hero-ink instead of --color-ink. */
-.home-hero-actions .ui-btn-quiet {
-  color: var(--hero-ink);
-  border-color: color-mix(in srgb, var(--hero-ink) 40%, transparent);
-}
-.home-hero-actions .ui-btn-quiet:hover {
-  background: color-mix(in srgb, var(--hero-ink) 12%, transparent);
-  border-color: var(--hero-ink);
-}
-.home-hero-content .k710-chronometer,
-.home-hero-content [class*="chronometer"] { margin-top: var(--space-6); }
-
-.home-section { max-width: 1080px; margin: 0 auto; padding: var(--space-9) var(--space-6); }
-.home-section-head { text-align: center; max-width: 640px; margin: 0 auto var(--space-7); display: flex; flex-direction: column; gap: var(--space-2); }
-.home-section-head .k-mark { color: var(--color-accent-strong); }
-.home-section-title {
-  margin: 0;
-  font-family: var(--font-display);
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  font-weight: 800;
-  font-size: clamp(24px, 3.4vw, var(--text-3xl));
-  color: var(--color-ink);
-}
-.home-section-sub { margin: 0; font-size: var(--text-md); color: var(--color-ink-muted); line-height: 1.6; }
-
-.home-doctrine, .home-alliances { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-5); }
-.home-doctrine-card, .home-alliance-card { padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-2); }
-.home-doctrine-num { color: var(--color-accent); font-size: var(--text-lg); }
-.home-doctrine-title, .home-alliance-name { margin: 0; font-family: var(--font-display); font-size: var(--text-lg); letter-spacing: 0.02em; }
-.home-doctrine-body, .home-alliance-desc { margin: 0; font-size: var(--text-sm); color: var(--color-ink-muted); line-height: 1.55; }
-.home-alliance-card .ui-tag { align-self: flex-start; }
-
-.home-section-more {
-  display: block;
-  text-align: center;
-  margin-top: var(--space-6);
-  color: var(--color-accent-strong);
-  font-weight: 700;
-  font-size: var(--text-sm);
-  text-decoration: none;
-}
-.home-section-more:hover { text-decoration: underline; }
-
-.home-events-card { padding: var(--space-7); text-align: center; display: flex; flex-direction: column; gap: var(--space-2); align-items: center; }
-
-.home-deck { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); }
-.home-deck-item {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: var(--space-5);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  text-decoration: none;
-  transition: border-color 160ms, transform 160ms;
-}
-.home-deck-item:hover { border-color: var(--color-accent); transform: translateY(-2px); }
-.home-deck-label { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.02em; color: var(--color-ink); font-size: var(--text-md); }
-.home-deck-sub { font-size: var(--text-xs); color: var(--color-ink-muted); text-transform: uppercase; letter-spacing: 0.04em; }
-
-.home-final-cta { text-align: center; display: flex; flex-direction: column; align-items: center; gap: var(--space-4); padding-bottom: var(--space-11); }
-
-@media (max-width: 640px) {
-  .home-hero { min-height: 520px; padding: var(--space-8) var(--space-4); }
-  .home-section { padding: var(--space-7) var(--space-4); }
-}
+@media (prefers-reduced-motion: reduce) { .home-path,.home-deck-item,.home-deck-arrow { transition:none; } }
