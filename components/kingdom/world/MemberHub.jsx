@@ -38,13 +38,6 @@ const destinations = [
     description: 'Bear Hunt windows, KvK, Championship, and Swordland, in your local time.',
     href: (id) => `/events?member_id=${id}`,
   },
-  {
-    key: 'rankings',
-    kicker: 'The Honor Roll',
-    title: 'Rankings',
-    description: 'Kingdom, alliance, and player rankings with trend deltas.',
-    href: (id) => `/rankings?member_id=${id}`,
-  },
 ];
 
 function KingdomCrest() {
@@ -120,17 +113,6 @@ function StationSigil({ type }) {
           <circle className="sigil-mark" cx="35" cy="52" r="4.5" fill="currentColor" stroke="none" />
           <circle className="sigil-mark" cx="52" cy="52" r="4.5" fill="currentColor" stroke="none" />
           <circle className="sigil-mark" cx="35" cy="65" r="4.5" fill="currentColor" stroke="none" />
-        </g>
-      </svg>
-    );
-  }
-
-  if (type === 'rankings') {
-    return (
-      <svg className="station-sigil station-sigil-rankings" viewBox="0 0 96 96" aria-hidden="true">
-        <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M48 16 L58 34 L78 37 L63 51 L67 71 L48 61 L29 71 L33 51 L18 37 L38 34 Z" strokeWidth="4.5" />
-          <path className="sigil-mark" d="M40 71 L34 84 L48 78 L62 84 L56 71" strokeWidth="4" />
         </g>
       </svg>
     );
@@ -233,9 +215,6 @@ export default function MemberHub({ memberId }) {
         .member-station-events .member-relic-face{background:linear-gradient(90deg,#242c30,#4c6266 48%,#1f2729)}
         .member-station-events .member-sigil-medallion{color:#b9d2c9}
         .member-station-events:hover :global(.sigil-mark),.member-station-events:focus-visible :global(.sigil-mark){filter:drop-shadow(0 0 4px rgba(185,210,201,.55))}
-        .member-station-rankings .member-relic-face{background:linear-gradient(90deg,#2e2419,#6e5636 48%,#261e15)}
-        .member-station-rankings .member-sigil-medallion{color:#e3bd6a}
-        .member-station-rankings:hover :global(.sigil-mark),.member-station-rankings:focus-visible :global(.sigil-mark){filter:drop-shadow(0 0 5px rgba(239,205,112,.5))}
         :global(.sigil-hammer),:global(.sigil-seal),:global(.sigil-crown),:global(.sigil-page),:global(.sigil-mark){transition:transform var(--t-ui) var(--ease-cine),filter var(--t-ui) ease,color var(--t-ui) ease}
         .member-plaque{margin-top:10px}
         @media(max-width:1000px){.member-chambers-inner{padding-top:112px}.member-relic-wrap{height:210px}.member-hall{row-gap:22px}.member-chambers-head{margin-bottom:20px}}

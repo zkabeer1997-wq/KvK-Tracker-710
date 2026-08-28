@@ -1,5 +1,5 @@
 // A pragmatic CSP, not a strict nonce-based one: this codebase relies on
-// inline <style> tags across most pages (see app/rankings/page.js,
+// inline <style> tags across most pages (see app/tools/page.js,
 // app/alliances/[tag]/page.js, and others) and Next's own RSC hydration
 // payload ships as an inline <script>, so script-src and style-src both
 // need 'unsafe-inline'. A nonce-per-request CSP would remove that, but it

@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
-import { readMemberSession } from '../../../lib/memberAuth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -12,12 +11,7 @@ const NO_STORE_HEADERS = {
   Expires: '0',
 };
 
-export async function GET(request) {
-  const session = await readMemberSession(request);
-  if (!session) {
-    return NextResponse.json({ error: 'Member login required.' }, { status: 401, headers: NO_STORE_HEADERS });
-  }
-
+export async function GET() {
   try {
     const supabase = createAdminSupabaseClient();
     const { data, error } = await supabase

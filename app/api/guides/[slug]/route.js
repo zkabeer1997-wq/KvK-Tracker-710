@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { isAdminRequest } from '../../../../lib/adminAuth';
-import { readMemberSession } from '../../../../lib/memberAuth';
 import { createAdminSupabaseClient } from '../../../../lib/adminSupabase';
 
 export const dynamic = 'force-dynamic';
@@ -11,11 +10,6 @@ function validSlug(slug) {
 }
 
 export async function GET(request, { params: paramsPromise }) {
-  const session = await readMemberSession(request);
-  if (!session) {
-    return NextResponse.json({ error: 'Member login required.' }, { status: 401 });
-  }
-
   const params = await paramsPromise;
   const slug = params?.slug;
   if (!validSlug(slug)) {

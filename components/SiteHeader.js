@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
+import { SUPPORT_URL } from '../lib/supportLink';
 
 // The real, currently-live route surface. /about (PR 10) is the
 // canonical "About Kingdom 710" destination; /chronometer keeps its own
@@ -15,7 +16,6 @@ const NAV_LINKS = [
   { href: '/alliances', label: 'Alliances' },
   { href: '/guides', label: 'Guides' },
   { href: '/events', label: 'Events' },
-  { href: '/rankings', label: 'Rankings' },
   { href: '/tools', label: 'Tools' },
   { href: '/player-record', label: 'Members' },
 ];
@@ -55,6 +55,9 @@ export default function SiteHeader() {
           ))}
           <Link href="/interest" className="site-nav-cta">Join K710</Link>
           <Link href="/admin" className="site-nav-admin">Admin</Link>
+          <Link href={SUPPORT_URL} target="_blank" rel="noopener noreferrer" className="site-nav-support">
+            ☕ Support K710 Hub
+          </Link>
         </nav>
 
         <button
@@ -79,6 +82,15 @@ export default function SiteHeader() {
           ))}
           <Link href="/interest" onClick={() => setOpen(false)} className="site-nav-cta">Join K710</Link>
           <Link href="/admin" onClick={() => setOpen(false)} className="site-nav-admin">Admin</Link>
+          <Link
+            href={SUPPORT_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setOpen(false)}
+            className="site-nav-support"
+          >
+            ☕ Support K710 Hub
+          </Link>
         </nav>
       )}
     </header>

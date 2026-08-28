@@ -374,6 +374,8 @@ button[type="submit"]:not(.k-btn):disabled { opacity: 0.5; cursor: not-allowed; 
 
 .site-nav-admin { margin-left: 6px; border: 1px solid var(--line-bright); color: var(--text-muted) !important; }
 .site-nav-admin:hover { border-color: var(--gold); }
+.site-nav-support { margin-left: 6px; border: 1px solid var(--gold); color: var(--gold-bright) !important; white-space: nowrap; }
+.site-nav-support:hover { background: var(--gold); color: var(--ink) !important; }
 
 .site-nav-toggle { display: flex; flex-direction: column; gap: 4px; justify-content: center; align-items: center; width: 38px; height: 38px; background: transparent; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; }
 .site-nav-toggle span { display: block; width: 16px; height: 1.5px; background: var(--parchment); }

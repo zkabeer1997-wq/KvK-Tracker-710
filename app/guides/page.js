@@ -4,6 +4,7 @@ import GuidesDirectory from './GuidesDirectory';
 export const metadata = {
   title: 'K710 Guides',
   description: 'Kingdom 710 strategy, event, and member guides.',
+  alternates: { canonical: '/guides' },
 };
 
 // Static now, not force-dynamic: guides change when an admin saves one, and

@@ -59,14 +59,15 @@ export async function generateMetadata({ params }) {
       .select('title, description, is_published')
       .eq('slug', slug)
       .maybeSingle();
-    if (!data || !data.is_published) return { title: 'Kingdom Guide | K710' };
+    if (!data || !data.is_published) return { title: 'Kingdom Guide | K710', alternates: { canonical: `/guides/${slug}` } };
     return {
       title: data.title,
       description: data.description || undefined,
       openGraph: { title: data.title, description: data.description || undefined },
+      alternates: { canonical: `/guides/${slug}` },
     };
   } catch {
-    return { title: 'Kingdom Guide | K710' };
+    return { title: 'Kingdom Guide | K710', alternates: { canonical: `/guides/${slug}` } };
   }
 }
 
@@ -95,8 +96,28 @@ export default async function GuidePage({ params }) {
     loadError = 'Unable to load this guide.';
   }
 
+  const jsonLd = guide
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: guide.title,
+        description: guide.description || undefined,
+        articleSection: guide.category || undefined,
+        datePublished: guide.created_at || undefined,
+        dateModified: guide.updated_at || undefined,
+        author: { '@type': 'Organization', name: 'Kingdom 710' },
+        publisher: { '@type': 'Organization', name: 'Kingdom 710' },
+      }
+    : null;
+
   return (
     <>
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
       {/* GuideArticle reads member_id via useSearchParams() (client-side,
           so the page above it can stay statically generated) - Next
           requires a Suspense boundary around any component that does,

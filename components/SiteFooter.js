@@ -1,6 +1,5 @@
 import Link from 'next/link';
-
-const SUPPORT_URL = 'https://ko-fi.com/zenzen710';
+import { SUPPORT_URL } from '../lib/supportLink';
 
 export default function SiteFooter() {
   return (
@@ -21,7 +20,6 @@ export default function SiteFooter() {
           <Link href="/alliances">Alliances</Link>
           <Link href="/guides">Guides</Link>
           <Link href="/events">Events</Link>
-          <Link href="/rankings">Rankings</Link>
           <Link href="/tools">Tools</Link>
           <Link href="/player-record">Members</Link>
           <Link href="/interest">Join K710</Link>
