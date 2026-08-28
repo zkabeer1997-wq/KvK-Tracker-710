@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import GovernorGearOcr from '../../components/GovernorGearOcr';
 import {
   HEROES,
   TIERS,
@@ -71,6 +72,14 @@ function FlamedragonForm({ initialMemberId = '', intro }) {
   function updateGovernorGear(key, value) {
     setGovernorGear((current) => {
       const next = { ...current, [key]: value };
+      setForm((currentForm) => ({ ...currentForm, governor_gear: serializeGovernorGearSelections(next) }));
+      return next;
+    });
+  }
+
+  function applyGovernorGearScan(selections) {
+    setGovernorGear((current) => {
+      const next = { ...current, ...selections };
       setForm((currentForm) => ({ ...currentForm, governor_gear: serializeGovernorGearSelections(next) }));
       return next;
     });
@@ -227,6 +236,7 @@ function FlamedragonForm({ initialMemberId = '', intro }) {
                 ))}
               </div>
               <h4 className="power-subheader">Governor Gear</h4>
+              <GovernorGearOcr onApply={applyGovernorGearScan} />
               <div className="governor-gear-grid">
                 {GOVERNOR_GEAR_SLOTS.map((slot) => (
                   <label key={slot.key}>

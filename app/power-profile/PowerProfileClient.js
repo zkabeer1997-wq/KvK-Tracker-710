@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import GovernorGearOcr from '../../components/GovernorGearOcr';
 import {
 CHARM_LEVEL_OPTIONS,
 CHARM_SLOTS,
@@ -52,6 +53,14 @@ setForm((current) => ({ ...current, [key]: value }));
 function updateGovernorGear(key, value) {
 setGovernorGear((current) => {
 const next = { ...current, [key]: value };
+setForm((currentForm) => ({ ...currentForm, governor_gear: serializeGovernorGearSelections(next) }));
+return next;
+});
+}
+
+function applyGovernorGearScan(selections) {
+setGovernorGear((current) => {
+const next = { ...current, ...selections };
 setForm((currentForm) => ({ ...currentForm, governor_gear: serializeGovernorGearSelections(next) }));
 return next;
 });
@@ -203,6 +212,7 @@ Player profile on file - Governor Gear: {onFile.governor_gear || '-'} / Charms: 
     <span className="ledger-block-kicker">Governor Armory</span>
     <h3>Governor Gear</h3>
   </div>
+  <GovernorGearOcr onApply={applyGovernorGearScan} />
   <div className="ledger-gear-grid">
     {GOVERNOR_GEAR_SLOTS.map((slot) => (
       <label key={slot.key} className="ledger-select">

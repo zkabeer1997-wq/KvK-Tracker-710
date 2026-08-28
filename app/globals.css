@@ -150,6 +150,15 @@ button[type="submit"]:not(.k-btn):disabled { opacity: 0.5; cursor: not-allowed; 
 .power-subheader { grid-column: 1 / -1; margin: 4px 0 0; color: var(--ember); font-size: 15px; font-weight: 900; line-height: 1.1; }
 
 .governor-gear-grid { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.gear-ocr-panel { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px 16px; margin: 4px 0 6px; padding: 15px 16px; border: 1px solid rgba(196, 139, 54, .34); border-radius: 12px; background: linear-gradient(135deg, rgba(245, 226, 176, .1), rgba(109, 45, 23, .12)); }
+.gear-ocr-panel strong { color: var(--ember); font-size: 15px; }
+.gear-ocr-panel p { margin: 3px 0 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
+.gear-ocr-button { width: auto !important; margin: 0 !important; padding: 10px 14px !important; white-space: nowrap; font-size: 13px !important; }
+.gear-ocr-button:disabled { cursor: wait; opacity: .7; }
+.gear-ocr-status { grid-column: 1 / -1; margin: 0 !important; padding-top: 8px; border-top: 1px solid rgba(196, 139, 54, .18); }
+.gear-ocr-panel.success .gear-ocr-status { color: #7ecf91; }
+.gear-ocr-panel.review .gear-ocr-status { color: #e8b868; }
+.gear-ocr-panel.error .gear-ocr-status { color: #ef8585; }
 
 .charm-grid { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 
@@ -346,6 +355,7 @@ button[type="submit"]:not(.k-btn):disabled { opacity: 0.5; cursor: not-allowed; 
 .rally-member button { flex: 0 0 auto; width: 24px; height: 24px; border: none; border-radius: 999px; background: rgba(255, 107, 107, 0.18); color: #ff8f8f; font-weight: 700; line-height: 1; cursor: pointer; }
 
 @media (max-width: 960px) { .public-page { padding: 16px; align-items: flex-start; } .public-shell { grid-template-columns: minmax(0, 1fr); } .home-hub { grid-template-columns: minmax(0, 1fr); } .public-intro { position: static; min-height: auto; gap: 34px; } .unit-card-grid, .identity-grid, .availability-grid, .pin-panel, .power-field-grid, .governor-gear-grid, .charm-grid { grid-template-columns: minmax(0, 1fr); } .power-field-grid > label:last-child { grid-column: auto; } .admin-workspace { grid-template-columns: minmax(0, 1fr); } .admin-actions { flex-direction: column; align-items: stretch; } .rally-sidebar { position: static; border-left: none; } .dashboard-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .admin-hero, .rally-sidebar-header { flex-direction: column; } }
+@media (max-width: 600px) { .gear-ocr-panel { grid-template-columns: 1fr; } .gear-ocr-button { width: 100% !important; } }
 
 .radio-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; }
 
