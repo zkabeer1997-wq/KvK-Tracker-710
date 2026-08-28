@@ -4,10 +4,12 @@ import { useRef, useState } from 'react';
 
 /**
  * Upload a full Governor Profile screenshot.
- * Applies OCR results for Governor Gear (6 pieces) and Charms (up to 18 levels).
- * Charm levels follow https://kingshotoptimizer.com/charms/references/ (Level 1–22).
+ * Governor Gear (6 pieces) is read via Kingshot Optimizer OCR.
+ * Charm *levels* are not printed as numbers on the profile overview — only
+ * troop-colored socket gems (see https://kingshotoptimizer.com/charms/references/).
+ * When the upstream payload includes charm levels, they auto-fill (Level 1–22).
  *
- * onApply({ gear, charms }) — both are partial selection maps keyed by form slots.
+ * onApply({ gear, charms })
  */
 export default function GovernorGearOcr({ onApply }) {
   const inputRef = useRef(null);
@@ -37,17 +39,28 @@ export default function GovernorGearOcr({ onApply }) {
         (item) => item.confidence !== null && item.confidence !== undefined && item.confidence < 0.8,
       ).length;
 
-      const parts = [];
-      if (gearCount) parts.push(`${gearCount} gear piece${gearCount === 1 ? '' : 's'}`);
-      if (charmCount) parts.push(`${charmCount} charm level${charmCount === 1 ? '' : 's'}`);
-      const summary = parts.length ? parts.join(' and ') : 'readings';
-
-      setState(lowerConfidence ? 'review' : 'success');
-      setMessage(
-        lowerConfidence
-          ? `Imported ${summary}. Please double-check ${lowerConfidence} uncertain reading${lowerConfidence === 1 ? '' : 's'}.`
-          : `Imported ${summary}. Please verify them before submitting.`,
-      );
+      if (gearCount && charmCount) {
+        const summary = `${gearCount} gear piece${gearCount === 1 ? '' : 's'} and ${charmCount} charm level${charmCount === 1 ? '' : 's'}`;
+        setState(lowerConfidence ? 'review' : 'success');
+        setMessage(
+          lowerConfidence
+            ? `Imported ${summary}. Please double-check ${lowerConfidence} uncertain reading${lowerConfidence === 1 ? '' : 's'}.`
+            : `Imported ${summary}. Please verify them before submitting.`,
+        );
+      } else if (gearCount) {
+        setState('review');
+        setMessage(
+          `Imported ${gearCount} Governor Gear piece${gearCount === 1 ? '' : 's'}. ` +
+            'Charm levels are not shown as numbers on the Governor Profile overview (only colored sockets). ' +
+            'Set charm levels manually, or upload a piece-detail screen if available.',
+        );
+      } else if (charmCount) {
+        setState(lowerConfidence ? 'review' : 'success');
+        setMessage(`Imported ${charmCount} charm level${charmCount === 1 ? '' : 's'}. Please verify before submitting.`);
+      } else {
+        setState('error');
+        setMessage('No gear or charm levels could be read from this image.');
+      }
     } catch (error) {
       setState('error');
       setMessage(error instanceof Error ? error.message : 'The screenshot could not be read.');
@@ -61,8 +74,10 @@ export default function GovernorGearOcr({ onApply }) {
       <div>
         <strong>Upload Screenshot</strong>
         <p>
-          Upload the full, uncropped Governor Profile screen. We read all six Governor Gear pieces
-          and Charm levels (Level 1–22, per the Kingshot Optimizer charm reference). PNG, JPEG, or WebP; up to 8 MB.
+          Upload the full, uncropped Governor Profile screen for gear auto-fill.
+          Charm levels (1–22, per the Kingshot Optimizer reference) only auto-fill when the scanner
+          can read them from the image — the profile overview usually shows sockets, not levels.
+          PNG, JPEG, or WebP; up to 8 MB.
         </p>
       </div>
       <input
