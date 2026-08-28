@@ -20,7 +20,7 @@ export default function AdminLoginPage() {
         body: JSON.stringify({ password }),
       });
       if (res.ok) {
-        router.push('/admin/dashboard');
+        router.push('/admin/dashboard/overview');
         router.refresh();
       } else {
         setError('Incorrect password.');
