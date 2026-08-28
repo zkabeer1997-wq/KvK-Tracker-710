@@ -2,22 +2,15 @@ import { createAdminSupabaseClient } from '../lib/adminSupabase';
 
 const BASE_URL = 'https://k710hub.vercel.app';
 
-// Events and Tools are member-gated (proxy.js) - they intentionally do not
-// appear here, in robots.js, or carry canonical/JSON-LD tags, since search
-// engines can no longer reach them. Guides was gated the same way and then
-// reverted to public (Addendum 2), so it's back below.
 const STATIC_ROUTES = [
   { path: '/', priority: 1.0, changeFrequency: 'weekly' },
-  { path: '/about', priority: 0.7, changeFrequency: 'monthly' },
-  { path: '/alliances', priority: 0.8, changeFrequency: 'weekly' },
+  { path: '/about', priority: 0.8, changeFrequency: 'weekly' },
+  { path: '/timeline', priority: 0.7, changeFrequency: 'weekly' },
   { path: '/guides', priority: 0.8, changeFrequency: 'weekly' },
   { path: '/interest', priority: 0.9, changeFrequency: 'monthly' },
   { path: '/player-record', priority: 0.5, changeFrequency: 'yearly' },
 ];
 
-// Real lastmod per entry, not a single build timestamp reused everywhere -
-// 846's sitemap (per the recon) has none at all. Each query failing
-// independently still leaves the rest of the sitemap intact.
 async function guideEntries() {
   try {
     const supabase = createAdminSupabaseClient();
