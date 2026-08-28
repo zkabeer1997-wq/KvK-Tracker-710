@@ -22,51 +22,127 @@ const STATUS_TONE = {
   Available: 'tool-badge-available',
 };
 
-export default function ToolsDirectory({ memberId }) {
+function CategoryGlyph({ category }) {
+  const common = { viewBox: '0 0 48 48', 'aria-hidden': true, className: 'tools-menu-glyph' };
+  if (category === 'Charms') {
+    return <svg {...common}><path d="M24 6 L38 16 L33 34 L15 34 L10 16 Z" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /></svg>;
+  }
+  if (category === 'Governor Gear') {
+    return <svg {...common}><path d="M24 5 L39 11 V23 C39 33 32 40 24 43 C16 40 9 33 9 23 V11 Z" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /></svg>;
+  }
+  if (category === 'Hero Gear') {
+    return <svg {...common}><path d="M14 8 L34 28 M28 8 L8 28" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /><circle cx="34" cy="34" r="7" fill="none" stroke="currentColor" strokeWidth="2.4" /></svg>;
+  }
+  if (category === 'Pets') {
+    return <svg {...common}><circle cx="24" cy="30" r="9" fill="none" stroke="currentColor" strokeWidth="2.4" /><circle cx="13" cy="16" r="4.2" fill="none" stroke="currentColor" strokeWidth="2.2" /><circle cx="35" cy="16" r="4.2" fill="none" stroke="currentColor" strokeWidth="2.2" /><circle cx="24" cy="10" r="4" fill="none" stroke="currentColor" strokeWidth="2.2" /></svg>;
+  }
+  if (category === 'Masters') {
+    return <svg {...common}><path d="M9 32 L9 18 L17 25 L24 13 L31 25 L39 18 L39 32 Z" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /></svg>;
+  }
+  return <svg {...common}><path d="M9 18 H39 V36 H9 Z" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /><path d="M9 24 H39 M18 18 V13 C18 10 20 8 24 8 C28 8 30 10 30 13 V18" fill="none" stroke="currentColor" strokeWidth="2.2" /></svg>;
+}
+
+function ToolBox({ tool, query }) {
+  return (
+    <Link key={tool.key} href={`/tools/${tool.key}${query}`} className="tool-box" role="listitem">
+      <span className={`tool-box-badge ${STATUS_TONE[tool.status] || ''}`}>{tool.status}</span>
+      <span className="tool-box-icon" aria-hidden="true">
+        <span className="tool-box-icon-glow" />
+        <Image className="tool-box-icon-art" src={tool.icon} alt="" width={72} height={72} />
+      </span>
+      <span className="k-mark tool-box-event">{tool.event}</span>
+      <strong className="k-display tool-box-title">{tool.title}</strong>
+      <span className="tool-box-desc">{tool.description}</span>
+      <span className="tool-box-cta">Open tool <b aria-hidden="true">→</b></span>
+    </Link>
+  );
+}
+
+export default function ToolsDirectory({ memberId, category }) {
   const query = memberId ? `?member_id=${encodeURIComponent(memberId)}` : '';
+  const categoryQuery = (name) => {
+    const params = new URLSearchParams();
+    if (memberId) params.set('member_id', memberId);
+    params.set('category', name);
+    return `?${params.toString()}`;
+  };
+
+  const selected = CATEGORIES.includes(category) ? category : '';
+
+  if (!selected) {
+    return (
+      <section className="tools-catalog">
+        <div className="tools-menu-grid" role="list">
+          {CATEGORIES.map((name) => {
+            const tools = TOOLS[name];
+            return (
+              <Link key={name} href={`/tools${categoryQuery(name)}`} className="tools-menu-tile" role="listitem">
+                <span className="tools-menu-icon"><CategoryGlyph category={name} /></span>
+                <strong className="k-display tools-menu-title">{name}</strong>
+                <span className="tools-menu-count">
+                  {tools.length ? `${tools.length} instrument${tools.length === 1 ? '' : 's'}` : 'Coming soon'}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+
+        <style>{`
+          .tools-catalog{color:var(--parchment)}
+          .tools-menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:18px}
+          .tools-menu-tile{
+            display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;
+            padding:32px 20px;border:1px solid rgba(201,164,78,.24);border-radius:10px;
+            background:linear-gradient(180deg,rgba(20,17,10,.7),rgba(9,10,18,.86));
+            text-decoration:none;color:inherit;
+            transition:transform .18s var(--ease-cine,ease),border-color .18s ease,box-shadow .18s ease,background .18s ease;
+          }
+          .tools-menu-tile:hover,.tools-menu-tile:focus-visible{
+            transform:translateY(-4px);border-color:rgba(201,164,78,.7);outline:none;
+            box-shadow:0 14px 30px rgba(0,0,0,.4),0 0 0 1px rgba(201,164,78,.2);
+            background:linear-gradient(180deg,rgba(28,23,13,.82),rgba(11,12,21,.92));
+          }
+          .tools-menu-icon{width:60px;height:60px;display:grid;place-items:center;color:var(--gold-hot)}
+          .tools-menu-glyph{width:44px;height:44px}
+          .tools-menu-title{font-size:16px;letter-spacing:.06em;color:var(--parchment)}
+          .tools-menu-count{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--brass)}
+          @media(max-width:700px){.tools-menu-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}.tools-menu-tile{padding:24px 14px}}
+        `}</style>
+      </section>
+    );
+  }
+
+  const tools = TOOLS[selected];
 
   return (
     <section className="tools-catalog">
-      {CATEGORIES.map((category) => {
-        const tools = TOOLS[category];
-        return (
-          <div key={category} className="tools-category-block">
-            <div className="tools-category-head">
-              <span className="k-mark">Workshop discipline</span>
-              <h2 className="k-display">{category}</h2>
-              <span className="tools-category-count">{tools.length} instrument{tools.length === 1 ? '' : 's'}</span>
-            </div>
+      <Link href={`/tools${query}`} className="tools-category-back">← All categories</Link>
 
-            {tools.length ? (
-              <div className="tools-grid" role="list">
-                {tools.map((tool) => (
-                  <Link key={tool.key} href={`/tools/${tool.key}${query}`} className="tool-box" role="listitem">
-                    <span className={`tool-box-badge ${STATUS_TONE[tool.status] || ''}`}>{tool.status}</span>
-                    <span className="tool-box-icon" aria-hidden="true">
-                      <span className="tool-box-icon-glow" />
-                      <Image className="tool-box-icon-art" src={tool.icon} alt="" width={72} height={72} />
-                    </span>
-                    <span className="k-mark tool-box-event">{tool.event}</span>
-                    <strong className="k-display tool-box-title">{tool.title}</strong>
-                    <span className="tool-box-desc">{tool.description}</span>
-                    <span className="tool-box-cta">Open tool <b aria-hidden="true">→</b></span>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="tools-empty">
-                <span aria-hidden="true">◇</span>
-                <h3 className="k-display">Tools are being forged</h3>
-                <p className="k-narrative">The {category} workshop is prepared for future calculators.</p>
-              </div>
-            )}
+      <div className="tools-category-block">
+        <div className="tools-category-head">
+          <span className="k-mark">Workshop discipline</span>
+          <h2 className="k-display">{selected}</h2>
+          <span className="tools-category-count">{tools.length} instrument{tools.length === 1 ? '' : 's'}</span>
+        </div>
+
+        {tools.length ? (
+          <div className="tools-grid" role="list">
+            {tools.map((tool) => <ToolBox key={tool.key} tool={tool} query={query} />)}
           </div>
-        );
-      })}
+        ) : (
+          <div className="tools-empty">
+            <span aria-hidden="true">◇</span>
+            <h3 className="k-display">Tools are being forged</h3>
+            <p className="k-narrative">The {selected} workshop is prepared for future calculators.</p>
+          </div>
+        )}
+      </div>
 
       <style>{`
         .tools-catalog{color:var(--parchment);display:flex;flex-direction:column;gap:8px}
-        .tools-category-block+.tools-category-block{margin-top:40px;padding-top:36px;border-top:1px solid var(--edge)}
+        .tools-category-back{display:inline-block;margin-bottom:22px;color:var(--brass);font-family:var(--font-body);font-size:12px;text-decoration:none;letter-spacing:.06em}
+        .tools-category-back:hover{color:var(--gold-hot)}
+
         .tools-category-head{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding-bottom:20px;position:relative}
         .tools-category-head h2{margin:4px 0 0;color:var(--parchment);font-size:clamp(22px,3.6vw,32px);letter-spacing:.08em}
         .tools-category-count{position:absolute;right:0;top:2px;color:var(--brass);font-family:var(--font-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}
