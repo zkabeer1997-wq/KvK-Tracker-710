@@ -68,9 +68,6 @@ export default async function HomePage() {
           <div className="home-hero-actions">
             <Button href="/interest" variant="struck">Join K710</Button>
             <Button href="/player-record" variant="quiet">Member Login</Button>
-            <Button href="/gate" variant="quiet" className="home-hero-gate-link">
-              Enter the Gate →
-            </Button>
           </div>
           <Chronometer />
         </div>

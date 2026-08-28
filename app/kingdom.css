@@ -1564,7 +1564,6 @@
   background: color-mix(in srgb, var(--hero-ink) 12%, transparent);
   border-color: var(--hero-ink);
 }
-.home-hero-gate-link { opacity: 0.9; }
 .home-hero-content .k710-chronometer,
 .home-hero-content [class*="chronometer"] { margin-top: var(--space-6); }
 
