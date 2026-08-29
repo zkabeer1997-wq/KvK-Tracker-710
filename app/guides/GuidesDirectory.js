@@ -10,11 +10,6 @@ function readingTime(body) {
   return Math.max(1, Math.round(words / 200));
 }
 
-// Client-side search/filter over an already-fetched, already-static list.
-// The guide count here is small enough (single digits to low dozens) that
-// a dedicated search service would be solving a problem that doesn't exist
-// yet - this is the same call kingdom846.com's own 49-guide index should
-// have made and didn't.
 export default function GuidesDirectory({ guides, query, backHref }) {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
@@ -39,10 +34,9 @@ export default function GuidesDirectory({ guides, query, backHref }) {
   return (
     <>
       <div className="guides-toolbar">
-        <Field label="Search guides" className="guides-search">
+        <Field label="Search the archive" className="guides-search">
           <Input
             type="search"
-            tone="console"
             placeholder="Search by title or description…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -73,15 +67,15 @@ export default function GuidesDirectory({ guides, query, backHref }) {
               <GuideIcon index={index} />
               <span className="guide-entry-copy">
                 <span className="k-mark guide-category">{guide.category}</span>
-                <strong className="k-display">{guide.title}</strong>
-                <span className="k-narrative guide-description">{guide.description}</span>
+                <strong className="guide-entry-title">{guide.title}</strong>
+                <span className="guide-description">{guide.description}</span>
                 <span className="guide-entry-sub">
                   {readingTime(guide.body)} min read
                   {guide.updated_at ? ` · Updated ${new Date(guide.updated_at).toLocaleDateString()}` : ''}
                 </span>
               </span>
               <span className="guide-entry-meta">
-                <span>Read Guide</span>
+                <span>Open field manual</span>
                 <b aria-hidden="true">→</b>
               </span>
             </a>
@@ -90,8 +84,8 @@ export default function GuidesDirectory({ guides, query, backHref }) {
       )}
 
       <div className="guides-ledger">
-        <span className="k-mark">Library Ledger</span>
-        <p className="k-narrative">Guide titles and text are stored in Supabase. Admin renames are persisted to the same record used by this directory.</p>
+        <span className="k-mark">Archive Ledger</span>
+        <p>Guide titles and text are stored in Supabase. Admin edits update the same records used by this archive.</p>
       </div>
 
       <Link href={backHref} className="guides-back">← Return to member hall</Link>
