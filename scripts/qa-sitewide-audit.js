@@ -1,3 +1,4 @@
+// Full route-by-route visual audit for the sitewide redesign branch.
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
