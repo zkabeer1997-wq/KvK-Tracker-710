@@ -70,3 +70,29 @@ html,body,.site-shell,.site-route{max-width:100%;overflow-x:clip}
   .site-footer-inner{padding-block:40px!important}
   .k710-language-switcher{right:8px!important;bottom:8px!important;min-height:36px!important;padding:7px 10px!important;font-size:11px!important}
 }
+
+/* Browser-safe parallax: movement distances are computed in JS and emitted as length values. */
+.site-atmosphere-glow{transform:translate3d(calc(var(--site-pointer-x-10,0px) * -1),var(--site-scroll-035,0px),0)}
+.site-atmosphere-ridge-back{transform:translate3d(0,var(--site-scroll-025,0px),0)}
+.site-atmosphere-ridge-front{transform:translate3d(0,var(--site-scroll-045,0px),0)}
+.home-v2-sun{transform:translate3d(calc(var(--site-pointer-x-8,0px) * -1),var(--site-scroll-04,0px),0)}
+.home-v2-mountain-back{transform:translate3d(calc(var(--site-pointer-x-5,0px) * -1),var(--site-scroll-075,0px),0)}
+.home-v2-mountain-front{transform:translate3d(var(--site-pointer-x-7,0px),var(--site-scroll-12,0px),0) scaleX(1.08)}
+.home-v2-citadel{transform:translate3d(var(--site-pointer-x-10,0px),var(--site-scroll-16,0px),0)}
+.realm-shield-canvas{transform:translate3d(var(--site-pointer-x-16,0px),calc(var(--site-scroll-20,0px) + var(--site-pointer-y-8,0px)),0)}
+.home-v2-signal{transform:translate3d(0,var(--site-scroll-035,0px),0)}
+.home-v2-story-scene:after{transform:translate3d(0,var(--site-story-055,0px),0)}
+.home-v2-story-sun{transform:translate3d(0,var(--site-story-025,0px),0)}
+
+/* The transfer registry is part of the public Realm, not an operational console. */
+.site-shell-realm .registry{background:linear-gradient(180deg,rgba(10,13,18,.94),rgba(12,12,14,.985))}
+.site-shell-realm .registry-head{position:relative}
+.site-shell-realm .registry-head:after{content:'710';position:absolute;right:0;top:-24px;font:800 clamp(80px,14vw,170px)/1 var(--font-display);color:rgba(214,163,92,.035);pointer-events:none}
+
+/* Operational surfaces retain dense controls but use the same forge material language. */
+.site-shell-console #main :is(.public-form-card,.unit-card,.form-block,.prep-day-card){border-radius:5px!important}
+.site-shell-console #main :is(.public-form-card,.form-block,.prep-day-card){background:linear-gradient(180deg,rgba(18,22,29,.92),rgba(10,13,18,.96))!important}
+
+@media(prefers-reduced-motion:reduce){
+  .site-atmosphere-glow,.site-atmosphere-ridge,.home-v2-sun,.home-v2-mountain,.home-v2-citadel,.realm-shield-canvas,.home-v2-signal,.home-v2-story-scene:after,.home-v2-story-sun{transform:none!important}
+}
