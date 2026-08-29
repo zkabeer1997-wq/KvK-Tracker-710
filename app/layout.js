@@ -6,6 +6,7 @@ import './kingdom.css';
 import './world-scene.css';
 import './i18n.css';
 import './sitewide-parallax.css';
+import './admin-v2.css';
 import { Cinzel, Inter, JetBrains_Mono, Cormorant_Garamond, Fraunces } from 'next/font/google';
 import LanguageProvider from '../components/i18n/LanguageProvider';
 import SiteChrome from '../components/SiteChrome';
