@@ -104,6 +104,148 @@ html,body,.site-shell,.site-route{max-width:100%;overflow-x:clip}
 .site-shell-console #main :is(.public-form-card,.unit-card,.form-block,.prep-day-card){border-radius:5px!important}
 .site-shell-console #main :is(.public-form-card,.form-block,.prep-day-card){background:linear-gradient(180deg,rgba(18,22,29,.92),rgba(10,13,18,.96))!important}
 
+/* Final route-level pass: public detail pages must not fall back to the old/plain design language. */
+.site-shell-realm .alliance-page,
+.site-shell-realm .event-page,
+.site-shell-realm .guide-page{
+  position:relative;
+  min-height:100vh;
+  overflow:hidden;
+}
+.site-shell-realm .alliance-page:before,
+.site-shell-realm .event-page:before,
+.site-shell-realm .guide-page:before{
+  content:"";
+  position:absolute;
+  inset:0 0 auto;
+  height:360px;
+  background:
+    radial-gradient(circle at 78% 24%,rgba(220,130,53,.2),transparent 26%),
+    linear-gradient(118deg,#17120d 0%,#35200f 62%,#6e3718 100%);
+  pointer-events:none;
+}
+.site-shell-realm .alliance-page:after,
+.site-shell-realm .event-page:after,
+.site-shell-realm .guide-page:after{
+  content:"710";
+  position:absolute;
+  right:-2vw;
+  top:120px;
+  font:800 clamp(110px,20vw,300px)/.72 var(--font-display);
+  color:rgba(255,237,205,.045);
+  pointer-events:none;
+}
+.site-shell-realm .alliance-page-inner,
+.site-shell-realm .event-page-inner,
+.site-shell-realm .guide-inner{
+  position:relative;
+  z-index:1;
+}
+
+/* Alliance detail — a banner profile, not a generic record card. */
+.site-shell-realm .alliance-page{padding:0 24px 110px!important;background:linear-gradient(180deg,#24170f 0 360px,#ead8b7 360px,#ead8b7 100%)!important;color:#2b2118!important}
+.site-shell-realm .alliance-page-inner{max-width:1080px!important;padding-top:70px!important;gap:22px!important}
+.site-shell-realm .alliance-back{color:#f3d99a!important;margin-bottom:18px!important}
+.site-shell-realm .alliance-head{gap:10px!important}
+.site-shell-realm .alliance-title{max-width:760px;margin-top:8px!important;color:#fff2da!important;font-size:clamp(48px,7vw,88px)!important;line-height:.92!important;letter-spacing:-.04em!important}
+.site-shell-realm .alliance-blurb{max-width:64ch!important;color:#dfcdb1!important;font-size:clamp(16px,2vw,19px)!important;line-height:1.7!important}
+.site-shell-realm .alliance-facts{margin-top:78px!important;width:100%!important;display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:0!important;padding:0!important;border:1px solid rgba(78,51,26,.18)!important;background:rgba(255,248,234,.72)!important;box-shadow:0 24px 70px rgba(71,42,19,.1)!important}
+.site-shell-realm .alliance-facts div{display:block!important;padding:24px!important;border:0!important;border-right:1px solid rgba(78,51,26,.13)!important}
+.site-shell-realm .alliance-facts div:last-child{border-right:0!important}
+.site-shell-realm .alliance-facts dt{font:700 10px/1.2 var(--font-mono)!important;letter-spacing:.12em!important;text-transform:uppercase!important;color:#8c6845!important}
+.site-shell-realm .alliance-facts dd{margin-top:10px!important;font-family:var(--font-display)!important;font-size:20px!important;color:#2b2118!important}
+.site-shell-realm .alliance-windows{margin-top:24px!important;padding:28px 0!important;border-block:1px solid rgba(78,51,26,.18)!important}
+.site-shell-realm .alliance-section-title{font-size:30px!important;color:#2b2118!important}
+.site-shell-realm .alliance-window-chip{border-radius:2px!important;background:#2e2116!important;color:#f1d8ae!important;padding:9px 13px!important}
+.site-shell-realm .alliance-events-link{color:#8f4d1f!important}
+.site-shell-realm .alliance-cta{margin-top:12px!important}
+
+/* Event detail — campaign order / briefing page. */
+.site-shell-realm .event-page{padding:0 24px 110px!important;background:linear-gradient(180deg,#182131 0 360px,#ead8b7 360px,#ead8b7 100%)!important;color:#2b2118!important}
+.site-shell-realm .event-page:before{background:radial-gradient(circle at 75% 22%,rgba(224,165,79,.2),transparent 24%),linear-gradient(118deg,#101827,#1d2a3d 62%,#57311b 100%)!important}
+.site-shell-realm .event-page-inner{max-width:960px!important;padding-top:70px!important;gap:16px!important}
+.site-shell-realm .event-back{color:#f3d99a!important;margin-bottom:12px!important}
+.site-shell-realm .event-title{max-width:780px;color:#fff2da!important;font-size:clamp(48px,7vw,84px)!important;line-height:.94!important;letter-spacing:-.04em!important}
+.site-shell-realm .event-when{color:#e1cfae!important;font-family:var(--font-mono)!important;font-size:12px!important;letter-spacing:.05em!important}
+.site-shell-realm .event-description{max-width:64ch!important;color:#ddcfb8!important;font-size:18px!important;line-height:1.7!important}
+.site-shell-realm .event-actions{margin-top:70px!important;padding-top:24px!important;border-top:1px solid rgba(91,60,30,.16)!important;width:100%!important}
+.site-shell-realm .event-body{width:100%!important;max-width:760px!important;margin-top:18px!important;padding:36px 0!important;color:#433426!important;font-size:17px!important;line-height:1.8!important}
+.site-shell-realm .event-body :is(h2,h3){color:#2b2118!important}
+.site-shell-realm .event-body table{display:block;max-width:100%;overflow-x:auto}
+
+/* Guide reading view — keep the archive/editorial family instead of the old dark armory. */
+.site-shell-realm .guide-page{padding:0 24px 110px!important;background:linear-gradient(180deg,#24170f 0 330px,#ead8b7 330px,#ead8b7 100%)!important;color:#2d2117!important}
+.site-shell-realm .guide-page>.armory-atmos,
+.site-shell-realm .guide-page>.armory-rack-l,
+.site-shell-realm .guide-page>.armory-rack-r{display:none!important}
+.site-shell-realm .guide-inner{width:min(960px,100%)!important;padding-top:64px!important;padding-bottom:20px!important}
+.site-shell-realm .guide-topbar{border-bottom-color:rgba(243,217,154,.28)!important;margin-bottom:30px!important}
+.site-shell-realm .guide-back{color:#f3d99a!important}
+.site-shell-realm .guide-admin-badge{color:#f0d7a7!important;border-color:rgba(243,217,154,.3)!important;background:rgba(243,217,154,.06)!important}
+.site-shell-realm .guide-header{max-width:800px!important;margin-bottom:46px!important}
+.site-shell-realm .guide-header .k-mark{color:#e5bd7e!important}
+.site-shell-realm .guide-header h1{color:#fff2da!important;font-size:clamp(46px,6vw,76px)!important;line-height:.94!important;letter-spacing:-.035em!important}
+.site-shell-realm .guide-header p{color:#dfcdb1!important;font-size:18px!important}
+.site-shell-realm .guide-rule{background:linear-gradient(90deg,#d39a54,transparent)!important}
+.site-shell-realm .guide-volume{min-height:420px!important;padding:clamp(30px,5vw,58px)!important;background:rgba(255,248,234,.74)!important;border:1px solid rgba(83,55,28,.16)!important;box-shadow:0 28px 80px rgba(74,42,18,.12)!important}
+.site-shell-realm .guide-volume:before{border-color:rgba(83,55,28,.08)!important}
+.site-shell-realm .guide-volume-spine{background:linear-gradient(90deg,#4a2d16,#a56a31,#5a351b)!important;border-right-color:rgba(83,55,28,.18)!important}
+.site-shell-realm .guide-body{color:#433426!important;font-size:17px!important;line-height:1.82!important}
+.site-shell-realm .guide-body :is(h2,h3,strong){color:#2b2118!important}
+.site-shell-realm .guide-body a{color:#944d1c!important}
+.site-shell-realm .guide-body blockquote{color:#6d543d!important;border-left-color:#b37536!important}
+.site-shell-realm .guide-body code{background:rgba(116,74,35,.09)!important;color:#4a331f!important}
+.site-shell-realm .guide-body table{display:block;max-width:100%;overflow-x:auto}
+.site-shell-realm .guide-body :is(th,td){border-color:rgba(83,55,28,.18)!important}
+.site-shell-realm .guide-footer{color:#7a634c!important;border-top-color:rgba(83,55,28,.16)!important}
+.site-shell-realm .guide-pager{border-top-color:rgba(83,55,28,.18)!important}
+.site-shell-realm .guide-pager-link{color:#352719!important}
+.site-shell-realm .guide-pager-link .k-mark{color:#9a5a26!important}
+.site-shell-realm .guide-title-editor input,
+.site-shell-realm .guide-editor textarea{background:#fff9ec!important;color:#2b2118!important;border-color:rgba(111,70,32,.3)!important}
+.site-shell-realm .guide-editor p{color:#775e45!important}
+
+/* Route fallback states should still look intentional in preview/CI environments. */
+.site-shell-realm .alliance-page-inner>.alliance-blurb:only-child,
+.site-shell-realm .event-page-inner>.event-description:only-child,
+.site-shell-realm .guide-error{
+  max-width:720px!important;
+  padding:24px!important;
+  border:1px solid rgba(130,83,39,.2)!important;
+  background:rgba(255,248,234,.78)!important;
+  color:#624b36!important;
+  box-shadow:0 18px 54px rgba(63,37,16,.09)!important;
+}
+
+@media(max-width:820px){
+  .site-shell-realm .alliance-facts{grid-template-columns:1fr 1fr!important;margin-top:56px!important}
+  .site-shell-realm .alliance-facts div:nth-child(2){border-right:0!important}
+  .site-shell-realm .alliance-facts div:nth-child(-n+2){border-bottom:1px solid rgba(78,51,26,.13)!important}
+  .site-shell-realm .event-actions{margin-top:52px!important}
+}
+@media(max-width:560px){
+  .site-shell-realm .alliance-page,
+  .site-shell-realm .event-page,
+  .site-shell-realm .guide-page{padding-inline:16px!important}
+  .site-shell-realm .alliance-page:before,
+  .site-shell-realm .event-page:before,
+  .site-shell-realm .guide-page:before{height:310px}
+  .site-shell-realm .alliance-page{background:linear-gradient(180deg,#24170f 0 310px,#ead8b7 310px)!important}
+  .site-shell-realm .event-page{background:linear-gradient(180deg,#182131 0 310px,#ead8b7 310px)!important}
+  .site-shell-realm .guide-page{background:linear-gradient(180deg,#24170f 0 300px,#ead8b7 300px)!important}
+  .site-shell-realm .alliance-page-inner,
+  .site-shell-realm .event-page-inner,
+  .site-shell-realm .guide-inner{padding-top:46px!important}
+  .site-shell-realm .alliance-title,
+  .site-shell-realm .event-title,
+  .site-shell-realm .guide-header h1{font-size:clamp(40px,13vw,58px)!important}
+  .site-shell-realm .alliance-facts{grid-template-columns:1fr!important;margin-top:44px!important}
+  .site-shell-realm .alliance-facts div{border-right:0!important;border-bottom:1px solid rgba(78,51,26,.13)!important;padding:18px!important}
+  .site-shell-realm .alliance-facts div:last-child{border-bottom:0!important}
+  .site-shell-realm .guide-volume{padding:28px 22px 28px 28px!important}
+  .site-shell-realm .guide-topbar{align-items:flex-start!important;flex-direction:column!important}
+}
+
 @media(prefers-reduced-motion:reduce){
   .site-atmosphere-glow,.site-atmosphere-ridge,.home-v2-sun,.home-v2-mountain,.home-v2-citadel,.realm-shield-canvas,.home-v2-signal,.home-v2-story-scene:after,.home-v2-story-sun,.about-standard{transform:none!important}
 }
