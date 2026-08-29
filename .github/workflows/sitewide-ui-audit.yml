@@ -1,6 +1,9 @@
 name: Sitewide UI Playwright Audit
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - design/sitewide-parallax-ui
