@@ -19,7 +19,7 @@ const ROUTES = [
   '/admin/dashboard/alliances', '/admin/dashboard/form-gates', '/admin/dashboard/member-pins', '/admin/dashboard/interest',
   '/admin/dashboard/prep-ministers', '/admin/dashboard/flamedragon'
 ];
-const MEMBER_PREFIXES = ['/forms','/player-record/form','/power-profile','/flamedragon','/prep-phase-backpack','/events','/tools'];
+const MEMBER_PREFIXES = ['/forms','/player-record/form','/power-profile','/flamedragon','/prep-phase-backpack','/tools'];
 const ADMIN_PREFIX = '/admin/dashboard';
 
 function b64(v){return Buffer.from(v,'utf8').toString('base64url')}
@@ -29,6 +29,13 @@ function mintAdmin(){const secret=process.env.ADMIN_PASSWORD||'';if(!secret)retu
 function safeName(route,width){return `${(route.replace(/^\//,'').replace(/\//g,'-')||'home')}@${width}.png`}
 function needsMember(route){return MEMBER_PREFIXES.some(p=>route===p||route.startsWith(p+'/'))}
 function needsAdmin(route){return route===ADMIN_PREFIX||route.startsWith(ADMIN_PREFIX+'/')}
+async function setRouteAuth(ctx,route,host,member,admin){
+  await ctx.clearCookies();
+  const cookies=[];
+  if(needsMember(route)&&member) cookies.push({name:'k710_member_session',value:member,domain:host,path:'/'});
+  if(needsAdmin(route)&&admin) cookies.push({name:'tff_admin_session',value:admin,domain:host,path:'/'});
+  if(cookies.length) await ctx.addCookies(cookies);
+}
 
 (async()=>{
   fs.rmSync(OUT,{recursive:true,force:true}); fs.mkdirSync(SHOTS,{recursive:true});
@@ -39,12 +46,9 @@ function needsAdmin(route){return route===ADMIN_PREFIX||route.startsWith(ADMIN_P
     const ctx=await browser.newContext({viewport:{width,height:900}});
     await ctx.addInitScript(()=>{try{localStorage.setItem('k710-language-v1','en')}catch{}});
     const host=new URL(BASE).hostname;
-    const cookies=[];
-    if(member) cookies.push({name:'k710_member_session',value:member,domain:host,path:'/'});
-    if(admin) cookies.push({name:'tff_admin_session',value:admin,domain:host,path:'/'});
-    if(cookies.length) await ctx.addCookies(cookies);
     const page=await ctx.newPage();
     for(const route of ROUTES){
+      await setRouteAuth(ctx,route,host,member,admin);
       const errors=[]; const failed=[];
       const onConsole=(msg)=>{if(msg.type()==='error') errors.push(msg.text())};
       const onPageError=(err)=>errors.push(`pageerror: ${err.message}`);
@@ -72,7 +76,8 @@ function needsAdmin(route){return route===ADMIN_PREFIX||route.startsWith(ADMIN_P
           header:!!document.querySelector('.site-header'),
           footer:!!document.querySelector('.site-footer'),
           adminShell:!!document.querySelector('.admin-shell'),
-          atmosphere:!!document.querySelector('.site-atmosphere')
+          atmosphere:!!document.querySelector('.site-atmosphere'),
+          adminEditControls:document.querySelectorAll('[class*="edit"],[data-edit]').length
         }
       }).catch(()=>({}));
       const screenshot=path.join(SHOTS,safeName(route,width));
