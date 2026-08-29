@@ -52,9 +52,10 @@ function needsAdmin(route){return route===ADMIN_PREFIX||route.startsWith(ADMIN_P
       page.on('console',onConsole); page.on('pageerror',onPageError); page.on('requestfailed',onFailed);
       let status=null, finalUrl='', navError='';
       try{
-        const res=await page.goto(BASE+route,{waitUntil:'networkidle',timeout:30000});
+        const res=await page.goto(BASE+route,{waitUntil:'domcontentloaded',timeout:15000});
         status=res?.status()??null; finalUrl=page.url();
-        await page.waitForTimeout(350);
+        await page.waitForTimeout(700);
+        await page.evaluate(()=>document.fonts?.ready).catch(()=>{});
       }catch(err){navError=err.message; finalUrl=page.url()}
       const metrics=await page.evaluate(()=>{
         const main=document.querySelector('#main')||document.querySelector('main');
