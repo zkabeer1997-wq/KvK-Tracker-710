@@ -211,7 +211,15 @@ async function resolveDynamicRoutes(page) {
   const b = await chromium.launch({ executablePath: process.env.QA_CHROMIUM || undefined, args: ['--no-sandbox'] });
   const origin = new URL(B).hostname;
 
+  // Skip the first-visit language chooser (components/i18n/LanguageProvider.jsx)
+  // on every context - it's a full-screen overlay that would otherwise cover
+  // real page content in every screenshot, defeating the point of this tool.
+  const skipLanguageChooser = (ctx) => ctx.addInitScript(() => {
+    try { window.localStorage.setItem('k710-language-v1', 'en'); } catch { /* private mode */ }
+  });
+
   const probeCtx = await b.newContext();
+  await skipLanguageChooser(probeCtx);
   if (memberCookie) await probeCtx.addCookies([{ name: 'k710_member_session', value: memberCookie, domain: origin, path: '/' }]);
   const probe = await probeCtx.newPage();
   const routes = await resolveDynamicRoutes(probe);
@@ -219,6 +227,7 @@ async function resolveDynamicRoutes(page) {
 
   for (const width of WIDTHS) {
     const ctx = await b.newContext({ viewport: { width, height: 900 } });
+    await skipLanguageChooser(ctx);
     if (memberCookie) await ctx.addCookies([{ name: 'k710_member_session', value: memberCookie, domain: origin, path: '/' }]);
     if (adminCookie) await ctx.addCookies([{ name: 'tff_admin_session', value: adminCookie, domain: origin, path: '/' }]);
     const page = await ctx.newPage();
