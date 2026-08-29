@@ -5,7 +5,7 @@ import './admin-panel.css';
 import './kingdom.css';
 import './world-scene.css';
 import './i18n.css';
-import { Cinzel, Inter, JetBrains_Mono, Cormorant_Garamond } from 'next/font/google';
+import { Cinzel, Inter, JetBrains_Mono, Cormorant_Garamond, Fraunces } from 'next/font/google';
 import LanguageProvider from '../components/i18n/LanguageProvider';
 import SiteChrome from '../components/SiteChrome';
 import FilipinoTagalogOptions from '../components/i18n/FilipinoTagalogOptions';
@@ -45,6 +45,20 @@ const cormorant = Cormorant_Garamond({
   variable: '--font-narrative-loaded',
 });
 
+// .theme-realm's own display face (see tokens.css's .theme-realm block) -
+// a soft, warm serif so the bright public pages stop reading as
+// typographically identical to the dark .theme-console world, which
+// undermined the whole point of having two themes. Scoped entirely
+// through --font-display's value inside .theme-realm; .theme-console
+// keeps inheriting Cinzel from :root and never loads this at all beyond
+// the font file itself, which next/font still has to register on <html>.
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  weight: ['500', '600', '700', '800'],
+  display: 'swap',
+  variable: '--font-fraunces-loaded',
+});
+
 // The canonical production URL - every page's canonical tag and OG image
 // URL resolves against this. k710hub.vercel.app is the address named
 // throughout the portal plan itself; there's no purchased vanity domain
@@ -82,7 +96,7 @@ const organizationJsonLd = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${cinzel.variable} ${inter.variable} ${jetbrains.variable} ${cormorant.variable}`}>
+    <html lang="en" className={`${cinzel.variable} ${inter.variable} ${jetbrains.variable} ${cormorant.variable} ${fraunces.variable}`}>
       <body className="theme-console">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
         <LanguageProvider>

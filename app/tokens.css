@@ -231,6 +231,13 @@
 }
 
 .theme-realm {
+  /* Fraunces, not Cinzel - see app/layout.js. Every consumer (the
+     global h1-h4 rule in globals.css, and every .theme-realm page's own
+     inline styles) already reads var(--font-display) rather than a
+     hardcoded name, so overriding its value here is the only file this
+     needs to touch. .theme-console never redeclares --font-display, so
+     it keeps inheriting Cinzel from :root untouched. */
+  --font-display: var(--font-fraunces-loaded), Georgia, 'Times New Roman', serif;
   --color-bg:            #fbf3e0;
   --color-bg-alt:        #f5e6c4;
   --color-surface:       #fffaf0;

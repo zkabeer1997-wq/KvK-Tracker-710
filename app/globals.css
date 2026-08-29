@@ -462,7 +462,6 @@ button[type="submit"]:not(.k-btn):disabled { opacity: 0.5; cursor: not-allowed; 
 
 
 body { -webkit-font-smoothing: antialiased; }
-h1, h2, h3, h4 { font-family: var(--font-display); }
 ::selection { background: var(--gold); color: var(--ink); }
 
 *:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 3px; border-radius: 2px; }
