@@ -1,0 +1,45 @@
+name: Sitewide UI Playwright Audit
+
+on:
+  push:
+    branches:
+      - design/sitewide-parallax-ui
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ADMIN_PASSWORD: qa-admin-password
+      MEMBER_SESSION_SECRET: qa-member-session-secret
+      QA_BASE: http://127.0.0.1:3111
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - name: Start production server
+        run: |
+          npm run start -- -p 3111 > /tmp/k710-next.log 2>&1 &
+          for i in {1..45}; do
+            if curl -fsS http://127.0.0.1:3111 >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/k710-next.log
+          exit 1
+      - name: Run full-site Playwright audit
+        run: node scripts/qa-sitewide-audit.js
+      - name: Upload screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k710-sitewide-playwright-audit
+          path: |
+            qa-sitewide/
+            /tmp/k710-next.log
+          if-no-files-found: warn
