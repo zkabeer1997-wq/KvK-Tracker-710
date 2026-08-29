@@ -1,28 +1,15 @@
 import Link from 'next/link';
 import HomeEditableText from '../components/HomeEditableText';
 import { getHomeContent, checkIsAdmin } from '../lib/homeContent';
-import Chronometer from '../components/kingdom/world/Chronometer';
-import GateBackdrop from '../components/kingdom/world/GateBackdrop';
 import HomeForgeIntro from '../components/kingdom/world/HomeForgeIntro';
-import { Button, Card, Tag } from '../components/ui';
+import RealmShield3D from '../components/kingdom/world/RealmShield3D';
 
 export const metadata = {
   title: { absolute: 'Kingdom 710 — Three Alliances. One Kingdom.' },
-  description:
-    'Kingdom 710 is a KvK-first Kingshot kingdom run across three coordinated alliances, with Bear Hunt coverage in every timezone and real war-room tooling.',
+  description: 'Kingdom 710 — a cinematic Kingshot kingdom hub with live member tools, alliance operations, and transfer intake.',
   alternates: { canonical: '/' },
 };
 
-// Real content, server-rendered - the fix for the thing the whole portal
-// plan started from: this page used to render nothing but
-// <div id="main"><div class="k-scene"></div></div>. Every field below
-// (hero-*, deck-*, events-*) was already defined in lib/homeContent.js's
-// HOME_FIELDS and already stored in content_blocks - written for exactly
-// this page, then never wired up anywhere. wb-*/why-* are also read by
-// /chronometer, which keeps its own deeper treatment (full hunt windows,
-// the transfer march, doctrine) as the "About" destination PR 4's nav
-// already points to; this page is the concise front door, not a
-// duplicate of it.
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 export const revalidate = 0;
@@ -39,103 +26,100 @@ const DOCTRINE = [
   { n: 'III', titleKey: 'why-3-title', bodyKey: 'why-3-body' },
 ];
 
-const DECK = [
-  { key: 'deck-1', labelKey: 'deck-1-label', subKey: 'deck-1-sub', href: '/forms' },
-  { key: 'deck-2', labelKey: 'deck-2-label', subKey: 'deck-2-sub', href: '/power-profile' },
-  { key: 'deck-3', labelKey: 'deck-3-label', subKey: 'deck-3-sub', href: '/admin' },
+const COMMAND = [
+  { n: '01', href: '/events', title: 'Events', sub: 'Campaign schedule and kingdom timing' },
+  { n: '02', href: '/guides', title: 'Guides', sub: 'Doctrine, strategy and kingdom knowledge' },
+  { n: '03', href: '/tools', title: 'Tools', sub: 'Optimizers, calculators and event utilities' },
+  { n: '04', href: '/power-profile', title: 'Power Profile', sub: 'Player strength and profile management' },
 ];
 
 export default async function HomePage() {
   const content = await getHomeContent();
   const isAdmin = await checkIsAdmin();
-
   const field = (key, props = {}) => {
     const c = content[key] || { id: null, text: '' };
     return <HomeEditableText id={c.id} fieldKey={key} initialText={c.text} isAdmin={isAdmin} {...props} />;
   };
 
   return (
-    <main className="theme-realm home-page">
+    <main className="theme-realm home-v2">
       <HomeForgeIntro />
 
-      {/* ---- Hero ---- */}
-      <section className="home-hero">
-        <GateBackdrop />
-        <div className="home-hero-content">
+      <section className="home-v2-hero">
+        <div className="home-v2-sun" />
+        <div className="home-v2-mountain home-v2-mountain-back" />
+        <div className="home-v2-mountain home-v2-mountain-front" />
+        <div className="home-v2-citadel"><i/><i/><i/></div>
+        <div className="home-v2-forge-beam" />
+
+        <div className="home-v2-copy">
           <span className="k-mark">{field('hero-kicker')}</span>
-          <h1 className="home-hero-title">{field('hero-title', { as: 'span' })}</h1>
-          <p className="home-hero-sub">{field('hero-sub', { as: 'span', multiline: true })}</p>
-          <div className="home-hero-actions">
-            <Button href="/chronometer" variant="struck">Join K710</Button>
-            <Button href="/player-record" variant="quiet">Member Login</Button>
+          <h1>{field('hero-title', { as: 'span' })}</h1>
+          <p>{field('hero-sub', { as: 'span', multiline: true })}</p>
+          <div className="home-v2-actions">
+            <Link href="/chronometer" className="home-v2-primary">Request entry</Link>
+            <Link href="/tools" className="home-v2-secondary">Member command →</Link>
           </div>
-          <Chronometer />
         </div>
+
+        <RealmShield3D />
+
+        <aside className="home-v2-signal">
+          <div className="home-v2-signal-head"><span>KINGDOM SIGNAL</span><b>● LIVE</b></div>
+          <article><small>STATUS</small><strong>KVK MODE</strong><p>Preparation, growth and coordination in motion.</p></article>
+          <article><small>ALLIANCES</small><strong>03 ACTIVE</strong><p>710 · RED · SKY</p></article>
+          <article><small>MEMBER ACCESS</small><strong>TOOLS LIVE</strong><p>Forms, power data, events and optimizers.</p></article>
+        </aside>
       </section>
 
-      {/* ---- Why govern with us ---- */}
-      <section className="home-section">
-        <header className="home-section-head">
-          <span className="k-mark">{field('why-head-kicker')}</span>
-          <h2 className="home-section-title">{field('why-head-title')}</h2>
-          <p className="home-section-sub">{field('why-head-sub', { multiline: true })}</p>
-        </header>
-        <div className="home-doctrine">
-          {DOCTRINE.map((d) => (
-            <Card key={d.n} className="home-doctrine-card">
-              <span className="home-doctrine-num k-mark">{d.n}</span>
-              <h3 className="home-doctrine-title">{field(d.titleKey)}</h3>
-              <p className="home-doctrine-body">{field(d.bodyKey, { multiline: true })}</p>
-            </Card>
-          ))}
-        </div>
+      <section className="home-v2-strip">
+        <div><span>01</span><b>THE REALM</b><p>History, culture and what makes 710 worth joining.</p></div>
+        <div><span>02</span><b>THE WAR ROOM</b><p>Operational routes without turning the homepage into a dashboard.</p></div>
+        <div><span>03</span><b>THE FORGE</b><p>The shield identity continues beyond the loader and into the kingdom.</p></div>
       </section>
 
-      {/* ---- Alliance teaser ---- */}
-      <section className="home-section">
-        <header className="home-section-head">
-          <span className="k-mark">{field('wb-head-kicker')}</span>
-          <h2 className="home-section-title">{field('wb-head-title')}</h2>
-          <p className="home-section-sub">{field('wb-head-sub', { multiline: true })}</p>
-        </header>
-        <div className="home-alliances">
-          {ALLIANCES.map((a) => (
-            <Card key={a.band} className="home-alliance-card">
-              <Tag band={a.band}>{a.band}</Tag>
-              <h3 className="home-alliance-name">{field(a.nameKey)}</h3>
-              <p className="home-alliance-desc">{field(a.descKey, { multiline: true })}</p>
-            </Card>
-          ))}
-        </div>
-        <Link href="/chronometer" className="home-section-more">
-          See the full alliance schedule and hunt windows →
-        </Link>
-      </section>
-
-      {/* ---- Command deck (members) ---- */}
-      <section className="home-section">
-        <header className="home-section-head">
+      <section className="home-v2-command">
+        <div className="home-v2-command-copy">
           <span className="k-mark">{field('deck-head-kicker')}</span>
-          <h2 className="home-section-title">{field('deck-head-title')}</h2>
-          <p className="home-section-sub">{field('deck-head-sub', { multiline: true })}</p>
-        </header>
-        <div className="home-deck">
-          {DECK.map((d) => (
-            <Link key={d.key} href={d.href} className="home-deck-item">
-              <span className="home-deck-label">{field(d.labelKey)}</span>
-              <span className="home-deck-sub">{field(d.subKey)}</span>
-            </Link>
+          <h2>{field('deck-head-title')}</h2>
+          <p>{field('deck-head-sub', { multiline: true })}</p>
+        </div>
+        <div className="home-v2-command-list">
+          {COMMAND.map((item) => (
+            <Link key={item.href} href={item.href}><b>{item.n}</b><span><strong>{item.title}</strong><small>{item.sub}</small></span><i>↗</i></Link>
           ))}
         </div>
       </section>
 
-      {/* ---- Final CTA ---- */}
-      <section className="home-section home-final-cta">
-        <h2 className="home-section-title">Ready to march?</h2>
-        <p className="home-section-sub">
-          Bring your name, your strength, and your intent. The council reviews every petition.
-        </p>
-        <Button href="/chronometer" variant="struck">Approach the Registry</Button>
+      <section className="home-v2-story">
+        <div className="home-v2-story-scene"><div className="home-v2-story-sun"/><div className="home-v2-story-castle"/></div>
+        <div className="home-v2-story-copy">
+          <span className="k-mark">{field('why-head-kicker')}</span>
+          <h2>{field('why-head-title')}</h2>
+          <p>{field('why-head-sub', { multiline: true })}</p>
+          <div className="home-v2-doctrine">
+            {DOCTRINE.map((d) => <div key={d.n}><b>{d.n}</b><span><strong>{field(d.titleKey)}</strong><small>{field(d.bodyKey, { multiline: true })}</small></span></div>)}
+          </div>
+          <Link href="/about" className="home-v2-story-link">Read the kingdom story →</Link>
+        </div>
+      </section>
+
+      <section className="home-v2-alliances">
+        <span className="k-mark">{field('wb-head-kicker')}</span>
+        <h2>{field('wb-head-title')}</h2>
+        <div className="home-v2-alliance-line">
+          {ALLIANCES.map((a, index) => (
+            <div className="home-v2-alliance-fragment" key={a.band}>
+              {index > 0 && <i />}
+              <Link href={`/alliances/${a.band.toLowerCase()}`}><b>{a.band}</b><small>{field(a.nameKey)}</small><em>{field(a.descKey, { multiline: true })}</em></Link>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="home-v2-final">
+        <div><span className="k-mark">THE GATE IS OPEN</span><h2>Come in as a player.<br/>Stay because it works.</h2></div>
+        <Link href="/chronometer">Start transfer path</Link>
       </section>
     </main>
   );
