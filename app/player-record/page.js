@@ -1,6 +1,7 @@
 import { getBlocks, checkIsAdmin } from '../../lib/contentBlocks';
 import EditableSection from '../../components/EditableSection';
 import PlayerRecordGate from './PlayerRecordGate';
+import DiscordLoginOverlay from './DiscordLoginOverlay';
 
 export const metadata = {
   title: 'K710 KvK Availability',
@@ -20,5 +21,10 @@ export default async function PlayerRecordPage({ searchParams: searchParamsPromi
   const next = typeof searchParams?.next === 'string' ? searchParams.next : '';
   const discordLink = searchParams?.auth === 'discord-link';
   const authError = typeof searchParams?.auth_error === 'string' ? searchParams.auth_error : '';
-  return <PlayerRecordGate banner={banner} next={next} discordLink={discordLink} authError={authError} />;
+  return (
+    <>
+      <PlayerRecordGate banner={banner} next={next} />
+      <DiscordLoginOverlay discordLink={discordLink} authError={authError} next={next} />
+    </>
+  );
 }
