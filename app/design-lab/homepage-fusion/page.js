@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import FusionMotion from './FusionMotion';
 import './fusion.css';
 
 export const metadata = {
@@ -10,6 +11,7 @@ export const metadata = {
 export default function HomepageFusion() {
   return (
     <main className="fusion-page">
+      <FusionMotion />
       <section className="fusion-hero">
         <div className="sky-glow" />
         <div className="mountain mountain-a" />
