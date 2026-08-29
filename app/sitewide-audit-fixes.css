@@ -84,6 +84,17 @@ html,body,.site-shell,.site-route{max-width:100%;overflow-x:clip}
 .home-v2-story-scene:after{transform:translate3d(0,var(--site-story-055,0px),0)}
 .home-v2-story-sun{transform:translate3d(0,var(--site-story-025,0px),0)}
 
+/* About hero standard: keep the full shield/banner visible while preserving depth.
+   Chromium can clip a clip-path element when that same element is rotated in 3D. */
+.about-page .about-standard{
+  transform:translate3d(var(--site-pointer-x-10,0px),var(--site-pointer-y-8,0px),0)!important;
+  transform-origin:50% 50%;
+  backface-visibility:visible;
+  -webkit-backface-visibility:visible;
+  will-change:transform;
+}
+.about-page .about-head{overflow:visible!important}
+
 /* The transfer registry is part of the public Realm, not an operational console. */
 .site-shell-realm .registry{background:linear-gradient(180deg,rgba(10,13,18,.94),rgba(12,12,14,.985))}
 .site-shell-realm .registry-head{position:relative}
@@ -94,5 +105,5 @@ html,body,.site-shell,.site-route{max-width:100%;overflow-x:clip}
 .site-shell-console #main :is(.public-form-card,.form-block,.prep-day-card){background:linear-gradient(180deg,rgba(18,22,29,.92),rgba(10,13,18,.96))!important}
 
 @media(prefers-reduced-motion:reduce){
-  .site-atmosphere-glow,.site-atmosphere-ridge,.home-v2-sun,.home-v2-mountain,.home-v2-citadel,.realm-shield-canvas,.home-v2-signal,.home-v2-story-scene:after,.home-v2-story-sun{transform:none!important}
+  .site-atmosphere-glow,.site-atmosphere-ridge,.home-v2-sun,.home-v2-mountain,.home-v2-citadel,.realm-shield-canvas,.home-v2-signal,.home-v2-story-scene:after,.home-v2-story-sun,.about-standard{transform:none!important}
 }
