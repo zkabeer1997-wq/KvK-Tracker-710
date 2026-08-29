@@ -2,180 +2,50 @@ import Link from 'next/link';
 import styles from './homepage-lab.module.css';
 
 export const metadata = {
-  title: 'Homepage Design Lab · K710 Hub',
+  title: { absolute: 'K710 Homepage Design Lab' },
   description: 'Internal homepage direction studies for K710 Hub.',
   robots: { index: false, follow: false },
 };
 
-const ConceptNav = () => (
-  <nav className={styles.labNav} aria-label="Homepage design concepts">
-    <Link href="#chronicle">01 Chronicle</Link>
-    <Link href="#citadel">02 Citadel</Link>
-    <Link href="#march">03 March Table</Link>
-  </nav>
-);
+const concepts = [
+  ['04','The War Room'],['05','The Living Kingdom'],['06','The Royal Archive'],['07','The Forge Gate']
+];
 
-const EmberMark = ({ children }) => <span className={styles.emberMark}>{children}</span>;
+const Nav = () => <nav className={styles.labNav} aria-label="Homepage design concepts">
+  {concepts.map(([n,name]) => <Link key={n} href={`#c${n}`}>{n} {name.replace('The ','')}</Link>)}
+</nav>;
 
 export default function HomepageDesignLab() {
-  return (
-    <main className={styles.lab}>
-      <header className={styles.labHeader}>
-        <div>
-          <span className={styles.labKicker}>K710 · internal design lab</span>
-          <h1>Three directions for the front door.</h1>
-          <p>
-            These are structural studies, not production replacements. Each keeps the kingdom identity while testing a different bridge between cinematic Realm and useful Console.
-          </p>
-        </div>
-        <ConceptNav />
-      </header>
+  return <main className={styles.lab}>
+    <header className={styles.labHeader}><div><span className={styles.labKicker}>K710 · design lab · round two</span><h1>Four bolder front doors.</h1><p>The first studies were too polite. This round pushes hierarchy, atmosphere and identity harder while keeping the homepage useful to both recruits and members.</p></div><Nav /></header>
 
-      <section id="chronicle" className={`${styles.concept} ${styles.chronicle}`}>
-        <div className={styles.conceptLabel}>
-          <span>01</span>
-          <div>
-            <strong>The Chronicle</strong>
-            <small>Editorial Realm · recommended public direction</small>
-          </div>
-        </div>
+    <section id="c04" className={`${styles.concept} ${styles.warRoom}`}>
+      <div className={styles.conceptLabelDark}><span>04</span><div><strong>The War Room</strong><small>Command center · information as atmosphere</small></div></div>
+      <div className={styles.warHero}>
+        <div className={styles.warGrid}/><div className={styles.warOrb}>710<i/></div>
+        <div className={styles.warCopy}><span>KINGDOM COMMAND / ACTIVE</span><h2>One kingdom.<br/><em>Always moving.</em></h2><p>A living command homepage: current kingdom signal, events and member routes become part of the hero instead of content buried below it.</p><div className={styles.actions}><Link className={styles.signalButton} href="/chronometer">Request entry</Link><Link className={styles.warText} href="/tools">Open command tools →</Link></div></div>
+        <aside className={styles.livePanel}><div className={styles.liveHead}><span>LIVE SIGNAL</span><b>● ONLINE</b></div><article><small>01 / KINGDOM</small><strong>710</strong><p>Three alliances operating as one war group.</p></article><article><small>02 / NEXT MOVE</small><strong>PREP</strong><p>Growth, coordination and event readiness.</p></article><article><small>03 / ACCESS</small><strong>TOOLS</strong><p>Optimizers, records, forms and guides.</p></article></aside>
+      </div>
+      <div className={styles.warTicker}><span>710 / KINGDOM CORE</span><span>RED / REDEMPTION</span><span>SKY / ALLIANCE WING</span><span>KVK / PREP FIRST</span><span>TOOLS / LIVE</span></div>
+    </section>
 
-        <div className={styles.chronicleHero}>
-          <div className={styles.sunDisc} aria-hidden="true" />
-          <div className={styles.chronicleCopy}>
-            <EmberMark>Kingdom 710 · KvK-first</EmberMark>
-            <h2>Three alliances.<br />One kingdom.</h2>
-            <p>
-              Built for players who want organized wars, reliable event coverage, and a kingdom that treats preparation like part of the fight.
-            </p>
-            <div className={styles.actions}>
-              <Link className={styles.primaryWarm} href="/chronometer">Approach the registry</Link>
-              <Link className={styles.textAction} href="/about">Read our story <span>↗</span></Link>
-            </div>
-          </div>
-          <aside className={styles.fieldNote}>
-            <span className={styles.fieldNo}>710</span>
-            <p>Kingdom record</p>
-            <dl>
-              <div><dt>Alliances</dt><dd>710 · RED · SKY</dd></div>
-              <div><dt>Doctrine</dt><dd>Preparation wins wars</dd></div>
-              <div><dt>Coverage</dt><dd>Multi-timezone</dd></div>
-            </dl>
-          </aside>
-        </div>
+    <section id="c05" className={`${styles.concept} ${styles.living}`}>
+      <div className={styles.conceptLabel}><span>05</span><div><strong>The Living Kingdom</strong><small>Cinematic landscape · world-building first</small></div></div>
+      <div className={styles.livingHero}><div className={styles.mountain m1}/><div className={styles.mountain m2}/><div className={styles.kingdomSun}/><div className={styles.castle}><i/><i/><i/></div><div className={styles.livingCopy}><span>BEYOND THE GATE / KINGDOM 710</span><h2>There is a kingdom<br/>behind the tools.</h2><p>Make K710 feel like a place worth entering, then reveal the operational hub underneath the world-building.</p><Link className={styles.darkWarmButton} href="/about">Enter the realm</Link></div><div className={styles.coordinates}>K710<br/><small>THE REALM IS ACTIVE</small></div></div>
+      <div className={styles.storyStrip}><article><b>01</b><span>THE STORY</span><h3>Built through wars.</h3><p>A timeline-led introduction to what 710 has survived and become.</p></article><article><b>02</b><span>THE PEOPLE</span><h3>Three banners.</h3><p>Alliance identities feel like factions inside the same kingdom.</p></article><article><b>03</b><span>THE MISSION</span><h3>Win together.</h3><p>Recruitment becomes an invitation into a culture, not a form button.</p></article></div>
+    </section>
 
-        <div className={styles.chronicleBody}>
-          <article className={styles.statement}>
-            <span>Our doctrine</span>
-            <h3>We organize before the battlefield asks us to.</h3>
-            <p>
-              Instead of three equal cards, the kingdom philosophy becomes one memorable statement supported by a numbered campaign ledger.
-            </p>
-          </article>
-          <ol className={styles.doctrineLedger}>
-            <li><span>I</span><div><strong>Show up prepared.</strong><p>Growth, gear and coordination happen before the countdown reaches zero.</p></div></li>
-            <li><span>II</span><div><strong>Move as one.</strong><p>Three alliances share one operating picture when the kingdom is on the line.</p></div></li>
-            <li><span>III</span><div><strong>Make the kingdom useful.</strong><p>Schedules, tools and records live in one place instead of scattered chats.</p></div></li>
-          </ol>
-        </div>
+    <section id="c06" className={`${styles.concept} ${styles.archive}`}>
+      <div className={styles.conceptLabel}><span>06</span><div><strong>The Royal Archive</strong><small>Luxury editorial · restrained, authoritative, timeless</small></div></div>
+      <div className={styles.archiveHero}><div className={styles.archiveTop}><span>THE OFFICIAL RECORD OF</span><b>KINGDOM 710</b><span>EST. BY BATTLE</span></div><div className={styles.archiveMain}><div className={styles.bigSeven}>7</div><div className={styles.archiveCopy}><span>THE KINGDOM CHRONICLE / VOL. 710</span><h2>Built in battle.<br/>Kept in order.</h2><p>For a less “game UI” direction: premium typography, heraldic scale, deliberate whitespace and a strong editorial rhythm.</p><div className={styles.actions}><Link className={styles.inkButton} href="/timeline">Read the chronicle</Link><Link className={styles.archiveLink} href="/chronometer">Join the next chapter →</Link></div></div><div className={styles.bigTen}>10</div></div><div className={styles.archiveRule}><span>WAR RECORDS</span><span>ALLIANCE DOCTRINE</span><span>EVENT CALENDAR</span><span>TRANSFER REGISTRY</span></div></div>
+    </section>
 
-        <div className={styles.allianceRibbon} aria-label="K710 alliances">
-          <div><b>710</b><span>Kingdom core</span></div>
-          <div><b>RED</b><span>Redemption</span></div>
-          <div><b>SKY</b><span>Coordinated wing</span></div>
-          <Link href="/chronometer">View hunt windows →</Link>
-        </div>
-      </section>
+    <section id="c07" className={`${styles.concept} ${styles.forgeGate}`}>
+      <div className={styles.conceptLabelDark}><span>07</span><div><strong>The Forge Gate</strong><small>Brand signature · forge → shield → gate → hub</small></div></div>
+      <div className={styles.forgeHero}><div className={styles.forgeFlare}/><div className={styles.forgeShield}><span>710</span><i/></div><div className={styles.forgeCopy}><span>THE FORGE HAS OPENED</span><h2>Enter the kingdom<br/>you helped build.</h2><p>This direction turns the loader into the homepage's visual language instead of treating it as a separate intro animation.</p><div className={styles.actions}><Link className={styles.forgeButton} href="/chronometer">New to 710</Link><Link className={styles.forgeGhost} href="/tools">I’m already a member</Link></div></div><div className={styles.forgeRail}><span>CHOOSE YOUR PATH</span><Link href="/events"><b>01</b> Events <i>↗</i></Link><Link href="/guides"><b>02</b> Guides <i>↗</i></Link><Link href="/tools"><b>03</b> Tools <i>↗</i></Link><Link href="/power-profile"><b>04</b> Power <i>↗</i></Link></div></div>
+      <div className={styles.forgeManifesto}><span>THE IDEA</span><h3>The forge should not finish when the loader disappears.</h3><p>Carry its heat, metal, geometry and ritual into the entire entry experience. Of these four, this is the most ownable K710-specific visual system.</p></div>
+    </section>
 
-      <section id="citadel" className={`${styles.concept} ${styles.citadel}`}>
-        <div className={styles.conceptLabelDark}>
-          <span>02</span>
-          <div>
-            <strong>The Citadel</strong>
-            <small>Cinematic Bridge · strongest continuation of the gate</small>
-          </div>
-        </div>
-
-        <div className={styles.citadelScene}>
-          <div className={styles.gateSilhouette} aria-hidden="true">
-            <i className={styles.towerLeft} />
-            <i className={styles.gateArch} />
-            <i className={styles.towerRight} />
-          </div>
-          <div className={styles.citadelGlow} aria-hidden="true" />
-          <div className={styles.citadelHeroCopy}>
-            <span className={styles.goldEyebrow}>ENTER KINGDOM 710</span>
-            <h2>Built to fight<br />as one kingdom.</h2>
-            <p>War-room discipline outside. Kingdom atmosphere at the threshold.</p>
-            <div className={styles.actions}>
-              <Link className={styles.goldButton} href="/chronometer">Join K710</Link>
-              <Link className={styles.ghostDark} href="/player-record">Member entry</Link>
-            </div>
-          </div>
-          <div className={styles.statusRail}>
-            <span className={styles.statusTitle}>KINGDOM SIGNAL</span>
-            <div><small>WAR BANDS</small><strong>03</strong></div>
-            <div><small>OPERATING MODE</small><strong>KVK</strong></div>
-            <div><small>MEMBER TOOLS</small><strong>LIVE</strong></div>
-          </div>
-        </div>
-
-        <div className={styles.citadelDeck}>
-          <div className={styles.deckLead}>
-            <span>Command deck</span>
-            <h3>Get where you need to go.</h3>
-            <p>The homepage becomes a gateway, not a brochure. Member tasks sit immediately under the cinematic hero.</p>
-          </div>
-          <Link href="/forms" className={styles.deckRow}><b>01</b><span><strong>Kingdom forms</strong><small>Applications and operational submissions</small></span><i>↗</i></Link>
-          <Link href="/power-profile" className={styles.deckRow}><b>02</b><span><strong>Power profile</strong><small>Review and manage player strength data</small></span><i>↗</i></Link>
-          <Link href="/tools" className={styles.deckRow}><b>03</b><span><strong>Tools</strong><small>Optimizers, calculators and event utilities</small></span><i>↗</i></Link>
-        </div>
-      </section>
-
-      <section id="march" className={`${styles.concept} ${styles.march}`}>
-        <div className={styles.conceptLabel}>
-          <span>03</span>
-          <div>
-            <strong>The March Table</strong>
-            <small>Realm × Console · strongest utility-first hybrid</small>
-          </div>
-        </div>
-
-        <div className={styles.marchGrid}>
-          <article className={styles.marchHero}>
-            <span className={styles.marchKicker}>THE KINGDOM TABLE · 710</span>
-            <h2>Know the kingdom.<br />Know the next move.</h2>
-            <p>A homepage designed like a campaign table: identity, current priorities and direct routes into the hub coexist in a single composition.</p>
-            <Link className={styles.inkButton} href="/chronometer">Enter the kingdom</Link>
-          </article>
-
-          <aside className={styles.marchBrief}>
-            <span>Today in K710</span>
-            <div className={styles.briefItem}><b>01</b><p><strong>Bear Hunt coverage</strong><small>Multiple alliance windows across the day</small></p></div>
-            <div className={styles.briefItem}><b>02</b><p><strong>Transfer registry</strong><small>Review requirements and submit interest</small></p></div>
-            <div className={styles.briefItem}><b>03</b><p><strong>Member operations</strong><small>Tools, records and event workflows</small></p></div>
-          </aside>
-
-          <div className={styles.mapField} aria-label="Stylized kingdom campaign map">
-            <span className={styles.mapLabel}>K710 CAMPAIGN TABLE</span>
-            <div className={`${styles.mapNode} ${styles.node710}`}><b>710</b><small>CORE</small></div>
-            <div className={`${styles.mapNode} ${styles.nodeRed}`}><b>RED</b><small>WEST</small></div>
-            <div className={`${styles.mapNode} ${styles.nodeSky}`}><b>SKY</b><small>EAST</small></div>
-            <i className={styles.routeOne} /><i className={styles.routeTwo} />
-          </div>
-
-          <div className={styles.quickRoutes}>
-            <Link href="/events"><span>Events</span><b>Campaign calendar →</b></Link>
-            <Link href="/guides"><span>Guides</span><b>Kingdom doctrine →</b></Link>
-            <Link href="/tools"><span>Tools</span><b>Open command tools →</b></Link>
-          </div>
-        </div>
-      </section>
-
-      <footer className={styles.labFooter}>
-        <p><strong>Recommendation:</strong> use Chronicle as the public content language, Citadel as the hero/entry language, and borrow March Table patterns selectively for live/utility modules.</p>
-        <Link href="/">Return to current homepage →</Link>
-      </footer>
-    </main>
-  );
+    <footer className={styles.labFooter}><p><strong>Round-two recommendation:</strong> 07 is the strongest brand direction; 04 is the strongest functional homepage; 05 is the most cinematic; 06 is the most premium/editorial. The best production result may combine 07’s identity with 04’s live command layer.</p><Link href="/">Current homepage →</Link></footer>
+  </main>;
 }
