@@ -21,16 +21,16 @@ const ALLIANCES = [
 ];
 
 const DOCTRINE = [
-  { n: 'I', titleKey: 'why-1-title', bodyKey: 'why-1-body' },
-  { n: 'II', titleKey: 'why-2-title', bodyKey: 'why-2-body' },
-  { n: 'III', titleKey: 'why-3-title', bodyKey: 'why-3-body' },
+  { titleKey: 'why-1-title', bodyKey: 'why-1-body' },
+  { titleKey: 'why-2-title', bodyKey: 'why-2-body' },
+  { titleKey: 'why-3-title', bodyKey: 'why-3-body' },
 ];
 
 const COMMAND = [
-  { n: '01', href: '/events', title: 'Events', sub: 'Campaign schedule and kingdom timing' },
-  { n: '02', href: '/guides', title: 'Guides', sub: 'Doctrine, strategy and kingdom knowledge' },
-  { n: '03', href: '/tools', title: 'Tools', sub: 'Optimizers, calculators and event utilities' },
-  { n: '04', href: '/power-profile', title: 'Power Profile', sub: 'Player strength and profile management' },
+  { href: '/events', title: 'Events', sub: 'Campaign schedule and kingdom timing' },
+  { href: '/guides', title: 'Guides', sub: 'Strategy and kingdom knowledge' },
+  { href: '/tools', title: 'Tools', sub: 'Optimizers, calculators and event utilities' },
+  { href: '/power-profile', title: 'Power Profile', sub: 'Player strength and profile management' },
 ];
 
 export default async function HomePage() {
@@ -42,84 +42,86 @@ export default async function HomePage() {
   };
 
   return (
-    <main className="theme-realm home-v2">
+    <main className="theme-realm home-v2 home-crafted">
       <HomeForgeIntro />
 
-      <section className="home-v2-hero">
-        <div className="home-v2-sun" />
-        <div className="home-v2-mountain home-v2-mountain-back" />
-        <div className="home-v2-mountain home-v2-mountain-front" />
-        <div className="home-v2-citadel"><i/><i/><i/></div>
-        <div className="home-v2-forge-beam" />
-
-        <div className="home-v2-copy">
-          <span className="k-mark">{field('hero-kicker')}</span>
+      <section className="home-crafted-hero">
+        <div className="home-crafted-hero-copy">
+          <p className="home-crafted-context">{field('hero-kicker')}</p>
           <h1>{field('hero-title', { as: 'span' })}</h1>
-          <p>{field('hero-sub', { as: 'span', multiline: true })}</p>
-          <div className="home-v2-actions">
-            <Link href="/chronometer" className="home-v2-primary">Request entry</Link>
-            <Link href="/tools" className="home-v2-secondary">Member command →</Link>
+          <p className="home-crafted-lede">{field('hero-sub', { as: 'span', multiline: true })}</p>
+          <div className="home-crafted-actions">
+            <Link href="/chronometer" className="home-crafted-primary">Request entry</Link>
+            <Link href="/player-record" className="home-crafted-text-link">Member sign in <span aria-hidden="true">→</span></Link>
           </div>
         </div>
 
-        <RealmShield3D />
+        <div className="home-crafted-emblem" aria-label="Kingdom 710 shield">
+          <RealmShield3D />
+          <p><strong>710</strong><span>Three alliances<br />One kingdom</span></p>
+        </div>
 
-        <aside className="home-v2-signal">
-          <div className="home-v2-signal-head"><span>KINGDOM SIGNAL</span><b>● LIVE</b></div>
-          <article><small>STATUS</small><strong>KVK MODE</strong><p>Preparation, growth and coordination in motion.</p></article>
-          <article><small>ALLIANCES</small><strong>03 ACTIVE</strong><p>710 · RED · SKY</p></article>
-          <article><small>MEMBER ACCESS</small><strong>TOOLS LIVE</strong><p>Forms, power data, events and optimizers.</p></article>
-        </aside>
+        <div className="home-crafted-brief" aria-label="Kingdom brief">
+          <span>Kingdom brief</span>
+          <p><strong>710 · RED · SKY</strong><small>Coordinated alliance network</small></p>
+          <p><strong>7 hunt windows</strong><small>Coverage across global time zones</small></p>
+          <Link href="/events">View the live schedule →</Link>
+        </div>
       </section>
 
-      <section className="home-v2-strip">
-        <div><span>01</span><b>THE REALM</b><p>History, culture and what makes 710 worth joining.</p></div>
-        <div><span>02</span><b>THE WAR ROOM</b><p>Operational routes without turning the homepage into a dashboard.</p></div>
-        <div><span>03</span><b>THE FORGE</b><p>The shield identity continues beyond the loader and into the kingdom.</p></div>
-      </section>
-
-      <section className="home-v2-command">
-        <div className="home-v2-command-copy">
-          <span className="k-mark">{field('deck-head-kicker')}</span>
+      <section className="home-crafted-directory">
+        <div className="home-crafted-section-copy">
+          <p>{field('deck-head-kicker')}</p>
           <h2>{field('deck-head-title')}</h2>
-          <p>{field('deck-head-sub', { multiline: true })}</p>
+          <div className="home-crafted-rule" />
+          <p className="home-crafted-description">{field('deck-head-sub', { multiline: true })}</p>
         </div>
-        <div className="home-v2-command-list">
+        <nav className="home-crafted-directory-list" aria-label="Member tools">
           {COMMAND.map((item) => (
-            <Link key={item.href} href={item.href}><b>{item.n}</b><span><strong>{item.title}</strong><small>{item.sub}</small></span><i>↗</i></Link>
+            <Link key={item.href} href={item.href}><span><strong>{item.title}</strong><small>{item.sub}</small></span><b aria-hidden="true">↗</b></Link>
           ))}
-        </div>
+        </nav>
       </section>
 
-      <section className="home-v2-story">
-        <div className="home-v2-story-scene"><div className="home-v2-story-sun"/><div className="home-v2-story-castle"/></div>
-        <div className="home-v2-story-copy">
-          <span className="k-mark">{field('why-head-kicker')}</span>
+      <section className="home-crafted-story">
+        <div className="home-crafted-story-heading">
+          <p>{field('why-head-kicker')}</p>
           <h2>{field('why-head-title')}</h2>
-          <p>{field('why-head-sub', { multiline: true })}</p>
-          <div className="home-v2-doctrine">
-            {DOCTRINE.map((d) => <div key={d.n}><b>{d.n}</b><span><strong>{field(d.titleKey)}</strong><small>{field(d.bodyKey, { multiline: true })}</small></span></div>)}
-          </div>
-          <Link href="/about" className="home-v2-story-link">Read the kingdom story →</Link>
+          <p className="home-crafted-description">{field('why-head-sub', { multiline: true })}</p>
+          <Link href="/about">Read the kingdom story →</Link>
         </div>
-      </section>
-
-      <section className="home-v2-alliances">
-        <span className="k-mark">{field('wb-head-kicker')}</span>
-        <h2>{field('wb-head-title')}</h2>
-        <div className="home-v2-alliance-line">
-          {ALLIANCES.map((a, index) => (
-            <div className="home-v2-alliance-fragment" key={a.band}>
-              {index > 0 && <i />}
-              <Link href={`/alliances/${a.band.toLowerCase()}`}><b>{a.band}</b><small>{field(a.nameKey)}</small><em>{field(a.descKey, { multiline: true })}</em></Link>
-            </div>
+        <div className="home-crafted-principles">
+          {DOCTRINE.map((d) => (
+            <article key={d.titleKey}>
+              <h3>{field(d.titleKey)}</h3>
+              <p>{field(d.bodyKey, { multiline: true })}</p>
+            </article>
           ))}
         </div>
       </section>
 
-      <section className="home-v2-final">
-        <div><span className="k-mark">THE GATE IS OPEN</span><h2>Come in as a player.<br/>Stay because it works.</h2></div>
-        <Link href="/chronometer">Start transfer path</Link>
+      <section className="home-crafted-alliances">
+        <div className="home-crafted-alliance-heading">
+          <p>{field('wb-head-kicker')}</p>
+          <h2>{field('wb-head-title')}</h2>
+          <p className="home-crafted-description">{field('wb-head-sub', { multiline: true })}</p>
+        </div>
+        <div className="home-crafted-alliance-list">
+          {ALLIANCES.map((a, index) => (
+            <Link href={`/alliances/${a.band.toLowerCase()}`} key={a.band}>
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              <strong>{a.band}</strong>
+              <p>{field(a.descKey, { multiline: true })}</p>
+              <b aria-hidden="true">→</b>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="home-crafted-final">
+        <p>Considering a move?</p>
+        <h2>See whether 710 fits the way you play.</h2>
+        <Link href="/chronometer">Start your transfer request <span aria-hidden="true">→</span></Link>
       </section>
     </main>
   );
