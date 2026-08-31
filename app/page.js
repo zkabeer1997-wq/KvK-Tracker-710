@@ -5,7 +5,7 @@ import HomeForgeIntro from '../components/kingdom/world/HomeForgeIntro';
 import RealmShield3D from '../components/kingdom/world/RealmShield3D';
 
 export const metadata = {
-  title: { absolute: 'Kingdom 710 — Three Alliances. One Kingdom.' },
+  title: { absolute: 'Kingdom 710 · Kingshot' },
   description: 'The Kingdom 710 website for alliance schedules, events, member forms, guides, upgrade tools, and transfer applications.',
   alternates: { canonical: '/' },
 };
@@ -185,12 +185,6 @@ export default async function HomePage() {
 
         <RealmShield3D />
 
-        <aside className="home-v2-signal">
-          <div className="home-v2-signal-head"><span>KINGDOM 710</span><b>● SITE ONLINE</b></div>
-          <article><small>ALLIANCES</small><strong>710 · RED · SKY</strong><p>Open an alliance page for Bear Hunt times.</p></article>
-          <article><small>EVENT COVERAGE</small><strong>7 BEAR HUNTS</strong><p>Times are listed in UTC on the Events page.</p></article>
-          <article><small>MEMBERS</small><strong>SIGN IN</strong><p>Update your profile or submit a KvK form.</p></article>
-        </aside>
       </section>
 
       <section className="home-v2-strip">
