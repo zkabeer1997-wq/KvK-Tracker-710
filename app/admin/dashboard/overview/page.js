@@ -111,7 +111,7 @@ export default function AdminDashboardOverviewPage() {
   return (
     <AdminShell
       title="Dashboard Panel"
-      subtitle="K710 command overview"
+      subtitle="Website and member activity"
       onLogout={handleLogout}
       counters={[
         { label: 'Roster', value: roster.length },
