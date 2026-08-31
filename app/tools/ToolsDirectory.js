@@ -82,7 +82,7 @@ export default function ToolsDirectory({ memberId, category }) {
                 <span className="tools-menu-icon"><CategoryGlyph category={name} /></span>
                 <strong className="k-display tools-menu-title">{name}</strong>
                 <span className="tools-menu-count">
-                  {tools.length ? `${tools.length} instrument${tools.length === 1 ? '' : 's'}` : 'Coming soon'}
+                  {tools.length ? `${tools.length} tool${tools.length === 1 ? '' : 's'}` : 'No tools yet'}
                 </span>
               </Link>
             );
@@ -122,9 +122,9 @@ export default function ToolsDirectory({ memberId, category }) {
 
       <div className="tools-category-block">
         <div className="tools-category-head">
-          <span className="k-mark">Workshop discipline</span>
+          <span className="k-mark">Tool category</span>
           <h2 className="k-display">{selected}</h2>
-          <span className="tools-category-count">{tools.length} instrument{tools.length === 1 ? '' : 's'}</span>
+          <span className="tools-category-count">{tools.length} tool{tools.length === 1 ? '' : 's'}</span>
         </div>
 
         {tools.length ? (
@@ -134,8 +134,8 @@ export default function ToolsDirectory({ memberId, category }) {
         ) : (
           <div className="tools-empty">
             <span aria-hidden="true">◇</span>
-            <h3 className="k-display">Tools are being forged</h3>
-            <p className="k-narrative">The {selected} workshop is prepared for future calculators.</p>
+            <h3 className="k-display">No {selected} tools yet</h3>
+            <p className="k-narrative">Calculators added to this category will appear here.</p>
           </div>
         )}
       </div>
