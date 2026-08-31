@@ -38,8 +38,8 @@ export default function AdminLoginPage() {
         <svg className="command-hall-crest" viewBox="0 0 40 40" fill="none" aria-hidden="true">
           <path d="M20 3 L35 8 V19 C35 28 29 34 20 37 C11 34 5 28 5 19 V8 Z" stroke="currentColor" strokeWidth="1.6" />
         </svg>
-        <h1>COMMAND HALL</h1>
-        <p className="sub">Leadership Access</p>
+        <h1>ADMIN SIGN IN</h1>
+        <p className="sub">Kingdom 710 administrators</p>
         <form className="command-hall-form" onSubmit={handleSubmit}>
           <label htmlFor="admin-password" className="admin-drawer-field">
             <span>Admin Password</span>
@@ -64,7 +64,7 @@ export default function AdminLoginPage() {
           </label>
           {error && <div className="status error">{error}</div>}
           <button type="submit" className="command-hall-submit" disabled={loading}>
-            {loading ? 'Checking...' : 'Enter the Hall'}
+            {loading ? 'Checking...' : 'Sign in'}
           </button>
         </form>
       </div>
