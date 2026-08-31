@@ -5,35 +5,35 @@ import Link from 'next/link';
 const destinations = [
   {
     key: 'tools',
-    kicker: 'The Workshop',
+    kicker: 'Planning',
     title: 'Tools & Calculators',
     description: 'Event planning, upgrade optimization, and kingdom utilities.',
     href: (id) => `/tools?member_id=${id}`,
   },
   {
     key: 'forms',
-    kicker: 'The Muster Hall',
+    kicker: 'Member information',
     title: 'Forms',
     description: 'Player Profile, KvK Availability, KvK Prep, and Flamedragon Tyrant.',
     href: (id) => `/forms?member_id=${id}`,
   },
   {
     key: 'admin',
-    kicker: 'Restricted Command',
+    kicker: 'Administrators only',
     title: 'Admin Portal',
     description: 'Kingdom administration and response management.',
     href: () => '/admin',
   },
   {
     key: 'guides',
-    kicker: 'The Kingdom Library',
+    kicker: 'Help and strategy',
     title: 'Guides',
     description: 'Strategy, event, and kingdom reference guides.',
     href: (id) => `/guides?member_id=${id}`,
   },
   {
     key: 'events',
-    kicker: 'The War Calendar',
+    kicker: 'Schedule',
     title: 'Events',
     description: 'Bear Hunt windows, KvK, Championship, and Swordland, in your local time.',
     href: (id) => `/events?member_id=${id}`,
@@ -149,9 +149,9 @@ export default function MemberHub({ memberId }) {
 
       <div className="muster-inner member-chambers-inner">
         <header className="muster-head member-chambers-head">
-          <span className="k-mark">Inner Hall &middot; Member {memberId}</span>
-          <h1 className="k-display member-chambers-title">Choose your chamber</h1>
-          <p className="k-narrative member-chambers-lede">Four doors stand open inside the kingdom. Choose where you need to go.</p>
+          <span className="k-mark">Member {memberId}</span>
+          <h1 className="k-display member-chambers-title">Member page</h1>
+          <p className="k-narrative member-chambers-lede">Choose the section you want to open.</p>
         </header>
 
         <nav className="hall member-hall" aria-label="Member destinations">
