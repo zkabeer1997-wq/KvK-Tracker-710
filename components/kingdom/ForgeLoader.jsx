@@ -75,7 +75,7 @@ export default function ForgeLoader({ onDone, reducedMotion }) {
   }, []);
 
   return (
-    <div className={`forge-loader${fadeOut ? ' forge-loader-fade' : ''}`} role="status" aria-live="polite" aria-label="Forging the kingdom">
+    <div className={`forge-loader${fadeOut ? ' forge-loader-fade' : ''}`} role="status" aria-live="polite" aria-label="Loading Kingdom 710">
       {!reducedMotion && <canvas ref={canvasRef} className="forge-canvas" aria-hidden="true" />}
       <div className="forge-center">
         <svg className="forge-crest" viewBox="0 0 200 200" fill="none" aria-hidden="true">
@@ -84,7 +84,7 @@ export default function ForgeLoader({ onDone, reducedMotion }) {
           <text x="100" y="112" textAnchor="middle" fontFamily="Cinzel, serif" fontWeight="900" fontSize="46" fill="#d9a94e" className="forge-crest-glyph">710</text>
         </svg>
         <div className="forge-title">KINGDOM 710</div>
-        <div className="forge-sub">Forging the kingdom</div>
+        <div className="forge-sub">Loading Kingdom 710</div>
       </div>
     </div>
   );
