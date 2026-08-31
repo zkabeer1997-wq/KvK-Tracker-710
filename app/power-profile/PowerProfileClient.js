@@ -166,9 +166,9 @@ return (
 <div className="armory-rack-r" aria-hidden="true" />
 <div className="armory-inner">
 <header className="armory-head">
-<span className="k-mark">The Armory</span>
+<span className="k-mark">Kingdom 710 member profile</span>
 <h1 className="k-display armory-title k-engraved">Player Profile</h1>
-<p className="k-narrative armory-lede">Record your equipment, troops, and heroes so rally leadership knows what you bring to the field.</p>
+<p className="k-narrative armory-lede">Keep your troop levels, heroes, Governor Gear, charms, and power information up to date.</p>
 </header>
 {intro}
 <form className="public-form-card war-ledger-form" onSubmit={handleSubmit}>
@@ -205,7 +205,7 @@ Player profile on file - Governor Gear: {onFile.governor_gear || '-'} / Charms: 
   <div className="ledger-block-head">
     <span className="ledger-block-kicker">Hero Roster</span>
     <h3>Heroes</h3>
-    <p>Select every hero you can confidently field.</p>
+    <p>Select the heroes available on your account.</p>
   </div>
   <div className="hero-chip-grid">
     {HEROES.map((hero) => (
@@ -263,9 +263,9 @@ Player profile on file - Governor Gear: {onFile.governor_gear || '-'} / Charms: 
 
 <div className="ledger-block">
   <div className="ledger-block-head">
-    <span className="ledger-block-kicker">War Stats</span>
+    <span className="ledger-block-kicker">Additional power</span>
     <h3>Hero, Pet &amp; Masters Power</h3>
-    <p>Use the exact labels or numbers you want admins to see.</p>
+    <p>Enter the values shown in your account.</p>
   </div>
   <div className="ledger-stats-grid">
     {POWER_PROFILE_FIELDS.map((field) => (
