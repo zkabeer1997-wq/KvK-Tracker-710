@@ -2,7 +2,7 @@ import GateExperience from '../../components/kingdom/world/GateExperience';
 
 export const metadata = {
   title: 'The Gate',
-  description: 'Enter Kingdom 710 through the Gate — choose your road into the realm.',
+  description: 'Choose where you want to go on the Kingdom 710 website.',
   alternates: { canonical: '/gate' },
 };
 
