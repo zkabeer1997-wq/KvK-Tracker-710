@@ -421,7 +421,7 @@ return timestamp > latest ? timestamp : latest;
 return (
 <AdminShell
 title="Player Records"
-subtitle="K710 command board"
+subtitle="Manage member records"
 onLogout={handleLogout}
 counters={[
 { label: 'Members', value: rows.length },
