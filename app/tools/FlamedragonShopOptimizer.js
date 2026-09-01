@@ -33,7 +33,7 @@ export default function FlamedragonShopOptimizer() {
       try {
         const response = await fetch('/api/tool-state/flamedragon-shop', { cache: 'no-store' });
         if (!response.ok) {
-          setSaveStatus(response.status === 401 ? 'Log in through the member gate to restore and save this plan.' : 'Could not load saved inputs.');
+          setSaveStatus(response.status === 401 ? 'Sign in as a member to restore and save this plan.' : 'Could not load saved inputs.');
           return;
         }
         const result = await response.json();
