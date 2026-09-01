@@ -5,12 +5,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const DESTINATIONS = [
-  { href: '/', label: 'The Gate', note: 'Kingdom entrance' },
-  { href: '/chronometer', label: 'Chronometer', note: 'The unbroken watch' },
-  { href: '/interest', label: 'Registry', note: 'Petition for entry' },
-  { href: '/player-record', label: 'Muster', note: 'Members only' },
-  { href: '/power-profile', label: 'Armory', note: 'Governor power' },
-  { href: '/admin', label: 'War Room', note: 'Command access', restricted: true },
+  { href: '/', label: 'Home', note: 'Kingdom 710 website' },
+  { href: '/chronometer', label: 'Bear Hunt Schedule', note: 'Alliance times and transfers' },
+  { href: '/interest', label: 'Transfer Form', note: 'Apply to join K710' },
+  { href: '/player-record', label: 'Member Sign In', note: 'Member pages and forms' },
+  { href: '/power-profile', label: 'Player Profile', note: 'Gear, heroes, troops, and power' },
+  { href: '/admin', label: 'Admin', note: 'Administrators only', restricted: true },
 ];
 
 /**
