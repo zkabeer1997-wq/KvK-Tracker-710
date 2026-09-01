@@ -3,6 +3,8 @@ import HomeEditableText from '../components/HomeEditableText';
 import { getHomeContent, checkIsAdmin } from '../lib/homeContent';
 import HomeForgeIntro from '../components/kingdom/world/HomeForgeIntro';
 import RealmShield3D from '../components/kingdom/world/RealmShield3D';
+import GalleryCarousel from '../components/gallery/GalleryCarousel';
+import { getGalleryImages } from '../lib/gallery';
 
 export const metadata = {
   title: { absolute: 'Kingdom 710 · Kingshot' },
@@ -155,6 +157,8 @@ const COPY_REWRITES = {
 export default async function HomePage() {
   const content = await getHomeContent();
   const isAdmin = await checkIsAdmin();
+  let galleryImages = [];
+  try { galleryImages = await getGalleryImages({ limit: 10 }); } catch (error) { console.error('homepage gallery load failed', error); }
   const field = (key, props = {}) => {
     const c = content[key] || { id: null, text: '' };
     const rewrite = COPY_REWRITES[key];
@@ -231,6 +235,8 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      <GalleryCarousel images={galleryImages} />
 
       <section className="home-v2-final">
         <div><span className="k-mark">KINGDOM TRANSFERS</span><h2>Interested in moving<br/>to Kingdom 710?</h2></div>

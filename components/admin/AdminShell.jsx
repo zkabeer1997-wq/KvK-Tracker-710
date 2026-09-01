@@ -19,6 +19,7 @@ const NAV_SECTIONS = [
       { href: '/admin/dashboard/guides', label: 'Guides', match: '/admin/dashboard/guides' },
       { href: '/admin/dashboard/events', label: 'Events', match: '/admin/dashboard/events' },
       { href: '/admin/dashboard/alliances', label: 'Alliances', match: '/admin/dashboard/alliances' },
+      { href: '/admin/dashboard/gallery', label: 'Gallery', match: '/admin/dashboard/gallery' },
       { href: '/admin/dashboard/form-gates', label: 'Form Gates', match: '/admin/dashboard/form-gates' },
     ],
   },

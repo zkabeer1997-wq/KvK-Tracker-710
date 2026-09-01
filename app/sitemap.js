@@ -7,6 +7,7 @@ const STATIC_ROUTES = [
   { path: '/about', priority: 0.8, changeFrequency: 'weekly' },
   { path: '/timeline', priority: 0.7, changeFrequency: 'weekly' },
   { path: '/guides', priority: 0.8, changeFrequency: 'weekly' },
+  { path: '/gallery', priority: 0.8, changeFrequency: 'weekly' },
   { path: '/interest', priority: 0.9, changeFrequency: 'monthly' },
   { path: '/player-record', priority: 0.5, changeFrequency: 'yearly' },
 ];
