@@ -6,11 +6,11 @@
   position: relative;
   height: 100%;
   padding: 0;
-  background: var(--stone);
+  background: var(--obsidian);
 }
 .home-gallery.is-embedded .home-gallery-stage {
   height: 100%;
-  min-height: 760px;
+  min-height: 100%;
   aspect-ratio: auto;
 }
 .home-gallery-embedded-link {
@@ -31,6 +31,20 @@
   top: 22px;
   left: 20px;
   margin: 0;
+}
+.home-gallery.is-embedded .home-gallery-stage figure::before,
+.home-gallery.is-embedded .home-gallery-stage figure::after {
+  display: none;
+}
+.home-gallery.is-embedded .home-gallery-stage img {
+  object-fit: cover;
+  object-position: center 32%;
+  filter: none;
+}
+.home-gallery.is-embedded .home-gallery-arrow {
+  top: auto;
+  bottom: 20px;
+  transform: none;
 }
 .home-gallery-heading {
   display: flex;
