@@ -23,7 +23,7 @@ export default function AdventureStallOptimizer() {
     async function load() {
       try {
         const response = await fetch('/api/tool-state/adventure-stall', { cache: 'no-store' });
-        if (!response.ok) { setSaveStatus(response.status === 401 ? 'Log in through the member gate to restore and save this plan.' : 'Could not load saved inputs.'); return; }
+        if (!response.ok) { setSaveStatus(response.status === 401 ? 'Sign in as a member to restore and save this plan.' : 'Could not load saved inputs.'); return; }
         const result = await response.json();
         const saved = result?.state;
         if (saved && typeof saved === 'object') {
