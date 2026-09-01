@@ -38,9 +38,9 @@ export default async function EventsPage() {
     <main className="theme-realm events-page">
       <header className="events-hero">
         <div className="events-hero-copy">
-          <p className="k-mark">Kingdom 710 operations calendar</p>
-          <h1>Be there before the horn sounds.</h1>
-          <p>Daily Bear Hunt windows, KvK, Championship, Swordland, and kingdom operations—converted to your local time automatically.</p>
+          <p className="k-mark">Kingdom 710 events</p>
+          <h1>Event schedule</h1>
+          <p>Check Bear Hunt times, KvK, Championship, Swordland, and other published events. Times are converted to your device’s time zone.</p>
         </div>
         <div className="events-time-dial" aria-hidden="true">
           <span className="events-dial-hand" />
@@ -59,8 +59,8 @@ export default async function EventsPage() {
 
         <section className="events-section">
           <div className="events-section-heading">
-            <div><span className="events-section-mark">On the horizon</span><h2 className="events-section-title">Upcoming operations</h2></div>
-            <p>Published from the Admin Panel. Live countdowns use your device timezone; open an event for full details.</p>
+            <div><span className="events-section-mark">Calendar</span><h2 className="events-section-title">Upcoming events</h2></div>
+            <p>Open an event to see its full details. Countdown times use your device’s time zone.</p>
           </div>
           {loadError ? (
             <Card className="events-error">{loadError}</Card>
@@ -75,7 +75,7 @@ export default async function EventsPage() {
           )}
         </section>
 
-        <div className="events-footer"><p>Plan ahead. Show up ready.</p><Button href="/about" variant="quiet">← About Kingdom 710</Button></div>
+        <div className="events-footer"><p>Kingdom 710 event calendar</p><Button href="/about" variant="quiet">← About Kingdom 710</Button></div>
       </div>
 
       <style>{`
