@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
+import {
+  INTEREST_UPLOAD_LIMITS,
+  isAcceptedInterestImage,
+  validateProcessedInterestFiles,
+} from '../../../lib/interestUploadLimits.mjs';
 
 // Best-effort in-memory rate limit: 5 submissions per 10 minutes per IP.
 // Honest limitation, not overclaimed: this Map lives in one warm serverless
@@ -64,6 +69,19 @@ if (renderedAt && Date.now() - renderedAt < MIN_FILL_TIME_MS) {
 const supabase = createAdminSupabaseClient();
 
 const screenshots = formData.getAll('screenshots').filter((f) => f && typeof f.arrayBuffer === 'function');
+if (!screenshots.length) {
+  return NextResponse.json({ error: 'Upload at least one battle report screenshot.' }, { status: 400 });
+}
+if (screenshots.length > INTEREST_UPLOAD_LIMITS.maxFiles) {
+  return NextResponse.json({ error: `Upload no more than ${INTEREST_UPLOAD_LIMITS.maxFiles} screenshots.` }, { status: 400 });
+}
+if (screenshots.some((file) => !isAcceptedInterestImage(file))) {
+  return NextResponse.json({ error: 'One image type is not supported. Use JPG, PNG, WebP, HEIC, or HEIF.' }, { status: 415 });
+}
+const processedFileError = validateProcessedInterestFiles(screenshots);
+if (processedFileError) {
+  return NextResponse.json({ error: processedFileError }, { status: 413 });
+}
 const screenshotUrls = [];
 for (const file of screenshots) {
 const arrayBuffer = await file.arrayBuffer();

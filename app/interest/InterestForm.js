@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import SealedPetition from '../../components/kingdom/world/SealedPetition';
+import { processInterestImages } from './processInterestImages';
 
 const MIGRATE_OPTIONS = [
 '710 (Bear 0200UTC and 1300UTC)',
@@ -88,6 +89,7 @@ website: '',
 export default function InterestForm() {
 const [form, setForm] = useState(initialForm);
 const [screenshots, setScreenshots] = useState([]);
+const [processingImages, setProcessingImages] = useState(false);
 const [status, setStatus] = useState('');
 const [isError, setIsError] = useState(false);
 const [loading, setLoading] = useState(false);
@@ -96,6 +98,7 @@ const [reducedMotion, setReducedMotion] = useState(false);
 const [step, setStep] = useState(0);
 const [confirmedInfo, setConfirmedInfo] = useState({});
 const renderedAt = useRef(Date.now());
+const screenshotInput = useRef(null);
 
 useEffect(() => {
   if (typeof window === 'undefined') return;
@@ -171,6 +174,27 @@ function goBack() {
   setStep((s) => Math.max(s - 1, 0));
 }
 
+async function handleScreenshotChange(event) {
+  const input = event.currentTarget;
+  const files = input.files;
+  setProcessingImages(true);
+  setIsError(false);
+  setStatus('Preparing and compressing your screenshots…');
+
+  try {
+    const processed = await processInterestImages(files);
+    setScreenshots(processed);
+    setStatus(`${processed.length} screenshot${processed.length === 1 ? '' : 's'} ready to upload.`);
+  } catch (error) {
+    setScreenshots([]);
+    setIsError(true);
+    setStatus(error instanceof Error ? error.message : 'The screenshots could not be prepared. Please try again.');
+    input.value = '';
+  } finally {
+    setProcessingImages(false);
+  }
+}
+
 async function handleSubmit(e) {
 e.preventDefault();
 if (!validateStep(step)) return;
@@ -207,8 +231,17 @@ screenshots.forEach((file) => body.append('screenshots', file));
 body.append('website', form.website);
 body.append('rendered_at', String(renderedAt.current));
 
-const response = await fetch('/api/interest', { method: 'POST', body });
-const result = await response.json().catch(() => ({}));
+let response;
+let result = {};
+try {
+  response = await fetch('/api/interest', { method: 'POST', body });
+  result = await response.json().catch(() => ({}));
+} catch {
+  setLoading(false);
+  setIsError(true);
+  setStatus('The upload was interrupted. Check your connection and try submitting again.');
+  return;
+}
 setLoading(false);
 
 if (!response.ok) {
@@ -221,6 +254,7 @@ setStatus('');
 setConfirmedInfo({ intakePeriod: form.intakePeriod, discordUsername: form.discordUsername });
 setForm(initialForm);
 setScreenshots([]);
+if (screenshotInput.current) screenshotInput.current.value = '';
 setStep(0);
 renderedAt.current = Date.now();
 setSealed(true);
@@ -491,8 +525,24 @@ return (
 <Chapter id="proof-fields" title="Battle report">
 <div className="troop-section public-section">
 <div className="section-title-row"><span>Screenshots</span><h3>Upload your most recent battle report</h3><p>Should show your in-game name, Gov Gears/charms, Hero Gears and Masters.</p></div>
-<input id="battle-report-upload" type="file" multiple accept="image/*" aria-label="Upload battle report screenshots" onChange={(e) => setScreenshots(Array.from(e.target.files || []))} />
-<p className="file-hint">{screenshots.length > 0 ? `${screenshots.length} file(s) selected` : 'No files selected yet.'}</p>
+<input
+  id="battle-report-upload"
+  ref={screenshotInput}
+  type="file"
+  multiple
+  accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
+  aria-label="Upload battle report screenshots"
+  aria-describedby="battle-report-upload-help"
+  disabled={processingImages || loading}
+  onChange={handleScreenshotChange}
+/>
+<p id="battle-report-upload-help" className="file-hint">
+  {processingImages
+    ? 'Compressing images…'
+    : screenshots.length > 0
+      ? `${screenshots.length} screenshot${screenshots.length === 1 ? '' : 's'} ready · JPG, PNG, WebP, HEIC, and HEIF supported`
+      : 'Up to 4 screenshots · 12 MB each · JPG, PNG, WebP, HEIC, or HEIF'}
+</p>
 </div>
 </Chapter>
 </div>
@@ -508,7 +558,7 @@ return (
       <button type="button" className="k-btn k-btn-quiet" onClick={goBack}>Back</button>
     )}
     {isFinalStep ? (
-      <button type="submit" className="k-btn k-btn-struck" disabled={loading}>{loading ? 'Submitting...' : 'Submit Petition'}</button>
+      <button type="submit" className="k-btn k-btn-struck" disabled={loading || processingImages}>{processingImages ? 'Preparing images…' : loading ? 'Submitting...' : 'Submit Petition'}</button>
     ) : (
       <button type="button" className="k-btn" onClick={goNext}>Continue</button>
     )}
