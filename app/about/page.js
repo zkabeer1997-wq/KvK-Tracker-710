@@ -63,10 +63,10 @@ export default async function AboutPage() {
         <header className="about-head">
           <div className="about-head-copy">
             <span className="k-mark">Kingdom 710</span>
-            <h1 className="about-title">Built for the long campaign.</h1>
+            <h1 className="about-title">About Kingdom 710</h1>
             <p className="about-lede">
-              710 is a KvK-first Kingshot kingdom run across three coordinated alliances — 710, RED, and SKY —
-              with Bear Hunt coverage in every timezone and real war-room tooling behind it.
+              Kingdom 710 includes three alliances: 710, RED, and SKY. We coordinate KvK preparation,
+              run seven Bear Hunt times, and share the same events, guides, forms, and member tools.
             </p>
             <nav className="about-jump" aria-label="About page sections">
               <a href="#alliances">Meet the alliances</a>
@@ -77,14 +77,14 @@ export default async function AboutPage() {
             <span className="about-standard-ring" aria-hidden="true" />
             <span className="about-standard-crown" aria-hidden="true">♜</span>
             <strong>710</strong>
-            <span>One kingdom · Three banners</span>
+            <span>710 · RED · SKY</span>
           </div>
         </header>
 
         <section className="about-section">
           <div className="about-section-heading">
-            <h2 className="about-section-title">How we operate</h2>
-            <p>Coordination beats noise. These are the principles behind the kingdom.</p>
+            <h2 className="about-section-title">How the kingdom works</h2>
+            <p>These are the practical arrangements shared across all three alliances.</p>
           </div>
           <div className="about-doctrine">
             {DOCTRINE_KEYS.map((d, i) => (
@@ -99,9 +99,9 @@ export default async function AboutPage() {
 
         <section className="about-section" id="alliances">
           <div className="about-section-heading split">
-            <h2 className="about-section-title">Three banners.<br />One kingdom.</h2>
+            <h2 className="about-section-title">Our three alliances</h2>
             <p className="about-section-lede">
-              Each alliance runs its own Bear Hunt schedule and recruiting posture, while sharing the same kingdom objective.
+              Each alliance has its own Bear Hunt times, leadership, languages, and current recruiting status.
             </p>
           </div>
           {alliances.length === 0 ? (
@@ -140,7 +140,7 @@ export default async function AboutPage() {
 
         <section className="about-section" id="competitive-record">
           <div className="about-section-heading split">
-            <h2 className="about-section-title">The campaign ledger</h2>
+            <h2 className="about-section-title">KvK record</h2>
             <p className="about-section-lede">
               Competitive record verified through{' '}
               <a href={OPTIMIZER_KINGDOM_URL} target="_blank" rel="noopener noreferrer">
