@@ -125,7 +125,7 @@ export default function GateExperience() {
       <div className={`k-scene-content gate-content ${phase === 'travelling' ? 'is-travelling' : ''}`}>
         <header className="gate-head">
           <span className="k-mark">Kingdom 710</span>
-          <h1 className="k-display gate-title">Three Alliances. One Kingdom.</h1>
+          <h1 className="k-display gate-title">Welcome to K710</h1>
         </header>
 
         {/* Environmental signage: anchored low and to the sides so it reads
