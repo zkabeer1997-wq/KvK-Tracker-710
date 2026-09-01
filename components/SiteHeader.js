@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { href: '/timeline', label: 'Timeline' },
   { href: '/guides', label: 'Guides' },
   { href: '/events', label: 'Events' },
+  { href: '/gallery', label: 'Gallery' },
   { href: '/tools', label: 'Tools' },
   { href: '/player-record', label: 'Members' },
 ];
