@@ -163,7 +163,7 @@ export default function AdminShell({ title, subtitle, actions, onLogout, counter
             {!sidebarCollapsed && (
               <div>
                 <span className="admin-sidebar-brand-k">K710</span>
-                <span className="admin-sidebar-brand-sub">War Room</span>
+                <span className="admin-sidebar-brand-sub">Admin</span>
               </div>
             )}
           </div>
@@ -181,7 +181,7 @@ export default function AdminShell({ title, subtitle, actions, onLogout, counter
           </button>
         </div>
 
-        <nav className="admin-sidebar-nav" aria-label="War room sections">
+        <nav className="admin-sidebar-nav" aria-label="Admin sections">
           {NAV_SECTIONS.map((section) => {
             const isOpen = openSections[section.id] !== false;
             const sectionHasActive = section.items.some((item) => isNavActive(pathname, item.match));
@@ -229,7 +229,7 @@ export default function AdminShell({ title, subtitle, actions, onLogout, counter
 
         <div className="admin-sidebar-bottom">
           {!sidebarCollapsed && (
-            <div className="warroom-modes" role="group" aria-label="War room view">
+            <div className="warroom-modes" role="group" aria-label="Admin view">
               <button
                 type="button"
                 className="warroom-mode"
@@ -237,7 +237,7 @@ export default function AdminShell({ title, subtitle, actions, onLogout, counter
                 aria-pressed={mode === 'command'}
                 onClick={() => choose('command')}
               >
-                Command
+                Admin
               </button>
               <button
                 type="button"
@@ -273,7 +273,7 @@ export default function AdminShell({ title, subtitle, actions, onLogout, counter
 
         {/* Brass counters read off the same live data the tables use. */}
         {counters.length > 0 && (
-          <div className="warroom-counters" aria-label="Command summary">
+          <div className="warroom-counters" aria-label="Admin summary">
             {counters.map((c) => (
               <div key={c.label} className="warroom-counter">
                 <span className="warroom-counter-val">{c.value}</span>
