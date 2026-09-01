@@ -37,9 +37,13 @@
   display: none;
 }
 .home-gallery.is-embedded .home-gallery-stage img {
-  object-fit: cover;
-  object-position: center 32%;
+  object-fit: contain;
+  object-position: center;
   filter: none;
+}
+.home-gallery.is-embedded .home-gallery-stage,
+.home-gallery.is-embedded .home-gallery-stage figure {
+  background: var(--obsidian);
 }
 .home-gallery.is-embedded .home-gallery-arrow {
   top: auto;
