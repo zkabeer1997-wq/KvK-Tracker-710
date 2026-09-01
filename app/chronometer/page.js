@@ -4,9 +4,9 @@ import { getHomeContent, checkIsAdmin } from '../../lib/homeContent';
 import Chronometer from '../../components/kingdom/world/Chronometer';
 
 export const metadata = {
-  title: 'Chronometer Chamber',
+  title: 'Bear Hunt Schedule & Transfers',
   description:
-    'The unbroken watch of Kingdom 710 — three alliances, seven Bear Hunt windows, continuous coverage across every timezone.',
+    'Kingdom 710 Bear Hunt times, alliance information, and transfer application steps.',
   alternates: { canonical: '/chronometer' },
 };
 
@@ -18,9 +18,9 @@ export const fetchCache = 'force-no-store';
 export const revalidate = 0;
 
 const ALLIANCES = [
-  { band: '710', nameKey: 'wb-1-name', descKey: 'wb-1-desc', windows: ['02:00', '13:00'], role: 'Early & midday anchor' },
-  { band: 'RED', nameKey: 'wb-2-name', descKey: 'wb-2-desc', windows: ['11:05', '19:00', '23:20'], role: 'EU evening → NA late' },
-  { band: 'SKY', nameKey: 'wb-3-name', descKey: 'wb-3-desc', windows: ['12:00', '20:00'], role: 'SEA / AU daytime' },
+  { band: '710', nameKey: 'wb-1-name', descKey: 'wb-1-desc', windows: ['02:00', '13:00'], role: 'Two daily Bear Hunts' },
+  { band: 'RED', nameKey: 'wb-2-name', descKey: 'wb-2-desc', windows: ['11:05', '19:00', '23:20'], role: 'Three daily Bear Hunts' },
+  { band: 'SKY', nameKey: 'wb-3-name', descKey: 'wb-3-desc', windows: ['12:00', '20:00'], role: 'Two daily Bear Hunts' },
 ];
 
 const DOCTRINE = [
@@ -54,11 +54,11 @@ export default async function ChronometerPage() {
 
       {/* ---- The instrument ---- */}
       <section className="chamber-hero">
-        <span className="k-mark">The Unbroken Watch</span>
-        <h1 className="k-display chamber-title k-engraved">Chronometer Chamber</h1>
+        <span className="k-mark">Kingdom 710</span>
+        <h1 className="k-display chamber-title k-engraved">Bear Hunt Schedule</h1>
         <p className="k-narrative chamber-lede">
-          Kingdom 710 does not sleep. Three alliances hold seven Bear Hunt windows
-          between them, so whatever hour you log in, somebody is already rallying.
+          Kingdom 710 has seven daily Bear Hunt times across 710, RED, and SKY.
+          All times below are shown in UTC.
         </p>
         <Chronometer />
       </section>
@@ -90,7 +90,7 @@ export default async function ChronometerPage() {
         </div>
       </section>
 
-      {/* ---- Doctrine wall (why 710) ---- */}
+      {/* ---- About the kingdom ---- */}
       <section className="chamber-section">
         <header className="chamber-head">
           <span className="k-mark">{field('why-head-kicker')}</span>
@@ -109,7 +109,7 @@ export default async function ChronometerPage() {
         </div>
       </section>
 
-      {/* ---- The march: transfer process as a campaign route ---- */}
+      {/* ---- Transfer process ---- */}
       <section className="chamber-section">
         <header className="chamber-head">
           <span className="k-mark">{field('steps-head-kicker')}</span>
@@ -127,7 +127,7 @@ export default async function ChronometerPage() {
         </ol>
       </section>
 
-      {/* ---- Approach the Registry ---- */}
+      {/* ---- Transfer form ---- */}
       <section className="registry-doors">
         <div className="registry-doors-light" aria-hidden="true" />
         <span className="k-mark">The Registry</span>
