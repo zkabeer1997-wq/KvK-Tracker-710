@@ -41,7 +41,12 @@ export default function GalleryCarousel({ images }) {
         }}
       >
         {images.map((image, index) => (
-          <figure key={image.id} className={index === active ? 'is-active' : ''} aria-hidden={index !== active}>
+          <figure
+            key={image.id}
+            className={index === active ? 'is-active' : ''}
+            aria-hidden={index !== active}
+            style={{ '--gallery-image': `url("${image.image_url.replace(/["\\]/g, '')}")` }}
+          >
             <img src={image.image_url} alt={index === active ? image.alt_text : ''} loading={index === 0 ? 'eager' : 'lazy'} />
             {(image.title || image.caption) && (
               <figcaption>
@@ -69,4 +74,3 @@ export default function GalleryCarousel({ images }) {
     </section>
   );
 }
-
