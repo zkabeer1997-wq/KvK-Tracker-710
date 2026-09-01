@@ -207,7 +207,7 @@ export default function AdminPrepMinistersPage() {
   }
 
   return (
-    <AdminShell title="Prep Ministers" subtitle="K710 command board" onLogout={handleLogout}>
+    <AdminShell title="Prep Ministers" subtitle="Manage prep minister requests" onLogout={handleLogout}>
           <p className="admin-page-lead">Backpack amounts and minister position bookings submitted through the Prep Phase Backpack form.</p>
           <div className="dashboard-stats" aria-label="Prep summary">
             <div><span>Total submissions</span><strong>{rows.length}</strong></div>

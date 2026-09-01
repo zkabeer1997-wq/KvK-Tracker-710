@@ -34,7 +34,7 @@ export default function GuidesDirectory({ guides, query, backHref }) {
   return (
     <>
       <div className="guides-toolbar">
-        <Field label="Search the archive" className="guides-search">
+        <Field label="Search guides" className="guides-search">
           <Input
             type="search"
             placeholder="Search by title or description…"
@@ -75,7 +75,7 @@ export default function GuidesDirectory({ guides, query, backHref }) {
                 </span>
               </span>
               <span className="guide-entry-meta">
-                <span>Open field manual</span>
+                <span>Open guide</span>
                 <b aria-hidden="true">→</b>
               </span>
             </a>
@@ -83,12 +83,7 @@ export default function GuidesDirectory({ guides, query, backHref }) {
         </div>
       )}
 
-      <div className="guides-ledger">
-        <span className="k-mark">Archive Ledger</span>
-        <p>Guide titles and text are stored in Supabase. Admin edits update the same records used by this archive.</p>
-      </div>
-
-      <Link href={backHref} className="guides-back">← Return to member hall</Link>
+      <Link href={backHref} className="guides-back">← Return to member page</Link>
     </>
   );
 }

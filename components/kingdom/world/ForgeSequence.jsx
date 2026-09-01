@@ -324,14 +324,14 @@ export default function ForgeSequence({ onDone, reducedMotion = false }) {
       className={`forge2 ${phase === 'through' ? 'forge2-through' : ''}`}
       role="status"
       aria-live="polite"
-      aria-label="Forging the Kingdom 710 sigil"
+      aria-label="Loading Kingdom 710"
       onClick={finish}
     >
       {!reducedMotion && <canvas ref={canvasRef} className="forge2-canvas" aria-hidden="true" />}
 
       <div className="forge2-copy">
         <div className="k-mark forge2-kicker">Kingdom 710</div>
-        <div className="k-display forge2-title">Three Alliances. One Kingdom.</div>
+        <div className="k-display forge2-title">Welcome to K710</div>
       </div>
 
       <button type="button" className="forge2-skip k-ui" onClick={finish}>

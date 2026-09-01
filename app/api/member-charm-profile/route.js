@@ -18,6 +18,6 @@ export async function GET(request) {
     return NextResponse.json({ profile: data || null });
   } catch (error) {
     console.error('member-charm-profile GET failed', error);
-    return NextResponse.json({ error: 'Unable to load War Ledger charm levels.' }, { status: 500 });
+    return NextResponse.json({ error: 'Unable to load saved charm levels.' }, { status: 500 });
   }
 }

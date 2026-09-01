@@ -386,7 +386,7 @@ export default function AdminInterestPage() {
   }
 
   return (
-    <AdminShell title="Transfer Requests" subtitle="K710 command board" onLogout={handleLogout}>
+    <AdminShell title="Transfer Requests" subtitle="Review transfer applications" onLogout={handleLogout}>
           <p className="admin-page-lead">Review 710 transfer onboarding requests submitted through the public interest form.</p>
           {credentials && (
             <div className="credentials-modal-overlay" role="presentation" onClick={() => setCredentials(null)}>

@@ -107,7 +107,7 @@ export default function PlayerRecordGate({ banner, next }) {
       if (firstTime && data.created === true && data.pin) {
         setIssuedPin(String(data.pin));
         setCopied(false);
-        setStatus('Credentials created. Save your PIN before entering the kingdom.');
+        setStatus('Your member sign-in was created. Save your PIN before continuing.');
         return;
       }
 
@@ -152,10 +152,10 @@ export default function PlayerRecordGate({ banner, next }) {
         {banner}
 
         <header className="gatehouse-head">
-          <span className="k-mark">Security Checkpoint</span>
-          <h1 className="k-display gatehouse-title">The Gatehouse</h1>
+          <span className="k-mark">Kingdom 710 members</span>
+          <h1 className="k-display gatehouse-title">Member sign in</h1>
           <p className="k-narrative gatehouse-lede">
-            {firstTime ? 'Register your governor credentials for the kingdom.' : 'Present your Member ID and PIN to enter.'}
+            {firstTime ? 'Create a member sign-in using your Kingshot Member ID.' : 'Enter your Member ID and PIN.'}
           </p>
         </header>
 
@@ -177,7 +177,7 @@ export default function PlayerRecordGate({ banner, next }) {
             <div style={{ display: 'grid', gap: 10, marginTop: 14 }}>
               <button type="button" className="k-btn" onClick={copyCredentials}>{copied ? 'Credentials copied' : 'Copy credentials'}</button>
               <Button variant="sky" className="gatehouse-submit" onClick={openGate} disabled={opening}>
-                {opening ? 'Gate opening…' : 'I saved them — enter the kingdom'}
+                {opening ? 'Opening member page…' : 'I saved them — continue'}
               </Button>
             </div>
           </section>
@@ -233,7 +233,7 @@ export default function PlayerRecordGate({ banner, next }) {
             )}
 
             <Button type="submit" variant="sky" className="gatehouse-submit" disabled={loading || opening}>
-              {loading ? (firstTime ? 'Creating…' : 'Checking…') : opening ? 'Gate opening…' : firstTime ? 'Generate credentials' : 'Present Credentials'}
+              {loading ? (firstTime ? 'Creating…' : 'Checking…') : opening ? 'Opening member page…' : firstTime ? 'Create member sign-in' : 'Sign in'}
             </Button>
 
             <button
@@ -255,8 +255,8 @@ export default function PlayerRecordGate({ banner, next }) {
         )}
 
         <Link href="/admin" className="gatehouse-restricted">
-          <span className="k-mark">Restricted</span>
-          <span>Command Access</span>
+          <span className="k-mark">Administrators only</span>
+          <span>Admin sign in</span>
         </Link>
       </div>
 

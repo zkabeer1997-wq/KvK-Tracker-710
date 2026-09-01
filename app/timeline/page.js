@@ -27,11 +27,11 @@ export default function TimelinePage() {
       <header className="timeline-hero">
         <div className="timeline-hero-inner">
           <div>
-            <p className="k-mark">The K710 campaign</p>
-            <h1>Every unlock changes the battlefield.</h1>
-            <p className="timeline-hero-lede">Follow the kingdom’s progression through hero generations, pets, Truegold tiers, PvP firsts, and major feature unlocks.</p>
+            <p className="k-mark">Kingdom 710 timeline</p>
+            <h1>Kingshot release timeline</h1>
+            <p className="timeline-hero-lede">See when hero generations, pets, Truegold tiers, PvP features, and other upgrades become available.</p>
           </div>
-          <div className="timeline-hero-seal" aria-hidden="true"><span>710</span><small>CAMPAIGN LOG</small></div>
+          <div className="timeline-hero-seal" aria-hidden="true"><span>710</span><small>TIMELINE</small></div>
         </div>
       </header>
 
@@ -69,7 +69,7 @@ export default function TimelinePage() {
         </ol>
 
         <footer className="timeline-footer">
-          <div><strong>The story continues.</strong><span>New milestones are added as K710 progresses.</span></div>
+          <div><strong>Timeline updates</strong><span>New milestones are added when the source data changes.</span></div>
           <nav><Link href="/about">← About K710</Link><a href={OPTIMIZER_KINGDOM_URL} target="_blank" rel="noopener noreferrer">View KvK history →</a></nav>
         </footer>
       </div>

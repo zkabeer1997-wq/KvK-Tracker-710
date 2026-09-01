@@ -217,7 +217,7 @@ export default function AdminFlamedragonPage() {
   return (
     <AdminShell
       title="Flamedragon Tyrant"
-      subtitle="K710 command board"
+      subtitle="Review Flamedragon submissions"
       onLogout={handleLogout}
       actions={<Button variant="quiet" onClick={exportCsv}>Export CSV</Button>}
     >

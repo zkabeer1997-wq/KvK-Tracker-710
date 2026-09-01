@@ -226,7 +226,7 @@ const STATIONS = [
   {
     key: 'lead',
     art: CommandTable,
-    kicker: 'The Command Table',
+    kicker: 'Account details',
     title: 'Player Profile',
     line: 'Record your gear, troops, and heroes.',
     href: (id) => `/power-profile?member_id=${id}`,
@@ -234,25 +234,25 @@ const STATIONS = [
   {
     key: 'joiner',
     art: MusterBoard,
-    kicker: 'The Muster Board',
+    kicker: 'KvK form',
     title: 'KvK Availability',
-    line: 'Report when you can join the battle.',
+    line: 'Tell leadership when you are available.',
     href: (id) => `/player-record/form?member_id=${id}`,
   },
   {
     key: 'prep',
     art: CampaignBackpack,
-    kicker: 'The Campaign Pack',
+    kicker: 'Preparation form',
     title: 'KvK Prep',
-    line: 'Are you packed?',
+    line: 'Submit your KvK preparation items.',
     href: (id) => `/prep-phase-backpack?member_id=${id}`,
   },
   {
     key: 'dragon',
     art: ArmoryRack,
-    kicker: 'The Armory',
+    kicker: 'Event form',
     title: 'Flamedragon Tyrant',
-    line: 'Levels, heroes, availability.',
+    line: 'Submit levels, heroes, and availability.',
     href: (id) => `/flamedragon?member_id=${id}`,
   },
 ];
@@ -285,8 +285,8 @@ export default function MusterHall({ memberId, closedKeys = [] }) {
 
       <div className="muster-inner">
         <header className="muster-head">
-          <span className="k-mark">Muster Hall &middot; {memberId}</span>
-          <h1 className="k-display muster-title">The hall is prepared</h1>
+          <span className="k-mark">Member forms &middot; {memberId}</span>
+          <h1 className="k-display muster-title">Choose a form</h1>
         </header>
 
         {/* Objects standing on a shared floor. Depth varies per station so
