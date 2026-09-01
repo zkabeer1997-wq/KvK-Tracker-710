@@ -1,4 +1,5 @@
 import { createAdminSupabaseClient } from '../../lib/adminSupabase';
+import Link from 'next/link';
 import GuidesDirectory from './GuidesDirectory';
 
 export const metadata = {
@@ -32,7 +33,7 @@ export default async function GuidesPage({ searchParams }) {
     guides = await loadGuides();
   } catch (error) {
     console.error('guides page load failed', error);
-    loadError = 'The archive could not be opened right now.';
+    loadError = 'Guides could not be loaded. Please try again.';
   }
 
   const categoryCount = new Set(guides.map((guide) => guide.category).filter(Boolean)).size;
@@ -45,20 +46,20 @@ export default async function GuidesPage({ searchParams }) {
       <section className="guides-hero">
         <div className="guides-hero-grid" aria-hidden="true" />
         <div className="guides-hero-copy">
-          <span className="k-mark">Kingdom 710 Field Archive</span>
-          <h1>Campaign knowledge, kept in one place.</h1>
+          <span className="k-mark">Kingdom 710</span>
+          <h1>Guides</h1>
           <p>
-            Strategy notes, event playbooks and kingdom operating doctrine — organized as a living archive instead of a wall of disconnected cards.
+            Read kingdom instructions, event strategies, and game information maintained by the K710 team.
           </p>
           <div className="guides-hero-links">
-            <a href="#archive">Browse the archive</a>
-            <a href="/events">See event operations</a>
+            <a href="#archive">Browse guides</a>
+            <Link href="/events">View events</Link>
           </div>
         </div>
 
-        <aside className="guides-index" aria-label="Archive summary">
+        <aside className="guides-index" aria-label="Guide summary">
           <div>
-            <span>Published volumes</span>
+            <span>Published guides</span>
             <strong>{guides.length || '—'}</strong>
           </div>
           <div>
@@ -68,7 +69,7 @@ export default async function GuidesPage({ searchParams }) {
           <div>
             <span>Latest revision</span>
             <strong className="guides-index-small">
-              {latest?.updated_at ? new Date(latest.updated_at).toLocaleDateString() : 'Live archive'}
+              {latest?.updated_at ? new Date(latest.updated_at).toLocaleDateString() : 'No revisions yet'}
             </strong>
           </div>
         </aside>
@@ -76,30 +77,30 @@ export default async function GuidesPage({ searchParams }) {
 
       <section className="guides-intro-band">
         <div>
-          <span className="k-mark">01 · Doctrine</span>
-          <strong>Understand the kingdom</strong>
-          <p>How K710 coordinates players, rallies, transfers and preparation.</p>
+          <span className="k-mark">Kingdom</span>
+          <strong>Kingdom information</strong>
+          <p>How K710 handles players, rallies, transfers, and preparation.</p>
         </div>
         <div>
-          <span className="k-mark">02 · Operations</span>
-          <strong>Prepare for events</strong>
-          <p>Repeatable guidance for the moments that decide event outcomes.</p>
+          <span className="k-mark">Events</span>
+          <strong>Event instructions</strong>
+          <p>What to do before and during major events.</p>
         </div>
         <div>
-          <span className="k-mark">03 · Execution</span>
-          <strong>Open the right manual</strong>
-          <p>Search by title, then filter the archive by category.</p>
+          <span className="k-mark">Search</span>
+          <strong>Find a guide</strong>
+          <p>Search by title or filter the list by category.</p>
         </div>
       </section>
 
       <section className="guides-archive" id="archive">
         <div className="guides-archive-head">
           <div>
-            <span className="k-mark">Field Manual Index</span>
-            <h2>Choose your briefing.</h2>
+            <span className="k-mark">All guides</span>
+            <h2>Find a guide</h2>
           </div>
           <p>
-            Each entry is pulled from the same saved guide record used by the Admin panel, so the archive stays current without duplicating content.
+            Search the published guides below or choose a category.
           </p>
         </div>
 
