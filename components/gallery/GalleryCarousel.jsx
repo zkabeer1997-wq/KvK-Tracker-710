@@ -51,7 +51,7 @@ export default function GalleryCarousel({ images, embedded = false }) {
             style={{ '--gallery-image': `url("${image.image_url.replace(/["\\]/g, '')}")` }}
           >
             <img src={image.image_url} alt={index === active ? image.alt_text : ''} loading={index === 0 ? 'eager' : 'lazy'} />
-            {(image.title || image.caption) && (
+            {!embedded && (image.title || image.caption) && (
               <figcaption>
                 {image.title && <strong>{image.title}</strong>}
                 {image.caption && <span>{image.caption}</span>}
