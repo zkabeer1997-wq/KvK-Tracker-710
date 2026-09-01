@@ -22,9 +22,9 @@ const fraunces = Fraunces({ subsets: ['latin'], weight: ['500', '600', '700', '8
 export const metadata = {
   metadataBase: new URL('https://k710hub.vercel.app'),
   title: { default: 'K710 Hub', template: '%s · K710 Hub' },
-  description: 'Kingdom 710 — Kingshot KvK command hub: rally roster, war ledger, and transfer intake for a KvK-first kingdom.',
+  description: 'The Kingdom 710 website for events, alliance schedules, member forms, guides, calculators, and transfer applications.',
   applicationName: 'K710 Hub',
-  openGraph: { title: 'K710 Hub', description: 'Kingdom 710 — Kingshot KvK command hub: rally roster, war ledger, and transfer intake for a KvK-first kingdom.', siteName: 'K710 Hub', type: 'website' },
+  openGraph: { title: 'K710 Hub', description: 'The Kingdom 710 website for events, alliance schedules, member forms, guides, calculators, and transfer applications.', siteName: 'K710 Hub', type: 'website' },
 };
 
 export const viewport = { themeColor: '#0b0e13', width: 'device-width', initialScale: 1 };
