@@ -211,7 +211,7 @@ export default async function HomePage() {
       </section>
 
       <section className="home-v2-story">
-        <div className="home-v2-story-scene"><div className="home-v2-story-sun"/><div className="home-v2-story-castle"/></div>
+        <div className="home-v2-story-scene"><GalleryCarousel images={galleryImages} embedded /></div>
         <div className="home-v2-story-copy">
           <span className="k-mark">{field('why-head-kicker')}</span>
           <h2>{field('why-head-title')}</h2>
@@ -235,8 +235,6 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
-
-      <GalleryCarousel images={galleryImages} />
 
       <section className="home-v2-final">
         <div><span className="k-mark">KINGDOM TRANSFERS</span><h2>Interested in moving<br/>to Kingdom 710?</h2></div>
