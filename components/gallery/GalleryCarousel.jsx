@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
-export default function GalleryCarousel({ images }) {
+export default function GalleryCarousel({ images, embedded = false }) {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const touchStart = useRef(null);
@@ -21,14 +21,17 @@ export default function GalleryCarousel({ images }) {
   const next = () => setActive((current) => (current + 1) % images.length);
 
   return (
-    <section className="home-gallery" aria-labelledby="home-gallery-title" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-      <div className="home-gallery-heading">
-        <div>
-          <h2 id="home-gallery-title">Life in Kingdom 710</h2>
-          <p>Recent moments shared by the kingdom.</p>
+    <section className={`home-gallery${embedded ? ' is-embedded' : ''}`} aria-label={embedded ? 'Kingdom 710 gallery' : undefined} aria-labelledby={embedded ? undefined : 'home-gallery-title'} onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+      {!embedded && (
+        <div className="home-gallery-heading">
+          <div>
+            <h2 id="home-gallery-title">Life in Kingdom 710</h2>
+            <p>Recent moments shared by the kingdom.</p>
+          </div>
+          <Link href="/gallery">View the gallery →</Link>
         </div>
-        <Link href="/gallery">View the gallery →</Link>
-      </div>
+      )}
+      {embedded && <Link href="/gallery" className="home-gallery-embedded-link">View gallery ↗</Link>}
 
       <div
         className="home-gallery-stage"
