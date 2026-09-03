@@ -211,7 +211,7 @@ export default function AdminMemberPinsPage() {
       </Callout>
 
       {showCreate && (
-        <Panel eyebrow="New roster access" title="Create member + PIN" description="Adds the member to Player Records with a secure initial PIN. Troop and hero details can be filled in later." className="admin-page-panel">
+        <Panel eyebrow="New roster access" title="Create member + PIN" description="Adds the member to KvK Members with a secure initial PIN. Troop and hero details can be filled in later." className="admin-page-panel">
           <form onSubmit={createMember} className="member-pin-create-form">
             {error && <Callout tone="danger">{error}</Callout>}
             <div className="member-pin-create-grid">

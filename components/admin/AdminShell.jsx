@@ -36,7 +36,7 @@ const NAV_SECTIONS = [
     label: 'KvK Management',
     items: [
       { href: '/admin/dashboard/prep-ministers', label: 'Prep Ministers', match: '/admin/dashboard/prep-ministers' },
-      { href: '/admin/dashboard', label: 'Player Records', match: '/admin/dashboard' },
+      { href: '/admin/dashboard', label: 'KvK Members', match: '/admin/dashboard' },
     ],
   },
   {

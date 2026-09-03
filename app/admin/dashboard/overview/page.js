@@ -189,7 +189,7 @@ export default function AdminDashboardOverviewPage() {
             <div className="dash-detail">
               <h2>{branch.label}</h2>
               <p className="dash-detail-hint">
-                Exact matches only · TG8/T11 · TG8/T10 · TG7/T11 from Player Records.
+                Exact matches only · TG8/T11 · TG8/T10 · TG7/T11 from KvK Members.
               </p>
 
               <div className="dash-matrix" role="list">
@@ -238,7 +238,7 @@ export default function AdminDashboardOverviewPage() {
 
               <div className="dash-actions">
                 <Link href="/admin/dashboard" className="dash-btn primary">
-                  Open Player Records · {branch.label} · {selectedBandMeta.label}
+                  Open KvK Members · {branch.label} · {selectedBandMeta.label}
                 </Link>
                 <Link href="/admin/dashboard" className="dash-btn">
                   All 3 bands for this unit

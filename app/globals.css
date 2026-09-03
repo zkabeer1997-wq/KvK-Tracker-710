@@ -839,3 +839,25 @@ tr.row-dragging { opacity: 0.5; }
 .prep-slot-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
 .prep-slot-count { font-family: var(--font-mono); font-size: 11px; color: var(--gold-bright); background: rgba(217,169,78,0.1); border-radius: 999px; padding: 2px 8px; }
 .prep-slot-sub { width: 100%; font-family: var(--font-mono); }
+
+/* KvK roster summary; complete records open in the member drawer. */
+.kvk-members-table .member-name-cell { min-width: 110px; }
+.kvk-members-table tbody tr, .kvk-members-table tbody tr:active { cursor: pointer; }
+.member-details-trigger { border: 0; background: none; padding: 4px 0; color: var(--parchment); font: inherit; font-weight: 700; cursor: pointer; text-align: left; overflow-wrap: anywhere; }
+.member-details-trigger:hover { color: var(--gold-bright); }
+.member-details-trigger:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.member-troop-stack { display: grid; gap: 4px; min-width: 126px; }
+.member-troop-stack > div { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.member-troop-stack > div > span { color: var(--text-muted); font-size: 11px; }
+.member-troop-stack strong { color: var(--parchment); font-size: 11px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.member-detail-list { display: grid; gap: 14px; }
+.member-detail-text { color: var(--parchment); font-size: 13.5px; line-height: 1.65; overflow-wrap: anywhere; }
+.member-details-drawer .admin-drawer-header { gap: 16px; }
+.member-details-drawer .admin-drawer-header h2 { overflow-wrap: anywhere; }
+.member-details-drawer .admin-drawer-close { flex-shrink: 0; }
+.member-details-drawer .admin-drawer-field strong { white-space: pre-wrap; line-height: 1.65; }
+
+.kvk-members-workspace { grid-template-columns: minmax(0, 1fr) 320px; }
+@media (max-width: 1440px) {
+  .kvk-members-workspace { grid-template-columns: minmax(0, 1fr); }
+}

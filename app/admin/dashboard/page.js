@@ -6,6 +6,8 @@ import AdminShell from '../../../components/admin/AdminShell';
 import ConfirmDialog from '../../../components/admin/ConfirmDialog';
 import TableSkeleton from '../../../components/admin/TableSkeleton';
 import { Button, Input, Table } from '../../../components/ui';
+import MemberDetailsDrawer from '../../../components/admin/MemberDetailsDrawer';
+import { buildKvkMembersWorkbook, formatUnitLevel } from '../../../lib/kvkMembersExport.mjs';
 import { useEscapeToClose } from '../../../lib/useEscapeToClose';
 import {
 RALLY_STORAGE_KEY,
@@ -49,21 +51,13 @@ const HEROES = [
 ];
 
 const COLUMNS = [
-{ key: 'name', label: 'Name' },
-{ key: 'member_id', label: 'Member ID' },
-{ key: 'infantry_tg', label: 'Infantry' },
-{ key: 'cavalry_tg', label: 'Cavalry' },
-{ key: 'archer_tg', label: 'Archer' },
+{ key: 'name', label: 'Player Name' },
+{ key: 'infantry_tg', label: 'Troop Levels' },
 { key: 'heroes', label: 'Heroes' },
-{ key: 'power_profile', label: 'Power' },
+{ key: 'current_alliance', label: 'Alliance' },
 { key: 'availability', label: 'Availability' },
-  { key: 'current_alliance', label: 'Alliance' },
 { key: 'updated_at', label: 'Updated' },
 ];
-
-function formatUnitLevel(tier, tg) {
-return [tier, tg].filter(Boolean).join(' / ') || '-';
-}
 
 function availabilityTone(availability) {
 const text = String(availability || '').toLowerCase();
@@ -74,12 +68,9 @@ if (text.includes('first')) return 'early';
 return 'partial';
 }
 
-function powerValue(profile, key) {
-return profile && profile[key] ? profile[key] : '-';
-}
-
 export default function AdminDashboardPage() {
 const [rows, setRows] = useState([]);
+const [selectedMemberId, setSelectedMemberId] = useState(null);
 const [loading, setLoading] = useState(true);
 const [error, setError] = useState('');
 const [actionStatus, setActionStatus] = useState('');
@@ -304,19 +295,10 @@ setRallies((current) => autoAssignRallyMembers(current, rallyId, rows));
   }
 
   function handleExportXlsx() {
-    const headers = ['Name', 'Member ID', 'Infantry', 'Infantry TG', 'Cavalry', 'Cavalry TG', 'Archer', 'Archer TG', 'Heroes', 'Availability', 'Alliance', 'Updated'];
-    const esc = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const bodyRows = filteredSorted.map((row) => {
-      const cells = [row.name, row.member_id, formatUnitLevel(row.infantry_tier, row.infantry_tg), row.infantry_tg, formatUnitLevel(row.cavalry_tier, row.cavalry_tg), row.cavalry_tg, formatUnitLevel(row.archer_tier, row.archer_tg), row.archer_tg, (row.heroes || []).join(', '), row.availability, row.current_alliance, row.updated_at ? new Date(row.updated_at).toLocaleString() : ''];
-      return '<tr>' + cells.map((c) => '<td>' + esc(c) + '</td>').join('') + '</tr>';
-    }).join('');
-    const headerRow = '<tr>' + headers.map((h) => '<th>' + esc(h) + '</th>').join('') + '</tr>';
-    const table = '<table border="1"><thead>' + headerRow + '</thead><tbody>' + bodyRows + '</tbody></table>';
-    const html = '<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="utf-8" /></head><body>' + table + '</body></html>';
-    const blob = new Blob(['\ufeff' + html], { type: 'application/vnd.ms-excel' });
+    const blob = buildKvkMembersWorkbook(filteredSorted);
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = 'k710-roster-' + new Date().toISOString().slice(0, 10) + '.xls';
+    link.download = 'k710-kvk-members-' + new Date().toISOString().slice(0, 10) + '.xlsx';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -374,10 +356,11 @@ if (term) {
 result = rows.filter((r) => {
 return (
 (r.name || '').toLowerCase().includes(term) ||
-(r.member_id || '').toLowerCase().includes(term) ||
+String(r.member_id || '').toLowerCase().includes(term) ||
 (r.heroes || []).some((h) => h.toLowerCase().includes(term)) ||
 Object.values(r.power_profile || {}).some((value) => String(value || '').toLowerCase().includes(term)) ||
-(r.availability || '').toLowerCase().includes(term)
+(r.availability || '').toLowerCase().includes(term) ||
+(r.current_alliance || '').toLowerCase().includes(term)
 );
 });
 }
@@ -420,7 +403,7 @@ return timestamp > latest ? timestamp : latest;
 
 return (
 <AdminShell
-title="Player Records"
+title="KvK Members"
 subtitle="Manage member records"
 onLogout={handleLogout}
 counters={[
@@ -447,7 +430,7 @@ confirmLabel={confirmState ? confirmState.confirmLabel : 'Confirm'}
 onConfirm={() => confirmState && confirmState.onConfirm()}
 onCancel={() => setConfirmState(null)}
 />
-<p className="admin-page-lead">Roster intake, rally composition, and hero guidance in one live planning view.</p>
+<p className="admin-page-lead">Select a member to view their full record. Drag the handle beside their name to assign a rally.</p>
 <div className="dashboard-stats" aria-label="Dashboard summary">
 <div>
 <span>Total members</span>
@@ -484,7 +467,7 @@ onCancel={() => setConfirmState(null)}
 <Input
 tone="console"
 type="text"
-placeholder="Search by name, member ID, hero, availability..."
+placeholder="Search by name, player ID, hero, alliance, availability..."
 value={search}
 onChange={(e) => setSearch(e.target.value)}
 className="admin-search"
@@ -493,10 +476,10 @@ className="admin-search"
 </div>
 {actionStatus && <div className="status">{actionStatus}</div>}
 {actionError && <div className="status error">{actionError}</div>}
-{loading && <TableSkeleton columns={COLUMNS.length + 1} rows={7} />}
+{loading && <TableSkeleton columns={COLUMNS.length} rows={7} />}
 {error && <div className="status error">{error}</div>}
 {!loading && !error && (
-<div className="admin-workspace">
+<div className="admin-workspace kvk-members-workspace">
 <section className="roster-panel" aria-label="Member roster">
 <div className="panel-heading">
 <div>
@@ -543,29 +526,32 @@ className="admin-search"
     </div>
   </div>
   )}
-<Table>
+<Table className="kvk-members-table">
 <thead>
 <tr>
 {COLUMNS.map((col) => (
-<th key={col.key} onClick={() => handleSort(col.key)}>
+<th key={col.key} aria-sort={sortKey === col.key ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}>
+<button type="button" className="admin-sort-btn" onClick={() => handleSort(col.key)}>
 {col.label}
 {sortKey === col.key ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''}
+</button>
 </th>
 ))}
-<th>Actions</th>
 </tr>
 </thead>
 <tbody>
 {filteredSorted.map((row) => (
 <tr
 key={row.member_id}
-className={draggingMemberId === String(row.member_id) ? 'row-dragging' : undefined}
+className={'admin-row-clickable' + (draggingMemberId === String(row.member_id) ? ' row-dragging' : '')}
+onClick={() => setSelectedMemberId(String(row.member_id))}
 >
 <td>
 <div className="member-name-cell">
 <span className="member-name-row">
 <span
 className="rally-drag-handle"
+onClick={(event) => event.stopPropagation()}
 draggable
 onDragStart={(event) => handleDragStart(event, row.member_id)}
 onDragEnd={handleDragEnd}
@@ -576,53 +562,34 @@ title="Drag to assign to a rally"
 >
 &#8942;&#8942;
 </span>
-<span>{row.name}</span>
+<button type="button" className="member-details-trigger" aria-haspopup="dialog" onClick={(event) => { event.stopPropagation(); setSelectedMemberId(String(row.member_id)); }}>{row.name}</button>
 </span>
 {rallyByMemberId.has(String(row.member_id)) && (
 <span className="rally-badge">{rallyByMemberId.get(String(row.member_id))}</span>
 )}
 </div>
 </td>
-<td className="member-id-cell">{row.member_id}</td>
-<td><span className="unit-pill">{formatUnitLevel(row.infantry_tier, row.infantry_tg)}</span></td>
-<td><span className="unit-pill cavalry">{formatUnitLevel(row.cavalry_tier, row.cavalry_tg)}</span></td>
-<td><span className="unit-pill archer">{formatUnitLevel(row.archer_tier, row.archer_tg)}</span></td>
+<td>
+<div className="member-troop-stack">
+{[['infantry', 'Infantry'], ['cavalry', 'Cavalry'], ['archer', 'Archer']].map(([key, label]) => (
+<div key={key}><span>{label}</span><strong>{formatUnitLevel(row[`${key}_tier`], row[`${key}_tg`])}</strong></div>
+))}
+</div>
+</td>
 <td>
 <div className="heroes-cell">
 <strong>{(row.heroes || []).length}</strong>
 <span>{(row.heroes || []).slice(0, 3).join(', ') || '-'}</span>
 </div>
 </td>
-<td>
-{row.power_profile ? (
-<div className="power-cell">
-<span>Gov {powerValue(row.power_profile, 'governor_gear')}</span>
-<span>Charms {powerValue(row.power_profile, 'charms')}</span>
-<span>Hero {powerValue(row.power_profile, 'hero_gear')}</span>
-<span>Pet {powerValue(row.power_profile, 'pet_power')}</span>
-<span>Masters {powerValue(row.power_profile, 'masters_power')}</span>
-</div>
-) : (
-<span className="missing-power-pill">No Player Profile</span>
-)}
-</td>
+<td><span className="unit-pill">{row.current_alliance || '-'}</span></td>
 <td>
 <span className={`availability-pill ${availabilityTone(row.availability)}`}>
 {row.availability || '-'}
 </span>
 </td>
-<td><span className="unit-pill">{row.current_alliance || '-'}</span></td>
                   <td className="updated-cell">{row.updated_at ? new Date(row.updated_at).toLocaleString() : ''}</td>
-<td>
-<button
-type="button"
-className="delete-entry-btn"
-onClick={() => deleteMember(row)}
-disabled={deletingIds.includes(String(row.member_id))}
->
-{deletingIds.includes(String(row.member_id)) ? 'Removing...' : 'Remove'}
-</button>
-</td>
+
 </tr>
 ))}
 </tbody>
@@ -796,6 +763,16 @@ x
 </div>
 </aside>
 </div>
+)}
+{selectedMemberId && membersById.has(selectedMemberId) && (
+<MemberDetailsDrawer
+  member={membersById.get(selectedMemberId)}
+  rallyName={rallyByMemberId.get(selectedMemberId)}
+  onClose={() => setSelectedMemberId(null)}
+  onDelete={deleteMember}
+  deleting={deletingIds.includes(selectedMemberId)}
+  confirming={Boolean(confirmState)}
+/>
 )}
 </AdminShell>
 );

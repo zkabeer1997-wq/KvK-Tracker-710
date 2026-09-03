@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabaseClient';
 
 const AVAILABILITY_OPTIONS = [
 'First half (12-14:30 UTC)',
@@ -14,13 +13,6 @@ const ALLIANCES = ['710', 'RED', 'SKY'];
 export default function PlayerRecordForm({ initialMemberId = '' }) {
 const [name, setName] = useState('');
 const [memberId, setMemberId] = useState(initialMemberId);
-const [infantryTier, setInfantryTier] = useState('');
-const [infantryTg, setInfantryTg] = useState('');
-const [cavalryTier, setCavalryTier] = useState('');
-const [cavalryTg, setCavalryTg] = useState('');
-const [archerTier, setArcherTier] = useState('');
-const [archerTg, setArcherTg] = useState('');
-const [heroes, setHeroes] = useState([]);
 const [availability, setAvailability] = useState('');
   const [currentAlliance, setCurrentAlliance] = useState('');
 const [pin, setPin] = useState('');
@@ -29,77 +21,57 @@ const [status, setStatus] = useState('');
 const [isError, setIsError] = useState(false);
 const [loading, setLoading] = useState(false);
 
-async function lookup() {
-if (!memberId) return;
-const { data } = await supabase
-.from('public_submissions')
-.select('*')
-.eq('member_id', memberId)
-.maybeSingle();
-if (data) {
-setOnFile(data);
-if (name === '') setName(data.name || '');
-setInfantryTier(data.infantry_tier || '');
-setInfantryTg(data.infantry_tg || '');
-setCavalryTier(data.cavalry_tier || '');
-setCavalryTg(data.cavalry_tg || '');
-setArcherTier(data.archer_tier || '');
-setArcherTg(data.archer_tg || '');
-setHeroes(data.heroes || []);
-setAvailability(data.availability || '');
-        setCurrentAlliance(data.current_alliance || '');
-} else {
-setOnFile(null);
-}
-}
-
 useEffect(() => {
-if (initialMemberId) {
-lookup();
+let cancelled = false;
+async function load() {
+setLoading(true);
+try {
+const response = await fetch('/api/kvk-availability', { cache: 'no-store' });
+const result = await response.json();
+if (!response.ok) throw new Error(result.error || 'Could not load your saved availability.');
+if (!cancelled && result.row) {
+setOnFile(result.row);
+setName(result.row.name || '');
+setMemberId(result.row.member_id);
+setCurrentAlliance(result.row.current_alliance || '');
+setAvailability(result.row.availability || '');
 }
-// eslint-disable-next-line react-hooks/exhaustive-deps
+} catch (error) {
+if (!cancelled) { setIsError(true); setStatus(error.message); }
+} finally {
+if (!cancelled) setLoading(false);
+}
+}
+load();
+return () => { cancelled = true; };
 }, []);
 
 async function handleSubmit(e) {
 e.preventDefault();
 setStatus('');
 setIsError(false);
-if (!name || !memberId || !pin) {
+if (!name.trim() || !memberId || !pin || !currentAlliance || !availability) {
 setIsError(true);
-setStatus('Please fill in your name, member ID, and PIN.');
+setStatus('Enter your name and PIN, and select your alliance and availability.');
 return;
 }
 setLoading(true);
-const { data, error } = await supabase.rpc('submit_troop_form', {
-p_name: name,
-p_member_id: memberId,
-p_infantry_tier: infantryTier || null,
-p_infantry_tg: infantryTg || null,
-p_cavalry_tier: cavalryTier || null,
-p_cavalry_tg: cavalryTg || null,
-p_archer_tier: archerTier || null,
-p_archer_tg: archerTg || null,
-p_heroes: heroes,
-p_availability: availability || null,
-p_pin: pin,
+try {
+const response = await fetch('/api/kvk-availability', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ name, member_id: memberId, current_alliance: currentAlliance, availability, pin }),
 });
-setLoading(false);
-if (error) {
+const result = await response.json();
+if (!response.ok) throw new Error(result.error || 'Could not save your availability.');
+setOnFile(result.row);
+setStatus('Saved your alliance and KvK availability.');
+} catch (error) {
 setIsError(true);
-if (error.message && error.message.includes('PIN_MISMATCH')) {
-setStatus('Incorrect PIN for this Member ID. Please try again.');
-} else {
-setStatus('Something went wrong: ' + error.message);
+setStatus(error.message || 'Could not save. Please try again.');
+} finally {
+setLoading(false);
 }
-return;
-}
-setIsError(false);
-if (currentAlliance) {
-await supabase.from('submissions').update({ current_alliance: currentAlliance }).eq('member_id', memberId);
-}
-setStatus(
-data === 'created' ? 'Submitted! Your entry has been created.' : 'Updated! Your entry has been saved.'
-);
 }
 
 return (
@@ -130,7 +102,7 @@ return (
 </div>
 <section className="identity-grid">
 <label>Your name<input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your in-game name" /></label>
-<label>Member ID<input value={memberId} onChange={(e) => setMemberId(e.target.value)} onBlur={lookup} placeholder="Your Member ID" /></label>
+<label>Member ID<input value={memberId} readOnly placeholder="Your Member ID" /></label>
 </section>
 <section className="troop-section public-section">
 <div className="section-title-row"><span>Alliance</span><h3>Current Alliance</h3><p>Select the alliance you are currently in.</p></div>
@@ -138,7 +110,7 @@ return (
 </section>
 {onFile && (
 <div className="on-file">
-Currently on file - Availability: {onFile.availability || '-'}
+Currently on file — Alliance: {onFile.current_alliance || '-'} · Availability: {onFile.availability || '-'}
 </div>
 )}
 <section className="troop-section public-section">
@@ -154,7 +126,7 @@ Currently on file - Availability: {onFile.availability || '-'}
 </section>
 <section className="pin-panel">
 <label>Enter your PIN<input type="password" value={pin} onChange={(e) => setPin(e.target.value)} placeholder="Your PIN" /></label>
-<p className="hint">First submission sets your PIN. Enter the same PIN next time to update your entry.</p>
+<p className="hint">Enter the same PIN you use to sign in.</p>
 </section>
 {status && <div className={isError ? 'status error' : 'status'}>{status}</div>}
 <button type="submit" disabled={loading}>{loading ? 'Submitting...' : 'Save KvK Availability'}</button>
