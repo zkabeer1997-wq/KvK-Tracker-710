@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { KVK_ALLIANCES } from '../../../lib/playerCombatOptions.mjs';
 
 const SECTIONS = ['Tools and Calculators', 'Forms', 'Events', 'Guides', 'General'];
 const MAX_MESSAGE_LENGTH = 2000;
@@ -49,9 +50,9 @@ export default function WebsiteRequestForm() {
     e.preventDefault();
     setStatus('');
     setIsError(false);
-    if (!section || !message.trim()) {
+    if (!currentAlliance || !section || !message.trim()) {
       setIsError(true);
-      setStatus('Select a section and describe the improvement you would like.');
+      setStatus('Select your alliance and a section, and describe the improvement you would like.');
       return;
     }
     setLoading(true);
@@ -59,7 +60,7 @@ export default function WebsiteRequestForm() {
       const response = await fetch('/api/website-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ section, message: message.trim() }),
+        body: JSON.stringify({ current_alliance: currentAlliance, section, message: message.trim() }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Could not submit your request.');
@@ -121,8 +122,13 @@ export default function WebsiteRequestForm() {
           <label>Member ID<input value={memberId} readOnly placeholder="Loading..." /></label>
         </section>
         <section className="troop-section public-section">
-          <div className="section-title-row"><span>Alliance</span><h3>Current Alliance</h3><p>Loaded from your account.</p></div>
-          <label>Current Alliance<input value={currentAlliance} readOnly placeholder="Loading..." /></label>
+          <div className="section-title-row"><span>Alliance</span><h3>Current Alliance</h3><p>Select the alliance you are currently in.</p></div>
+          <label>Current Alliance
+            <select value={currentAlliance} onChange={(e) => setCurrentAlliance(e.target.value)}>
+              <option value="">Select alliance</option>
+              {KVK_ALLIANCES.map((a) => <option key={a} value={a}>{a}</option>)}
+            </select>
+          </label>
         </section>
         <section className="troop-section public-section">
           <div className="section-title-row"><span>Category</span><h3>Which part of the site?</h3><p>Select the section your suggestion is about.</p></div>
