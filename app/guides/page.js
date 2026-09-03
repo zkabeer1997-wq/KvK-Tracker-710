@@ -1,3 +1,7 @@
+import { cookies } from 'next/headers';
+import { readMemberSession } from '../../lib/memberAuth';
+import { isAdminRequest } from '../../lib/adminAuth';
+import { guidesTable } from '../../lib/guideAccess.mjs';
 import { createAdminSupabaseClient } from '../../lib/adminSupabase';
 import Link from 'next/link';
 import GuidesDirectory from './GuidesDirectory';
@@ -9,14 +13,20 @@ export const metadata = {
   alternates: { canonical: '/guides' },
 };
 
+export const dynamic = 'force-dynamic';
+
 async function loadGuides() {
+  const request = { cookies: await cookies() };
+  const allowed = Boolean(await readMemberSession(request)) || await isAdminRequest(request);
   const supabase = createAdminSupabaseClient();
-  const { data, error } = await supabase
-    .from('kingdom_guides')
-    .select('slug, title, category, description, body, position, updated_at')
+  let query = supabase
+    .from(guidesTable())
+    .select('slug, title, category, description, access_level, position, updated_at')
     .eq('is_published', true)
     .order('position', { ascending: true })
     .order('title', { ascending: true });
+  if (!allowed) query = query.eq('access_level', 'public');
+  const { data, error } = await query;
 
   if (error) throw error;
   return data || [];

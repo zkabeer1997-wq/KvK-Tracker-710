@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import TableFilters from './TableFilters';
+import { searchRow, compareValues } from '../../lib/adminTable.mjs';
 import AdminShell from './AdminShell';
 import ConfirmDialog from './ConfirmDialog';
 import TableSkeleton from './TableSkeleton';
@@ -96,6 +98,10 @@ export default function RosterWorkspace({
   const [actionError, setActionError] = useState('');
   const [deletingIds, setDeletingIds] = useState([]);
   const [search, setSearch] = useState('');
+  const [allianceFilter,setAllianceFilter]=useState('');
+  const [availabilityFilter,setAvailabilityFilter]=useState('');
+  const [heroFilter,setHeroFilter]=useState('');
+  const [tierFilter,setTierFilter]=useState('');
   const [sortKey, setSortKey] = useState('name');
   const [sortDir, setSortDir] = useState('asc');
   const [rallies, setRallies] = useState([]);
@@ -393,33 +399,13 @@ export default function RosterWorkspace({
   }
 
   const filteredSorted = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    let result = rows;
-    if (term) {
-      result = rows.filter((r) => {
-        return (
-          (r.name || '').toLowerCase().includes(term) ||
-          String(r.member_id || '').toLowerCase().includes(term) ||
-          (r.heroes || []).some((h) => h.toLowerCase().includes(term)) ||
-          Object.values(r.power_profile || {}).some((value) => String(value || '').toLowerCase().includes(term)) ||
-          (r.availability || '').toLowerCase().includes(term) ||
-          (r.current_alliance || '').toLowerCase().includes(term)
-        );
-      });
-    }
-    const sorted = [...result].sort((a, b) => {
-      let av = a[sortKey];
-      let bv = b[sortKey];
-      if (Array.isArray(av)) av = av.join(', ');
-      if (Array.isArray(bv)) bv = bv.join(', ');
-      av = (av ?? '').toString().toLowerCase();
-      bv = (bv ?? '').toString().toLowerCase();
-      if (av < bv) return sortDir === 'asc' ? -1 : 1;
-      if (av > bv) return sortDir === 'asc' ? 1 : -1;
-      return 0;
-    });
-    return sorted;
-  }, [rows, search, sortKey, sortDir]);
+    const result = rows.filter(row =>
+      (!allianceFilter || row.current_alliance===allianceFilter) && (!availabilityFilter || row.availability===availabilityFilter) &&
+      (!heroFilter || row.heroes?.includes(heroFilter)) && (!tierFilter || [row.infantry_tier,row.cavalry_tier,row.archer_tier].includes(tierFilter)) &&
+      searchRow(row,search,['name','member_id','heroes','current_alliance','availability','governor_gear','charms','infantry_tier','cavalry_tier','archer_tier'])
+    );
+    return result.sort((a,b)=>compareValues(a[sortKey],b[sortKey])*(sortDir==='asc'?1:-1));
+  }, [rows,search,sortKey,sortDir,allianceFilter,availabilityFilter,heroFilter,tierFilter]);
 
   const membersById = useMemo(() => {
     return new Map(rows.map((row) => [String(row.member_id), row]));
@@ -523,19 +509,12 @@ export default function RosterWorkspace({
           <strong>{lastUpdated ? new Date(lastUpdated).toLocaleDateString() : '-'}</strong>
         </div>
       </div>
-      <div className="admin-actions">
-        <div className="search-shell">
-          <span>Search</span>
-          <Input
-            tone="console"
-            type="text"
-            placeholder="Search by name, player ID, hero, alliance, availability..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="admin-search"
-          />
-        </div>
-      </div>
+      <TableFilters query={search} onQuery={setSearch} placeholder="Name, player ID, hero, or equipment" shown={filteredSorted.length} total={rows.length} onReset={()=>{setSearch('');setAllianceFilter('');setAvailabilityFilter('');setHeroFilter('');setTierFilter('');setSortKey('name');setSortDir('asc');}} filters={[
+        {key:'alliance',label:'Alliance',value:allianceFilter,onChange:setAllianceFilter,options:[...new Set(rows.map(r=>r.current_alliance).filter(Boolean))].sort()},
+        {key:'availability',label:'Availability',value:availabilityFilter,onChange:setAvailabilityFilter,options:[...new Set(rows.map(r=>r.availability).filter(Boolean))].sort()},
+        {key:'hero',label:'Hero',value:heroFilter,onChange:setHeroFilter,options:HEROES},
+        {key:'tier',label:'Any troop tier',value:tierFilter,onChange:setTierFilter,options:TROOP_TIERS},
+      ]}/>
       {actionStatus && <div className="status">{actionStatus}</div>}
       {actionError && <div className="status error">{actionError}</div>}
       {loading && <TableSkeleton columns={COLUMNS.length} rows={7} />}

@@ -89,11 +89,11 @@ test('image validation rejects oversized or disguised files before storage', asy
   }
   assert.equal(state.uploads.length, 0);
 });
-test('valid photo uploads get unique image paths and a usable public URL', async () => {
+test('valid photo uploads get unique image paths and an access-checked image URL', async () => {
   const form = new FormData();
   form.set('file', new File([Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aN3sAAAAASUVORK5CYII=', 'base64')], 'photo.png', { type: 'image/png' }));
   const response = await photoPost(request(form));
   assert.equal(response.status, 201);
-  assert.match((await response.json()).url, /^https:\/\/storage\.example\/[\w-]+\.png$/);
+  assert.match((await response.json()).url, /^\/api\/guide-images\/[\w-]+\.png$/);
   assert.equal(state.uploads[0][2].upsert, false);
 });

@@ -1,3 +1,4 @@
+import { guidesTable } from '../../../lib/guideAccess.mjs';
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { isAdminRequest } from '../../../lib/adminAuth';
@@ -18,8 +19,8 @@ export async function GET(request) {
 
   const supabase = createAdminSupabaseClient();
   const { data, error } = await supabase
-    .from('kingdom_guides')
-    .select('slug, title, category, description, body, position, is_published, created_at, updated_at')
+    .from(guidesTable())
+    .select('slug, title, category, description, body, position, is_published, access_level, created_at, updated_at')
     .order('position', { ascending: true })
     .order('title', { ascending: true });
 
@@ -52,7 +53,7 @@ export async function POST(request) {
   const now = new Date().toISOString();
   const supabase = createAdminSupabaseClient();
   const { data, error } = await supabase
-    .from('kingdom_guides')
+    .from(guidesTable())
     .insert({ ...guide, updated_at: now })
     .select(GUIDE_FIELDS)
     .single();

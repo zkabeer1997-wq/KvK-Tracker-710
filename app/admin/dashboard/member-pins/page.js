@@ -2,6 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import TableFilters from '../../../../components/admin/TableFilters';
+import { compareValues, searchRow, numericValue } from '../../../../lib/adminTable.mjs';
+import { profileSummary } from '../../../../lib/memberProfiles.mjs';
+import { parseCharmSelections, parseGovernorGearSelections, GOVERNOR_GEAR_OPTIONS } from '../../../../lib/powerProfiles.mjs';
+import { formatUnitLevel } from '../../../../lib/kvkMembersExport.mjs';
 import AdminShell from '../../../../components/admin/AdminShell';
 import ConfirmDialog from '../../../../components/admin/ConfirmDialog';
 import TableSkeleton from '../../../../components/admin/TableSkeleton';
@@ -28,6 +33,10 @@ export default function AdminMemberPinsPage() {
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
   const [query, setQuery] = useState('');
+  const [filters, setFilters] = useState({ alliance: '', pin: '', gear: '', charm: '', pet: '', master: '', mystic: '' });
+  const [sort, setSort] = useState('name');
+  const [descending, setDescending] = useState(false);
+  const setFilter = (key, value) => setFilters(current => ({ ...current, [key]: value }));
   const [resettingId, setResettingId] = useState('');
   const [confirmRow, setConfirmRow] = useState(null);
   const [revealedPins, setRevealedPins] = useState({});
@@ -45,10 +54,10 @@ export default function AdminMemberPinsPage() {
       try {
         const response = await fetch('/api/admin-member-pins', { cache: 'no-store' });
         const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Unable to load member PINs.');
+        if (!response.ok) throw new Error(result.error || 'Unable to load member profiles.');
         if (active) setRows(result.rows || []);
       } catch (loadError) {
-        if (active) setError(loadError.message || 'Unable to load member PINs.');
+        if (active) setError(loadError.message || 'Unable to load member profiles.');
       } finally {
         if (active) setLoading(false);
       }
@@ -177,22 +186,25 @@ export default function AdminMemberPinsPage() {
     }
   }
 
-  const visibleRows = useMemo(() => {
-    const term = query.trim().toLowerCase();
-    if (!term) return rows;
-    return rows.filter((row) => (
-      String(row.name || '').toLowerCase().includes(term)
-      || String(row.member_id || '').toLowerCase().includes(term)
-    ));
-  }, [rows, query]);
+  const visibleRows = useMemo(() => rows.map(profileSummary).filter(row =>
+    searchRow(row, query, ['name','member_id','current_alliance','governor_gear','charms','infantry_tier','cavalry_tier','archer_tier']) &&
+    (!filters.alliance || row.current_alliance === filters.alliance) && (!filters.pin || row.pin_status === filters.pin) &&
+    (!filters.gear || row.gear_min >= Number(filters.gear)) && (!filters.charm || row.charm_min >= Number(filters.charm)) &&
+    (!filters.pet || numericValue(row.pet_power) >= numericValue(filters.pet)) && (!filters.master || numericValue(row.masters_power) >= numericValue(filters.master)) &&
+    (!filters.mystic || numericValue(row.mystic_trial_score) >= numericValue(filters.mystic))
+  ).sort((a,b) => {
+    const value = row => ['infantry','cavalry','archer'].includes(sort) ? formatUnitLevel(row[`${sort}_tier`], row[`${sort}_tg`]) : row[sort];
+    return compareValues(value(a),value(b),['charm_min','gear_min','pet_power','masters_power','mystic_trial_score'].includes(sort)) * (descending ? -1 : 1);
+  }), [rows,query,filters,sort,descending]);
+  const sortOptions = [{value:'name',label:'Name'},{value:'member_id',label:'Player ID'},...['infantry','cavalry','archer'].map(value=>({value,label:value+' level'})),{value:'gear_min',label:'Lowest gear level'},{value:'charm_min',label:'Lowest charm level'},{value:'pet_power',label:'Pet power'},{value:'masters_power',label:'Master power'},{value:'mystic_trial_score',label:'Mystic Trial total'}];
 
   const securedCount = rows.filter((row) => row.pin_status === 'secured').length;
   const needsResetCount = rows.length - securedCount;
 
   return (
     <AdminShell
-      title="Member PINs"
-      subtitle="Access control"
+      title="Member Profiles"
+      subtitle="Player levels, equipment, power totals, and PIN resets"
       onLogout={handleLogout}
       actions={(
         <Button variant="quiet" onClick={showCreate ? closeCreate : openCreate}>
@@ -210,6 +222,7 @@ export default function AdminMemberPinsPage() {
         or reset an existing member to a replacement PIN that is revealed here once for private copying.
       </Callout>
 
+      {!showCreate && error && <Callout tone="danger">{error}</Callout>}
       {showCreate && (
         <Panel eyebrow="New roster access" title="Create member + PIN" description="Adds the member to KvK Members with a secure initial PIN. Troop and hero details can be filled in later." className="admin-page-panel">
           <form onSubmit={createMember} className="member-pin-create-form">
@@ -263,17 +276,16 @@ export default function AdminMemberPinsPage() {
         </Panel>
       )}
 
-      <div className="admin-toolbar">
-        <Input
-          tone="console"
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search member name or ID..."
-          aria-label="Search member PIN list"
-        />
-        <span className="admin-count">{visibleRows.length} of {rows.length}</span>
-      </div>
+      <TableFilters query={query} onQuery={setQuery} placeholder="Name, ID, alliance, troop or equipment level" shown={visibleRows.length} total={rows.length} onReset={() => { setQuery(''); setFilters({}); setSort('name'); setDescending(false); }} filters={[
+        {key:'alliance',label:'Alliance',value:filters.alliance || '',onChange:v=>setFilter('alliance',v),options:[...new Set(rows.map(r=>r.current_alliance).filter(Boolean))].sort()},
+        {key:'pin',label:'PIN status',value:filters.pin || '',onChange:v=>setFilter('pin',v),options:[{value:'secured',label:'Secured'},{value:'needs_reset',label:'Needs reset'}]},
+        {key:'gear',label:'All gear at least',value:filters.gear || '',onChange:v=>setFilter('gear',v),options:GOVERNOR_GEAR_OPTIONS.map((label,i)=>({value:String(i+1),label}))},
+        {key:'charm',label:'All charms at least',value:filters.charm || '',onChange:v=>setFilter('charm',v),options:Array.from({length:22},(_,i)=>({value:String(i+1),label:`Level ${i+1}`}))},
+      ]}>
+        {[['pet','Min. pet power'],['master','Min. master power'],['mystic','Min. Mystic Trial']].map(([key,label])=><label key={key}>{label}<input inputMode="decimal" placeholder="e.g. 1.5M" value={filters[key] || ''} onChange={e=>setFilter(key,e.target.value)} /></label>)}
+        <label>Sort by<select value={sort} onChange={e=>setSort(e.target.value)}>{sortOptions.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select></label>
+        <label>Order<select value={descending ? 'desc' : 'asc'} onChange={e=>setDescending(e.target.value==='desc')}><option value="asc">Low to high / A–Z</option><option value="desc">High to low / Z–A</option></select></label>
+      </TableFilters>
 
       {status && <div className="status">{status}</div>}
 
@@ -285,13 +297,14 @@ export default function AdminMemberPinsPage() {
             <tr>
               <th>Member</th>
               <th>Member ID</th>
+              <th>Troop levels</th><th>Governor Gear</th><th>Charms</th><th>Mystic Trial total</th><th>Pet power</th><th>Master power</th>
               <th>PIN</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody>
             {visibleRows.length === 0 ? (
-              <tr><td colSpan="4">No members found.</td></tr>
+              <tr><td colSpan="10">No members found.</td></tr>
             ) : visibleRows.map((row) => {
               const memberId = String(row.member_id);
               const revealedPin = revealedPins[memberId];
@@ -300,6 +313,10 @@ export default function AdminMemberPinsPage() {
                 <tr key={memberId}>
                   <td><strong>{row.name || '-'}</strong></td>
                   <td><span className="member-id-cell">{memberId}</span></td>
+                  <td>{['infantry','cavalry','archer'].map(unit=><div key={unit}><strong>{unit}:</strong> {formatUnitLevel(row[`${unit}_tier`],row[`${unit}_tg`])}</div>)}</td>
+                  <td>{['infantry','cavalry','archer'].map(unit=><div key={unit}><strong>{unit}:</strong> {[1,2].map(i=>parseGovernorGearSelections(row.governor_gear)[`${unit}_${i}`] || '—').join(' / ')}</div>)}</td>
+                  <td>{['infantry','cavalry','archer'].map(unit=><div key={unit}><strong>{unit}:</strong> {[1,2,3,4,5,6].map(i=>parseCharmSelections(row.charms)[`${unit}_${i}`] || '—').join(' · ')}</div>)}</td>
+                  <td>{row.mystic_trial_score || '—'}</td><td>{row.pet_power || '—'}</td><td>{row.masters_power || '—'}</td>
                   <td>
                     {revealedPin ? (
                       <div className="member-pin-reveal">

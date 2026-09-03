@@ -2,14 +2,7 @@
 
 import { useState } from 'react';
 
-export const TIME_SLOTS = [
-  '23:45', '00:15', '00:45', '01:15', '01:45', '02:15', '02:45', '03:15', '03:45', '04:15',
-  '04:45', '05:15', '05:45', '06:15', '06:45', '07:15', '07:45', '08:15', '08:45', '09:15',
-  '09:45', '10:15', '10:45', '11:15', '11:45', '12:15', '12:45', '13:15', '13:45', '14:15',
-  '14:45', '15:15', '15:45', '16:15', '16:45', '17:15', '17:45', '18:15', '18:45', '19:15',
-  '19:45', '20:15', '20:45', '21:15', '21:45', '22:15', '22:45', '23:15',
-];
-
+import NobleAdvisorFields, { SlotPicker } from '../../components/NobleAdvisorFields';
 const CONSTRUCTION_UPGRADES = ['TG5', 'TG6', 'TG7', 'TG8'];
 const T11_TROOPS = ['T11 Infantry', 'T11 Cavalry', 'T11 Archers'];
 
@@ -29,34 +22,6 @@ const initialForm = {
   promotingT11: '',
   notes: '',
 };
-
-function SlotPicker({ label, sublabel, selected, onToggle }) {
-  return (
-    <div className="prep-slot-group">
-      <div className="prep-slot-head">
-        <strong>{label}</strong>
-        <span className="prep-slot-count">{selected.length} selected</span>
-        {sublabel ? <span className="prep-slot-sub">{sublabel} &middot; UTC</span> : null}
-      </div>
-      <div className="prep-slot-grid">
-        {TIME_SLOTS.map((slot) => {
-          const on = selected.includes(slot);
-          return (
-            <button
-              type="button"
-              key={slot}
-              className={on ? 'prep-slot on' : 'prep-slot'}
-              onClick={() => onToggle(slot)}
-              aria-pressed={on}
-            >
-              {slot}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 export default function PrepBackpackForm({ initialMemberId = '' }) {
   const [form, setForm] = useState(initialForm);
@@ -202,33 +167,7 @@ export default function PrepBackpackForm({ initialMemberId = '' }) {
         <SlotPicker label="Available Times &mdash; Day 2 (Research)" sublabel="30-minute start times, UTC" selected={availDay2} onToggle={toggleInArray(setAvailDay2)} />
       </section>
 
-      <section className="form-block">
-        <span className="minister-day-badge">Day 4</span>
-        <h3>Noble Advisor &mdash; Troop Training</h3>
-        <label>Do you want a Troop Training appointment?
-          <select value={form.wantTroopTraining} onChange={(e) => updateField('wantTroopTraining', e.target.value)}>
-            <option value="">Select</option>
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-          </select>
-        </label>
-        <label>Are you a transfer?
-          <select value={form.isTransfer} onChange={(e) => updateField('isTransfer', e.target.value)}>
-            <option value="">Select</option>
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-          </select>
-        </label>
-        <label>How many days of speedups will you use? (600+ days gets more slots)<input value={form.troopSpeedupDays} onChange={(e) => updateField('troopSpeedupDays', e.target.value)} /></label>
-        <label>Promoting to T11 troops?
-          <select value={form.promotingT11} onChange={(e) => updateField('promotingT11', e.target.value)}>
-            <option value="">Select</option>
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-          </select>
-        </label>
-        <SlotPicker label="Available Times &mdash; Day 4 (Troop Training)" sublabel="30-minute start times, UTC" selected={availDay4} onToggle={toggleInArray(setAvailDay4)} />
-      </section>
+      <NobleAdvisorFields form={form} updateField={updateField} availDay4={availDay4} onToggle={toggleInArray(setAvailDay4)} />
 
       <section className="form-block">
         <span className="minister-day-badge minister-day-badge-overflow">Day 5</span>

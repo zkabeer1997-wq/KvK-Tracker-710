@@ -20,6 +20,7 @@ const EMPTY_FORM = {
   body: '',
   position: '0',
   is_published: false,
+  access_level: 'public',
 };
 
 function slugify(value) {
@@ -279,6 +280,11 @@ export default function AdminGuidesPage() {
             <Field label="Library position" htmlFor="guide-position" hint="Lower numbers appear first">
               <Input id="guide-position" tone="console" type="number" min="0" max="100000" step="1" value={form.position} onChange={(event) => setForm((current) => ({ ...current, position: event.target.value }))} />
             </Field>
+            <Field label="Guide access" htmlFor="guide-access">
+              <Select id="guide-access" tone="console" value={form.access_level || 'public'} onChange={event => setForm(current => ({ ...current, access_level: event.target.value }))}>
+                <option value="public">Public Access</option><option value="members">Member Access — login required</option>
+              </Select>
+            </Field>
             <Field label="Status" htmlFor="guide-status">
               <Select id="guide-status" tone="console" value={form.is_published ? 'published' : 'draft'} onChange={(event) => setForm((current) => ({ ...current, is_published: event.target.value === 'published' }))}>
                 <option value="draft">Draft</option>
@@ -335,7 +341,7 @@ export default function AdminGuidesPage() {
                 <td>{guide.position}</td>
                 <td><strong>{guide.title}</strong><br /><span style={{ opacity: 0.7 }}>/guides/{guide.slug}</span></td>
                 <td>{guide.category}</td>
-                <td>{guide.is_published ? 'Published' : 'Draft'}</td>
+                <td>{guide.is_published ? 'Published' : 'Draft'} · {guide.access_level === 'members' ? 'Members' : 'Public'}</td>
                 <td>{guide.updated_at ? new Date(guide.updated_at).toLocaleString() : '—'}</td>
                 <td>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>

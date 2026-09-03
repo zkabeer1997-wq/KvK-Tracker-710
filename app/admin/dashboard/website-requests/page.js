@@ -75,6 +75,7 @@ export default function AdminWebsiteRequestsPage() {
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Could not update status.');
+      window.dispatchEvent(new Event('admin-tasks-changed'));
       setRows((current) => current.map((r) => (r.id === row.id ? result.row : r)));
     } catch (err) {
       setError(err.message || 'Could not update status.');

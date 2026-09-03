@@ -26,6 +26,7 @@ const POWER_COLUMNS = [
 'hero_gear',
 'pet_power',
 'masters_power',
+'mystic_trial_score',
 'infantry_tier',
 'infantry_tg',
 'cavalry_tier',

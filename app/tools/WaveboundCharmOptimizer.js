@@ -2,9 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-const LEVEL_COSTS = {
-  1:[5,5],2:[40,15],3:[60,40],4:[80,100],5:[100,200],6:[120,300],7:[140,400],8:[200,400],9:[300,400],10:[420,420],11:[560,420],12:[580,600],13:[610,780],14:[645,960],15:[685,1140],16:[730,1320],17:[780,1500],18:[835,1680],19:[895,1860],20:[960,2040],21:[1030,2220],22:[1105,2400]
-};
+import { toolConfiguration } from '../../lib/toolCatalog.mjs';
+const DEFAULT_CONFIG=toolConfiguration('wavebound-charms');
 
 function choose(n,k){
   if(k<0||k>n) return 0;
@@ -26,7 +25,8 @@ function fmt(n){
   return Number(n).toLocaleString(undefined,{maximumFractionDigits:2});
 }
 
-export default function WaveboundCharmOptimizer(){
+export default function WaveboundCharmOptimizer({configuration=DEFAULT_CONFIG}){
+  const LEVEL_COSTS=configuration.costs, r=configuration.rewards;
   const [currentLevel,setCurrentLevel]=useState(0);
   const [targetLevel,setTargetLevel]=useState(10);
   const [charmCount,setCharmCount]=useState(18);
@@ -107,7 +107,7 @@ export default function WaveboundCharmOptimizer(){
       }
     }
     return {guides:guides*charmCount,designs:designs*charmCount};
-  },[currentLevel,targetLevel,charmCount]);
+  },[currentLevel,targetLevel,charmCount,LEVEL_COSTS]);
 
   const result=useMemo(()=>{
     if(targetLevel<=currentLevel) return null;
@@ -119,13 +119,13 @@ export default function WaveboundCharmOptimizer(){
       for(let pm=0;pm<=maxPremiumMerges;pm++){
         const remainingCommon=common-(cm*3);
         const remainingPremium=premiumAvailable-(pm*3);
-        const fixedGuides=ownedGuides+(remainingPremium*5)+(exquisite*15)+(majestic*50)+(pm*15);
-        const fixedDesigns=ownedDesigns+(remainingCommon*5)+(remainingPremium*10)+(exquisite*15)+(majestic*50)+(pm*15);
-        const needMajestic=Math.max(0,Math.ceil((costs.guides-fixedGuides)/35),Math.ceil((costs.designs-fixedDesigns)/35));
+        const fixedGuides=ownedGuides+(remainingPremium*r['premium.g'])+(exquisite*r['exquisite.g'])+(majestic*r['majestic.g'])+(pm*r['exquisite.g']);
+        const fixedDesigns=ownedDesigns+(remainingCommon*r['common.d'])+(remainingPremium*r['premium.d'])+(exquisite*r['exquisite.d'])+(majestic*r['majestic.d'])+(pm*r['exquisite.d']);
+        const needMajestic=Math.max(0,Math.ceil((costs.guides-fixedGuides)/(r['majestic.g']-r['exquisite.g'])),Math.ceil((costs.designs-fixedDesigns)/(r['majestic.d']-r['exquisite.d'])));
         const success=probabilityAtLeast(pm,needMajestic);
-        const expectedGuides=fixedGuides+(pm*8.75);
-        const expectedDesigns=fixedDesigns+(pm*8.75);
-        const expectedShards=(exquisite*2)+(majestic*6)+(pm*3);
+        const expectedGuides=fixedGuides+(pm*.25*(r['majestic.g']-r['exquisite.g']));
+        const expectedDesigns=fixedDesigns+(pm*.25*(r['majestic.d']-r['exquisite.d']));
+        const expectedShards=(exquisite*r['exquisite.shards'])+(majestic*r['majestic.shards'])+(pm*(.75*r['exquisite.shards']+.25*r['majestic.shards']));
         plans.push({cm,pm,remainingCommon,remainingPremium,needMajestic,success,expectedGuides,expectedDesigns,expectedShards,merges:cm+pm});
       }
     }
@@ -136,7 +136,7 @@ export default function WaveboundCharmOptimizer(){
     }
     plans.sort((a,b)=>b.success-a.success || b.merges-a.merges);
     return plans.length ? {...plans[0],feasible:false} : null;
-  },[targetLevel,currentLevel,common,premium,exquisite,majestic,ownedGuides,ownedDesigns,costs,confidence]);
+  },[targetLevel,currentLevel,common,premium,exquisite,majestic,ownedGuides,ownedDesigns,costs,confidence,r]);
 
   const field=(label,value,setter,min=0,max=null)=>(
     <label className="wo-field">

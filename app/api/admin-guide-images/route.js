@@ -18,12 +18,11 @@ export async function POST(request) {
     || (file.type === 'image/gif' && ['GIF87a', 'GIF89a'].includes(bytes.toString('ascii', 0, 6)));
   if (!valid) return NextResponse.json({ error: 'This file is not a valid image of the selected type.' }, { status: 415 });
   const path = `${crypto.randomUUID()}.${TYPES[file.type]}`;
-  const bucket = createAdminSupabaseClient().storage.from('guide-images');
+  const bucket = createAdminSupabaseClient().storage.from('guide-attachments');
   const { error } = await bucket.upload(path, bytes, { contentType: file.type, upsert: false, cacheControl: '31536000' });
   if (error) {
     console.error('Guide photo upload failed', error);
     return NextResponse.json({ error: 'Photo upload failed. Please try again.' }, { status: 500 });
   }
-  const { data } = bucket.getPublicUrl(path);
-  return NextResponse.json({ url: data.publicUrl }, { status: 201 });
+  return NextResponse.json({ url: `/api/guide-images/${path}` }, { status: 201 });
 }

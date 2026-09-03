@@ -1,6 +1,6 @@
 'use client';
 import { useMemo, useState } from 'react';
-import { optimizePetPacks, PET_RESOURCES } from '../../lib/petPackOptimizer.mjs';
+import { createPetPackOptimizer, PET_RESOURCES as DEFAULT_RESOURCES } from '../../lib/petPackOptimizer.mjs';
 
 const EMPTY = { food: 0, manual: 0, potion: 0, medal: 0 };
 const DEFAULT_NEED = { food: 150000, manual: 500, potion: 160, medal: 80 };
@@ -12,14 +12,16 @@ function NumberField({ label, value, onChange, accent }) {
   return <label className="ppo-field"><span><i style={{ background: accent }} />{label}</span><input type="number" min="0" step="1" inputMode="numeric" value={value} onChange={event => onChange(Math.max(0, Number(event.target.value) || 0))} /></label>;
 }
 
-export default function PetPackOptimizer() {
+export default function PetPackOptimizer({configuration}) {
+  const PET_RESOURCES=configuration?.resources || DEFAULT_RESOURCES;
+  const optimizePetPacks=createPetPackOptimizer(configuration);
   const [need, setNeed] = useState(DEFAULT_NEED);
   const [have, setHave] = useState(EMPTY);
   const [ownedChests, setOwnedChests] = useState(0);
   const [maxWeeks, setMaxWeeks] = useState(8);
   const [result, setResult] = useState(null);
   const [calculating, setCalculating] = useState(false);
-  const shortfall = useMemo(() => Object.fromEntries(Object.keys(PET_RESOURCES).map(key => [key, Math.max(0, need[key] - have[key])])), [need, have]);
+  const shortfall = useMemo(() => Object.fromEntries(Object.keys(PET_RESOURCES).map(key => [key, Math.max(0, need[key] - have[key])])), [need, have, PET_RESOURCES]);
   const update = (setter, key, value) => { setter(previous => ({ ...previous, [key]: value })); setResult(null); };
   const calculate = () => {
     setCalculating(true);

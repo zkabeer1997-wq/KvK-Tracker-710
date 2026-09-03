@@ -340,6 +340,7 @@ const VARIANTS = {
     backHref: '/forms',
     backLabel: 'Back to Forms',
     stations: [
+      { key: 'noble', art: CampaignBackpack, kicker: 'Training appointments', title: 'Noble Advisor Schedule', line: 'Book a Troop Training appointment for Flamedragon.', href: () => '/forms/flamedragon-tyrant/noble-advisor' },
       {
         key: 'dragon',
         art: ArmoryRack,

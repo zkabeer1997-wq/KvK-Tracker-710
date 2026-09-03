@@ -1,3 +1,4 @@
+import { guidesTable } from '../../../../lib/guideAccess.mjs';
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { isAdminRequest } from '../../../../lib/adminAuth';
@@ -18,7 +19,7 @@ export async function DELETE(request, { params: paramsPromise }) {
 
   const supabase = createAdminSupabaseClient();
   const { data: existing, error: fetchError } = await supabase
-    .from('kingdom_guides')
+    .from(guidesTable())
     .select('slug')
     .eq('slug', slug)
     .maybeSingle();
@@ -31,7 +32,7 @@ export async function DELETE(request, { params: paramsPromise }) {
     return NextResponse.json({ error: 'Guide not found.' }, { status: 404 });
   }
 
-  const { error } = await supabase.from('kingdom_guides').delete().eq('slug', slug);
+  const { error } = await supabase.from(guidesTable()).delete().eq('slug', slug);
   if (error) {
     console.error('admin guide DELETE failed', error);
     return NextResponse.json({ error: 'Unable to remove guide.' }, { status: 500 });
@@ -53,7 +54,7 @@ export async function PUT(request, { params }) {
   const { guide, error: validationError } = validateGuide(payload);
   if (validationError) return NextResponse.json({ error: validationError }, { status: 400 });
   const supabase = createAdminSupabaseClient();
-  const { data, error } = await supabase.from('kingdom_guides')
+  const { data, error } = await supabase.from(guidesTable())
     .update({ ...guide, updated_at: new Date().toISOString() })
     .eq('slug', slug).select(GUIDE_FIELDS).maybeSingle();
   if (error) {

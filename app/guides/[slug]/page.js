@@ -1,138 +1,44 @@
 import { Suspense } from 'react';
+import { cookies } from 'next/headers';
+import Link from 'next/link';
 import GuideArticle from './GuideArticle';
 import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
-
-// Static generation with an on-demand fallback (dynamicParams defaults to
-// true), rather than force-dynamic + revalidate=0. PUT /api/guides/[slug]
-// already calls revalidatePath on both this route and /guides on every
-// save, so a stale static page is never actually stale in practice.
-//
-// This page never calls cookies()/headers() - a route can't export
-// generateStaticParams (a promise to prerender) and also read per-request
-// cookies in the same render; Next throws DYNAMIC_SERVER_USAGE if it does.
-// So the server-rendered pass always treats the visitor as anonymous and
-// only ever fetches published guides. Admin capability (previewing and
-// editing an unpublished guide) is upgraded client-side in GuideArticle,
-// which calls the existing GET /api/guides/[slug] - already computing
-// isAdmin per-request via isAdminRequest() - after mount. A published
-// guide looks identical either way; an admin previewing an unpublished
-// one sees a brief "not found" until that client fetch resolves, which is
-// an acceptable cost for a rarely-used preview path in exchange for the
-// public page being genuinely static.
-export async function generateStaticParams() {
-  try {
-    const supabase = createAdminSupabaseClient();
-    const { data, error } = await supabase
-      .from('kingdom_guides')
-      .select('slug')
-      .eq('is_published', true);
-    if (error) throw error;
-    return (data || []).map((g) => ({ slug: g.slug }));
-  } catch (error) {
-    // Build-time hiccup (or, in preview environments, no credentials at
-    // all): fall back to fully on-demand rendering for every slug rather
-    // than failing the whole build over pre-rendering an optimization.
-    console.error('guides generateStaticParams failed', error);
-    return [];
-  }
-}
-
-async function loadPublishedGuides() {
-  const supabase = createAdminSupabaseClient();
-  const { data, error } = await supabase
-    .from('kingdom_guides')
-    .select('slug, title, category, description, body, position, is_published, created_at, updated_at')
-    .eq('is_published', true)
-    .order('position', { ascending: true })
-    .order('title', { ascending: true });
-  if (error) throw error;
-  return data || [];
-}
+import { readMemberSession } from '../../../lib/memberAuth';
+import { isAdminRequest } from '../../../lib/adminAuth';
+import { guidesTable, canReadGuide } from '../../../lib/guideAccess.mjs';
+import { GUIDE_FIELDS } from '../../../lib/guideValidation.mjs';
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }) {
-  const resolvedParams = await params;
-  const slug = typeof resolvedParams?.slug === 'string' ? resolvedParams.slug : '';
+  const { slug } = await params;
   try {
-    const supabase = createAdminSupabaseClient();
-    const { data } = await supabase
-      .from('kingdom_guides')
-      .select('title, description, is_published')
-      .eq('slug', slug)
-      .maybeSingle();
-    if (!data || !data.is_published) return { title: 'Kingdom Guide | K710', alternates: { canonical: `/guides/${slug}` } };
-    return {
-      title: data.title,
-      description: data.description || undefined,
-      openGraph: { title: data.title, description: data.description || undefined },
-      alternates: { canonical: `/guides/${slug}` },
-    };
-  } catch {
-    return { title: 'Kingdom Guide | K710', alternates: { canonical: `/guides/${slug}` } };
-  }
+    const { data } = await createAdminSupabaseClient().from(guidesTable()).select('title,description,is_published,access_level').eq('slug', slug).maybeSingle();
+    if (!data?.is_published || data.access_level === 'members') return { title: 'Member guide | K710', robots: { index: false, follow: false } };
+    return { title: data.title, description: data.description, openGraph: { title: data.title, description: data.description }, alternates: { canonical: `/guides/${slug}` } };
+  } catch { return { title: 'Kingdom Guide | K710' }; }
 }
-
-// Reading searchParams in a page component forces per-request dynamic
-// rendering, for the same reason cookies() does above - so member_id
-// (used only to build "back to your member hall" links) is read
-// client-side in GuideArticle via useSearchParams() instead of being
-// threaded through here as a server prop.
 export default async function GuidePage({ params }) {
-  const resolvedParams = await params;
-  const slug = typeof resolvedParams?.slug === 'string' ? resolvedParams.slug : '';
-
-  let guide = null;
-  let prev = null;
-  let next = null;
-  let loadError = '';
-
+  const { slug } = await params;
+  const request = { cookies: await cookies() };
+  const [admin, session] = await Promise.all([isAdminRequest(request), readMemberSession(request)]);
+  let guide=null, loadError='', prev=null, next=null;
   try {
-    const published = await loadPublishedGuides();
-    const index = published.findIndex((g) => g.slug === slug);
-    guide = index >= 0 ? published[index] : null;
-    prev = index > 0 ? published[index - 1] : null;
-    next = index >= 0 && index < published.length - 1 ? published[index + 1] : null;
-  } catch (error) {
-    console.error('guide page load failed', error);
-    loadError = 'Unable to load this guide.';
+    const db=createAdminSupabaseClient();
+    const {data,error}=await db.from(guidesTable()).select(GUIDE_FIELDS).eq('slug',slug).maybeSingle();
+    if(error)throw error;
+    guide=data;
+    if(canReadGuide(guide,{admin,member:Boolean(session)})) {
+      let query=db.from(guidesTable()).select('slug,title,category,position').eq('is_published',true).order('position').order('title');
+      if(!admin && !session)query=query.eq('access_level','public');
+      const {data:neighbors}=await query;
+      const index=neighbors?.findIndex(g=>g.slug===slug) ?? -1;
+      if(index>=0){prev=neighbors[index-1] || null;next=neighbors[index+1] || null;}
+    }
+  } catch {loadError='This guide could not be loaded. Please try again.';}
+  if (!canReadGuide(guide, { admin, member: Boolean(session) })) {
+    const membersOnly=guide?.is_published && guide.access_level==='members';
+    return <main className="theme-realm" style={{ padding: '100px 24px', minHeight: '65vh' }}><h1>{membersOnly ? 'Member guide' : 'Guide unavailable'}</h1><p>{loadError || (membersOnly ? 'Sign in to read this member guide.' : 'This guide is unavailable or has not been published.')}</p>{membersOnly ? <Link href={`/player-record?next=${encodeURIComponent(`/guides/${slug}`)}`}>Member login</Link> : <Link href="/guides">Browse guides</Link>}</main>;
   }
-
-  const jsonLd = guide
-    ? {
-        '@context': 'https://schema.org',
-        '@type': 'Article',
-        headline: guide.title,
-        description: guide.description || undefined,
-        articleSection: guide.category || undefined,
-        datePublished: guide.created_at || undefined,
-        dateModified: guide.updated_at || undefined,
-        author: { '@type': 'Organization', name: 'Kingdom 710' },
-        publisher: { '@type': 'Organization', name: 'Kingdom 710' },
-      }
-    : null;
-
-  return (
-    <>
-      {jsonLd && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-      )}
-      {/* GuideArticle reads member_id via useSearchParams() (client-side,
-          so the page above it can stay statically generated) - Next
-          requires a Suspense boundary around any component that does,
-          otherwise the whole route silently falls back to fully
-          client-rendered instead of static + client-hydrated. */}
-      <Suspense fallback={null}>
-        <GuideArticle
-          slug={slug}
-          initialGuide={guide}
-          initialIsAdmin={false}
-          initialError={loadError}
-          prev={prev}
-          next={next}
-        />
-      </Suspense>
-    </>
-  );
+  const jsonLd=guide.access_level==='public' && guide.is_published ? {'@context':'https://schema.org','@type':'Article',headline:guide.title,description:guide.description,articleSection:guide.category,datePublished:guide.created_at,dateModified:guide.updated_at,author:{'@type':'Organization',name:'Kingdom 710'}} : null;
+  return <>{jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(jsonLd).replace(/</g,'\\u003c')}}/>}<Suspense fallback={null}><GuideArticle slug={slug} initialGuide={guide} initialIsAdmin={admin} initialError="" prev={prev} next={next} /></Suspense></>;
 }

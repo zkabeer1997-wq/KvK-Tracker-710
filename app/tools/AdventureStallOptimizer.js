@@ -1,16 +1,18 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { PACKS, SHOP_ITEMS, optimizeShellPacks, packLimits } from '../../lib/adventureStall.mjs';
+import { PACKS as DEFAULT_PACKS, SHOP_ITEMS as DEFAULT_ITEMS, optimizeShellPacks, packLimits } from '../../lib/adventureStall.mjs';
 
-const EMPTY_CART = Object.fromEntries(SHOP_ITEMS.map((item) => [item.key, 0]));
+const EMPTY_CART = Object.fromEntries(DEFAULT_ITEMS.map((item) => [item.key, 0]));
 const LIMITED_KEYS = new Set(['true-gold-limited', 'hero-shards', 'forgehammers-limited', 'mithril', 'mythic-hero-gear']);
 
 function clamp(value, minimum, maximum) { return Math.min(maximum, Math.max(minimum, Math.floor(Number(value) || 0))); }
 function number(value) { return Number(value || 0).toLocaleString(); }
 function money(cents) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100); }
 
-export default function AdventureStallOptimizer() {
+export default function AdventureStallOptimizer({ configuration }) {
+  const PACKS = configuration?.packs || DEFAULT_PACKS;
+  const SHOP_ITEMS = configuration?.items || DEFAULT_ITEMS;
   const [cart, setCart] = useState(EMPTY_CART);
   const [ownedShells, setOwnedShells] = useState(0);
   const [daysRemaining, setDaysRemaining] = useState(1);
@@ -53,11 +55,11 @@ export default function AdventureStallOptimizer() {
   }, [cart, daysRemaining, hydrated, ownedShells]);
 
   const days = clamp(daysRemaining, 0, 30);
-  const limits = useMemo(() => packLimits(days), [days]);
-  const totalShells = useMemo(() => SHOP_ITEMS.reduce((sum, item) => sum + item.shells * clamp(cart[item.key], 0, item.max), 0), [cart]);
+  const limits = useMemo(() => packLimits(days, PACKS), [days, PACKS]);
+  const totalShells = useMemo(() => SHOP_ITEMS.reduce((sum, item) => sum + item.shells * clamp(cart[item.key], 0, item.max), 0), [cart, SHOP_ITEMS]);
   const shellsToBuy = Math.max(0, totalShells - ownedShells);
-  const plan = useMemo(() => optimizeShellPacks(shellsToBuy, days), [days, shellsToBuy]);
-  const selectedItems = useMemo(() => SHOP_ITEMS.filter((item) => clamp(cart[item.key], 0, item.max) > 0), [cart]);
+  const plan = useMemo(() => optimizeShellPacks(shellsToBuy, days, PACKS), [days, shellsToBuy, PACKS]);
+  const selectedItems = useMemo(() => SHOP_ITEMS.filter((item) => clamp(cart[item.key], 0, item.max) > 0), [cart, SHOP_ITEMS]);
   const availableShells = PACKS.reduce((sum, pack) => sum + pack.shells * limits[pack.key], 0);
 
   function setPreset(mode) {

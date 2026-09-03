@@ -4,7 +4,7 @@ import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
 import { publicPowerProfile, sanitizePowerProfileInput } from '../../../lib/powerProfiles.mjs';
 
 const PUBLIC_COLUMNS = [
-'member_id', 'name', 'governor_gear', 'charms', 'hero_gear', 'pet_power', 'masters_power',
+'member_id', 'name', 'governor_gear', 'charms', 'hero_gear', 'pet_power', 'masters_power', 'mystic_trial_score',
 'infantry_tier', 'infantry_tg', 'cavalry_tier', 'cavalry_tg', 'archer_tier', 'archer_tg',
 'heroes', 'updated_at',
 ].join(',');
@@ -78,6 +78,7 @@ charms: profile.charms || null,
 hero_gear: profile.hero_gear || null,
 pet_power: profile.pet_power || null,
 masters_power: profile.masters_power || null,
+mystic_trial_score: profile.mystic_trial_score || null,
 infantry_tier: profile.infantry_tier || null,
 infantry_tg: profile.infantry_tg || null,
 cavalry_tier: profile.cavalry_tier || null,

@@ -1,3 +1,6 @@
+import { readMemberSession } from '../../../lib/memberAuth';
+import { isAdminRequest } from '../../../lib/adminAuth';
+import { guidesTable } from '../../../lib/guideAccess.mjs';
 import { NextResponse } from 'next/server';
 import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
 
@@ -11,15 +14,18 @@ const NO_STORE_HEADERS = {
   Expires: '0',
 };
 
-export async function GET() {
+export async function GET(request) {
   try {
     const supabase = createAdminSupabaseClient();
-    const { data, error } = await supabase
-      .from('kingdom_guides')
-      .select('slug, title, category, description, position, updated_at')
+    const allowed = Boolean(await readMemberSession(request)) || await isAdminRequest(request);
+    let query = supabase
+      .from(guidesTable())
+      .select('slug, title, category, description, access_level, position, updated_at')
       .eq('is_published', true)
       .order('position', { ascending: true })
       .order('title', { ascending: true });
+    if (!allowed) query = query.eq('access_level', 'public');
+    const { data, error } = await query;
 
     if (error) throw error;
     return NextResponse.json({ guides: data || [] }, { headers: NO_STORE_HEADERS });

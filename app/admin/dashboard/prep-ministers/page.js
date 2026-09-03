@@ -4,9 +4,12 @@ import { useRouter } from 'next/navigation';
 import AdminShell from '../../../../components/admin/AdminShell';
 import TableSkeleton from '../../../../components/admin/TableSkeleton';
 import { Button, Field, Input, Select, Table } from '../../../../components/ui';
+import TableFilters from '../../../../components/admin/TableFilters';
+import { searchRow, compareValues, numericValue } from '../../../../lib/adminTable.mjs';
+import { TIME_SLOTS } from '../../../../lib/nobleAdvisor.mjs';
 import { schedule, OPEN_SPOT } from '../prepScheduler.mjs';
 
-const COLUMNS = [
+const ALL_COLUMNS = [
   { key: 'in_game_name', label: 'In-game name' },
   { key: 'member_id', label: 'Member ID' },
   { key: 'want_construction', label: 'Construction?' },
@@ -35,16 +38,6 @@ function cellValue(row, key) {
   const v = row[key];
   if (Array.isArray(v)) return v.join(', ');
   return v == null ? '' : String(v);
-}
-
-function buildMatcher(query) {
-  const q = query.trim();
-  if (!q) return null;
-  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  if (q.includes('%')) {
-    try { return new RegExp('^' + escaped.split('%').join('.*') + '$', 'i'); } catch (e) { return null; }
-  }
-  try { return new RegExp(escaped, 'i'); } catch (e) { return null; }
 }
 
 function buildXlsx(sheets) {
@@ -121,7 +114,15 @@ function buildXlsx(sheets) {
   return new Blob(chunks, { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 }
 
-export default function AdminPrepMinistersPage() {
+export default function AdminPrepMinistersPage({ noble = false }) {
+  const api = noble ? '/api/admin-noble-advisor' : '/api/admin-prep-backpack';
+  const COLUMNS = noble ? ALL_COLUMNS.filter(col => ['in_game_name','member_id','want_troop_training','is_transfer','promoting_t11','troop_speedup_days','avail_day4','created_at'].includes(col.key)) : ALL_COLUMNS;
+  const [transferFilter,setTransferFilter] = useState('');
+  const [promotionFilter,setPromotionFilter] = useState('');
+  const [slotFilter,setSlotFilter] = useState('');
+  const [minSpeedups,setMinSpeedups] = useState('');
+  const [sortKey,setSortKey] = useState('in_game_name');
+  const [sortDir,setSortDir] = useState('asc');
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -136,14 +137,14 @@ export default function AdminPrepMinistersPage() {
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const response = await fetch('/api/admin-prep-backpack');
+      const response = await fetch(api);
       const data = await response.json().catch(() => ({}));
       if (!response.ok) { setError(data.error || 'Failed to load submissions.'); setLoading(false); return; }
       setRows(data.rows || []);
       setLoading(false);
     }
-    load();
-  }, []);
+    load().catch(() => { setError('Unable to load submissions.'); setLoading(false); });
+  }, [api]);
 
   async function handleLogout() {
     await fetch('/api/admin-logout', { method: 'POST' });
@@ -152,48 +153,62 @@ export default function AdminPrepMinistersPage() {
   }
 
   const visibleRows = useMemo(() => {
-    const matcher = buildMatcher(query);
-    return rows.filter((row) => {
-      if (consFilter && String(row.want_construction) !== consFilter) return false;
-      if (resFilter && String(row.want_research) !== resFilter) return false;
-      if (ttFilter && String(row.want_troop_training) !== ttFilter) return false;
-      if (matcher) { const hit = SEARCH_KEYS.some((k) => matcher.test(String(row[k] || ''))); if (!hit) return false; }
-      return true;
-    });
-  }, [rows, query, consFilter, resFilter, ttFilter]);
+    return rows.filter(row => {
+      if (consFilter && row.want_construction !== consFilter) return false;
+      if (resFilter && row.want_research !== resFilter) return false;
+      if (ttFilter && row.want_troop_training !== ttFilter) return false;
+      if (transferFilter && row.is_transfer !== transferFilter) return false;
+      if (promotionFilter && row.promoting_t11 !== promotionFilter) return false;
+      if (minSpeedups && numericValue(row.troop_speedup_days) < numericValue(minSpeedups)) return false;
+      if (slotFilter && !(noble ? ['avail_day4'] : ['avail_day1','avail_day2','avail_day4','avail_day5']).some(key => (Array.isArray(row[key]) ? row[key] : String(row[key] || '').split(',').map(v=>v.trim())).includes(slotFilter))) return false;
+      return searchRow(row, query, [...SEARCH_KEYS,'notes','construction_upgrades','t11_troops']);
+    }).sort((a,b)=>compareValues(a[sortKey],b[sortKey],['troop_speedup_days','research_speedup_days','tg_used','ttg_used','tg_dust'].includes(sortKey))*(sortDir==='asc'?1:-1));
+  }, [rows, query, consFilter, resFilter, ttFilter, transferFilter, promotionFilter, slotFilter, minSpeedups, sortKey, sortDir, noble]);
 
-  function handleGenerate() { setResult(schedule(rows)); }
+  function makeSchedule() { const data = schedule(rows.map(row=>({...row,...Object.fromEntries(ARRAY_KEYS.map(key=>[key,Array.isArray(row[key])?row[key]:String(row[key] || '').split(',').map(v=>v.trim()).filter(Boolean)]))}))); return noble ? {...data,days:data.days.filter(day=>day.day===4)} : data; }
+  function handleGenerate() { setResult(makeSchedule()); }
 
   const saveTimers = useRef({});
   const ARRAY_KEYS = ['construction_upgrades', 't11_troops', 'avail_day1', 'avail_day2', 'avail_day4', 'avail_day5'];
 
-  async function persistCell(rowId, key, value) {
-    const payloadValue = ARRAY_KEYS.includes(key)
-      ? String(value).split(',').map((s) => s.trim()).filter(Boolean)
-      : value;
-    setSaveStatus('saving');
+  const saveVersions = useRef({});
+  const pendingSaves = useRef(new Set());
+  const failedSaves = useRef(new Set());
+  const saveQueues = useRef({});
+  useEffect(() => () => Object.values(saveTimers.current).forEach(clearTimeout), []);
+  function refreshSaveStatus() {
+    setSaveStatus(pendingSaves.current.size ? 'saving' : failedSaves.current.size ? 'error' : 'saved');
+  }
+  async function persistCell(rowId, key, value, version) {
+    const timerKey = rowId + ':' + key;
+    const payloadValue = ARRAY_KEYS.includes(key) ? String(value).split(',').map(s=>s.trim()).filter(Boolean) : value;
     try {
-      const res = await fetch('/api/admin-prep-backpack', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: rowId, key, value: payloadValue }),
-      });
+      const res = await fetch(api, {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:rowId,key,value:payloadValue})});
       if (!res.ok) throw new Error('save failed');
-      setSaveStatus('saved');
-    } catch (e) {
-      setSaveStatus('error');
+      if (saveVersions.current[timerKey] === version) failedSaves.current.delete(timerKey);
+    } catch {
+      if (saveVersions.current[timerKey] === version) failedSaves.current.add(timerKey);
+    } finally {
+      if (saveVersions.current[timerKey] === version) pendingSaves.current.delete(timerKey);
+      refreshSaveStatus();
     }
   }
-
   function updateCell(rowId, key, value) {
-    setRows((prev) => prev.map((row) => (row.id === rowId ? { ...row, [key]: value } : row)));
+    setRows(prev=>prev.map(row=>row.id===rowId?{...row,[key]:value}:row));
+    setResult(null);
     const timerKey = rowId + ':' + key;
-    if (saveTimers.current[timerKey]) clearTimeout(saveTimers.current[timerKey]);
-    saveTimers.current[timerKey] = setTimeout(() => persistCell(rowId, key, value), 600);
+    const version = (saveVersions.current[timerKey] || 0) + 1;
+    saveVersions.current[timerKey] = version;
+    pendingSaves.current.add(timerKey);
+    refreshSaveStatus();
+    clearTimeout(saveTimers.current[timerKey]);
+    saveTimers.current[timerKey] = setTimeout(() => {
+      saveQueues.current[rowId] = (saveQueues.current[rowId] || Promise.resolve()).then(()=>persistCell(rowId,key,value,version));
+    }, 600);
   }
 
   function exportExcel() {
-    const data = result || schedule(rows);
+    const data = result || makeSchedule();
     const sheets = data.days.map((d) => ({
       name: 'Day ' + d.day,
       aoa: [['Day ' + d.day, d.position], ['Start Time', 'Member'], ...d.rows.map((r) => [r.time, r.member])],
@@ -202,39 +217,39 @@ export default function AdminPrepMinistersPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'prep-week-schedules-' + new Date().toISOString().slice(0, 10) + '.xlsx';
+    a.download = (noble ? 'noble-advisor-schedule-' : 'prep-week-schedules-') + new Date().toISOString().slice(0, 10) + '.xlsx';
     document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
   }
 
   return (
-    <AdminShell title="Prep Ministers" subtitle="Manage prep minister requests" onLogout={handleLogout}>
-          <p className="admin-page-lead">Backpack amounts and minister position bookings submitted through the Prep Phase Backpack form.</p>
+    <AdminShell title={noble ? "Noble Advisor Schedule" : "Prep Ministers"} subtitle={noble ? "Flamedragon Troop Training appointments" : "Manage prep minister requests"} onLogout={handleLogout}>
+          <p className="admin-page-lead">{noble ? "Training bookings for Flamedragon. Schedule priorities match KvK Day 4: transfers, T11 promotion, then speedup days." : "Backpack amounts and minister bookings submitted through KvK Prep."}</p>
           <div className="dashboard-stats" aria-label="Prep summary">
             <div><span>Total submissions</span><strong>{rows.length}</strong></div>
             <div><span>Showing</span><strong>{visibleRows.length}</strong></div>
           </div>
-          <div className="admin-filter-bar">
-            <Field label="Search (name or Member ID) — use % as wildcard">
-              <Input tone="console" className="narrow" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. Legend%" />
-            </Field>
-            <Field label="Construction?">
-              <Select tone="console" value={consFilter} onChange={(e) => setConsFilter(e.target.value)}><option value="">All</option><option value="Yes">Yes</option><option value="No">No</option></Select>
-            </Field>
-            <Field label="Research?">
-              <Select tone="console" value={resFilter} onChange={(e) => setResFilter(e.target.value)}><option value="">All</option><option value="Yes">Yes</option><option value="No">No</option></Select>
-            </Field>
-            <Field label="Troop Training?">
-              <Select tone="console" value={ttFilter} onChange={(e) => setTtFilter(e.target.value)}><option value="">All</option><option value="Yes">Yes</option><option value="No">No</option></Select>
-            </Field>
-            <Button variant="quiet" onClick={handleGenerate}>Generate</Button>
-            <Button variant="quiet" onClick={exportExcel}>Export to Excel</Button>
-            {saveStatus && (<span className="prep-save-status">{saveStatus === 'saving' ? 'Saving…' : saveStatus === 'saved' ? 'Saved' : 'Save failed'}</span>)}
+          <TableFilters query={query} onQuery={setQuery} shown={visibleRows.length} total={rows.length} placeholder="Name, player ID, or notes" onReset={()=>{setQuery('');setConsFilter('');setResFilter('');setTtFilter('');setTransferFilter('');setPromotionFilter('');setSlotFilter('');setMinSpeedups('');setSortKey('in_game_name');setSortDir('asc');}} filters={[
+            ...(!noble ? [{key:'construction',label:'Construction',value:consFilter,onChange:setConsFilter,options:['Yes','No']},{key:'research',label:'Research',value:resFilter,onChange:setResFilter,options:['Yes','No']}] : []),
+            {key:'training',label:'Troop Training',value:ttFilter,onChange:setTtFilter,options:['Yes','No']},
+            {key:'transfer',label:'Transfer',value:transferFilter,onChange:setTransferFilter,options:['Yes','No']},
+            {key:'promotion',label:'Promoting T11',value:promotionFilter,onChange:setPromotionFilter,options:['Yes','No']},
+            {key:'slot',label:'Available at (UTC)',value:slotFilter,onChange:setSlotFilter,options:TIME_SLOTS},
+          ]}>
+            <label>Min. training speedup days<input type="number" min="0" value={minSpeedups} onChange={e=>setMinSpeedups(e.target.value)}/></label>
+            <label>Sort by<select value={sortKey} onChange={e=>setSortKey(e.target.value)}>{COLUMNS.map(col=><option key={col.key} value={col.key}>{col.label}</option>)}</select></label>
+            <label>Order<select value={sortDir} onChange={e=>setSortDir(e.target.value)}><option value="asc">Ascending</option><option value="desc">Descending</option></select></label>
+          </TableFilters>
+          <div style={{display:'flex',gap:12,flexWrap:'wrap',marginBottom:18,alignItems:'center'}}>
+            <Button variant="quiet" onClick={handleGenerate} disabled={loading || Boolean(error) || saveStatus==='saving' || saveStatus==='error'}>Generate full schedule</Button>
+            <Button variant="quiet" onClick={exportExcel} disabled={loading || Boolean(error) || saveStatus==='saving' || saveStatus==='error'}>Export schedule to Excel</Button>
+            <span>Uses all {rows.length} submissions, regardless of filters.</span>
+            {saveStatus && <span role="status">{saveStatus === 'saving' ? 'Saving…' : saveStatus === 'saved' ? 'Saved' : 'Save failed — correct the edited value before generating.'}</span>}
           </div>
           {loading && <TableSkeleton columns={COLUMNS.length} rows={7} />}
           {error && <div className="status error">{error}</div>}
           {!loading && !error && (
             <Table>
-              <thead><tr>{COLUMNS.map((col) => (<th key={col.key}>{col.label}</th>))}</tr></thead>
+              <thead><tr>{COLUMNS.map((col) => (<th key={col.key} aria-sort={sortKey===col.key ? (sortDir==='asc'?'ascending':'descending') : 'none'}><button type="button" className="admin-sort-btn" onClick={()=>{setSortKey(col.key);setSortDir(sortKey===col.key && sortDir==='asc'?'desc':'asc');}}>{col.label}{sortKey===col.key ? (sortDir==='asc'?' ↑':' ↓') : ''}</button></th>))}</tr></thead>
               <tbody>
                 {visibleRows.map((row) => (
                   <tr key={row.id}>{COLUMNS.map((col) => (<td key={col.key}>{col.key === 'created_at' ? cellValue(row, col.key) : (<input className="admin-cell-input" value={cellValue(row, col.key)} onChange={(e) => updateCell(row.id, col.key, e.target.value)} />)}</td>))}</tr>

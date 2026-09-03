@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { PACKS, SHOP_ITEMS, VALUE_REFERENCE, VALUE_TIERS, optimizeEssencePacks } from '../../lib/flamedragonShop.mjs';
+import { PACKS as DEFAULT_PACKS, SHOP_ITEMS as DEFAULT_ITEMS, VALUE_REFERENCE, VALUE_TIERS, optimizeEssencePacks } from '../../lib/flamedragonShop.mjs';
 
-const EMPTY_CART = Object.fromEntries(SHOP_ITEMS.map((item) => [item.key, 0]));
-const DEFAULT_LIMITS = Object.fromEntries(PACKS.map((pack) => [pack.key, pack.defaultMax]));
+const EMPTY_CART = Object.fromEntries(DEFAULT_ITEMS.map((item) => [item.key, 0]));
+const DEFAULT_LIMITS = Object.fromEntries(DEFAULT_PACKS.map((pack) => [pack.key, pack.defaultMax]));
 
 function clamp(value, minimum, maximum) {
   return Math.min(maximum, Math.max(minimum, Math.floor(Number(value) || 0)));
@@ -18,7 +18,9 @@ function money(cents) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100);
 }
 
-export default function FlamedragonShopOptimizer() {
+export default function FlamedragonShopOptimizer({ configuration }) {
+  const PACKS = configuration?.packs || DEFAULT_PACKS;
+  const SHOP_ITEMS = configuration?.items || DEFAULT_ITEMS;
   const [cart, setCart] = useState(EMPTY_CART);
   const [ownedEssence, setOwnedEssence] = useState(0);
   const [daysRemaining, setDaysRemaining] = useState(1);
@@ -76,10 +78,10 @@ export default function FlamedragonShopOptimizer() {
   }, [cart, daysRemaining, hydrated, limits, ownedEssence]);
 
   const effectiveLimits = useMemo(() => ({ ...limits, 'daily-300': clamp(daysRemaining, 0, 60) }), [daysRemaining, limits]);
-  const totalEssence = useMemo(() => SHOP_ITEMS.reduce((sum, item) => sum + item.essence * clamp(cart[item.key], 0, item.max), 0), [cart]);
+  const totalEssence = useMemo(() => SHOP_ITEMS.reduce((sum, item) => sum + item.essence * clamp(cart[item.key], 0, item.max), 0), [cart, SHOP_ITEMS]);
   const essenceToBuy = Math.max(0, totalEssence - ownedEssence);
-  const plan = useMemo(() => optimizeEssencePacks(essenceToBuy, effectiveLimits), [effectiveLimits, essenceToBuy]);
-  const selectedItems = useMemo(() => SHOP_ITEMS.filter((item) => cart[item.key] > 0), [cart]);
+  const plan = useMemo(() => optimizeEssencePacks(essenceToBuy, effectiveLimits, PACKS), [effectiveLimits, essenceToBuy, PACKS]);
+  const selectedItems = useMemo(() => SHOP_ITEMS.filter((item) => cart[item.key] > 0), [cart, SHOP_ITEMS]);
   const availableEssence = PACKS.reduce((sum, pack) => sum + pack.essence * effectiveLimits[pack.key], 0);
 
   function updateCart(item, value) {

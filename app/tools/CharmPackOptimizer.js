@@ -2,13 +2,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { parseCharmSelections } from '../../lib/powerProfiles.mjs';
 
-const COSTS=[null,[5,5],[40,15],[60,40],[80,100],[100,200],[120,300],[140,400],[200,400],[300,400],[420,420],[560,420],[580,600],[610,780],[645,960],[685,1140],[730,1320],[780,1500],[835,1680],[895,1860],[960,2040],[1030,2220],[1105,2400]];
+import { CHARM_COSTS, CHARM_PACKS } from '../../lib/charmToolData.mjs';
 const DEFAULT_CHARMS=['Infantry','Cavalry','Archer'].flatMap(type=>Array.from({length:6},(_,i)=>({id:`${type}-${i+1}`,type,number:i+1,current:9,target:10})));
-const DEFAULT_PACKS=[{price:4.99,g:20,d:22,choices:3,max:1},{price:9.99,g:40,d:44,choices:3,max:1},{price:19.99,g:80,d:88,choices:3,max:1},{price:49.99,g:200,d:220,choices:3,max:1},{price:99.99,g:400,d:440,choices:3,max:1}];
 const LEVELS=Array.from({length:23},(_,i)=>i);
 const fmt=n=>Math.round(n).toLocaleString();
 const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(n);
-function costBetween(from,to){let g=0,d=0;for(let level=from+1;level<=to;level++){g+=COSTS[level]?.[0]||0;d+=COSTS[level]?.[1]||0}return{g,d}}
+function costBetween(from,to,COSTS){let g=0,d=0;for(let level=from+1;level<=to;level++){g+=COSTS[level]?.[0]||0;d+=COSTS[level]?.[1]||0}return{g,d}}
 function allocationStates(packs,qs,high){let states=new Map([[0,[]]]);for(let i=0;i<packs.length;i++){const unit=packs[i].g/20,maxSlots=qs[i]*packs[i].choices,next=new Map();for(const [sum,used] of states)for(let gs=0;gs<=maxSlots;gs++){const n=sum+gs*unit;if(n>high)break;if(!next.has(n))next.set(n,[...used,gs])}states=next}return states}
 function allocationFor(packs,qs,low,high){for(const [sum,used] of allocationStates(packs,qs,high))if(sum>=low)return{sum,used};return null}
 function planForWeeks(packs,weeks,needG,needD,ownedG,ownedD){const gUnits=Math.ceil(Math.max(0,needG-ownedG)/20),dUnits=Math.ceil(Math.max(0,needD-ownedD)/22);let states=new Map([[0,{cost:0,qs:[]}]]);for(let i=0;i<packs.length;i++){const p=packs[i],limit=p.max*weeks,cap=p.choices*(p.g/20),next=new Map();for(const [total,s] of states)for(let q=0;q<=limit;q++){const n=total+q*cap,c=s.cost+q*p.price,old=next.get(n);if(!old||c<old.cost-.0001)next.set(n,{cost:c,qs:[...s.qs,q]})}states=next}const candidates=[...states].filter(([cap])=>cap>=gUnits+dUnits).sort((a,b)=>a[1].cost-b[1].cost||a[0]-b[0]);for(const [cap,s] of candidates){const alloc=allocationFor(packs,s.qs,gUnits,cap-dUnits);if(!alloc)continue;const picks=s.qs.map((q,i)=>{const gs=alloc.used[i],slots=q*packs[i].choices;return{index:i,q,gs,ds:slots-gs,g:gs*packs[i].g,d:(slots-gs)*packs[i].d,cost:q*packs[i].price}});return{weeks,cost:s.cost,g:ownedG+picks.reduce((a,p)=>a+p.g,0),d:ownedD+picks.reduce((a,p)=>a+p.d,0),picks}}return null}
@@ -17,10 +16,11 @@ function charmsFromProfile(value){const selections=parseCharmSelections(value);r
 function validSavedCharms(value){return Array.isArray(value)&&value.length===18&&value.every(item=>item&&typeof item.id==='string'&&Number.isFinite(item.current)&&Number.isFinite(item.target))}
 function validSavedPacks(value){return Array.isArray(value)&&value.length===5&&value.every(item=>item&&Number.isFinite(item.price)&&Number.isFinite(item.g)&&Number.isFinite(item.d)&&Number.isFinite(item.choices)&&Number.isFinite(item.max))}
 
-export default function CharmPackOptimizer(){
+export default function CharmPackOptimizer({configuration}){
+  const COSTS=configuration?.costs || CHARM_COSTS, DEFAULT_PACKS=configuration?.packs || CHARM_PACKS;
   const [charms,setCharms]=useState(DEFAULT_CHARMS),[packs,setPacks]=useState(DEFAULT_PACKS),[ownedG,setOwnedG]=useState(0),[ownedD,setOwnedD]=useState(166),[maxWeeks,setMaxWeeks]=useState(52),[plan,setPlan]=useState(null),[message,setMessage]=useState(''),[hydrated,setHydrated]=useState(false),[saveStatus,setSaveStatus]=useState('Loading your profile…');
   const saveTimer=useRef(null);
-  const rows=useMemo(()=>charms.map(charm=>({...charm,...costBetween(charm.current,charm.target)})),[charms]);
+  const rows=useMemo(()=>charms.map(charm=>({...charm,...costBetween(charm.current,charm.target,COSTS)})),[charms,COSTS]);
   const required=useMemo(()=>rows.reduce((a,row)=>({g:a.g+row.g,d:a.d+row.d}),{g:0,d:0}),[rows]);
   const setLevel=(id,key,value)=>{setCharms(items=>items.map(item=>item.id===id?{...item,[key]:key==='current'?value:Math.max(item.current,value),...(key==='current'&&item.target<value?{target:value}:{})}:item));setPlan(null)};
   const editPack=(i,key,value)=>{setPacks(items=>items.map((p,n)=>n===i?{...p,[key]:Math.max(0,Number(value)||0)}:p));setPlan(null)};
@@ -46,7 +46,7 @@ export default function CharmPackOptimizer(){
         const response=await fetch('/api/tool-state/charm-pack-optimizer',{cache:'no-store'}),result=await response.json(),saved=result?.state;
         if(response.ok&&saved&&typeof saved==='object'){
           if(validSavedCharms(saved.charms))setCharms(saved.charms.map(item=>({...item,current:Math.min(22,Math.max(0,item.current)),target:Math.min(22,Math.max(item.current,item.target))})));
-          if(validSavedPacks(saved.packs))setPacks(saved.packs);
+          if(validSavedPacks(saved.packs))setPacks(saved.packs.map((p,i)=>({...p,g:DEFAULT_PACKS[i].g,d:DEFAULT_PACKS[i].d})));
           if(Number.isFinite(saved.ownedG))setOwnedG(Math.max(0,saved.ownedG));
           if(Number.isFinite(saved.ownedD))setOwnedD(Math.max(0,saved.ownedD));
           if(Number.isFinite(saved.maxWeeks))setMaxWeeks(Math.min(52,Math.max(1,saved.maxWeeks)));
@@ -59,7 +59,7 @@ export default function CharmPackOptimizer(){
       finally{if(!cancelled)setHydrated(true)}
     }
     restore();return()=>{cancelled=true;if(saveTimer.current)clearTimeout(saveTimer.current)};
-  },[]);
+  },[DEFAULT_PACKS]);
 
   useEffect(()=>{
     if(!hydrated)return;if(saveTimer.current)clearTimeout(saveTimer.current);setSaveStatus('Saving…');

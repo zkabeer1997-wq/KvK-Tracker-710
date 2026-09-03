@@ -20,6 +20,7 @@ const NAV_SECTIONS = [
       { href: '/admin/dashboard/events', label: 'Events', match: '/admin/dashboard/events' },
       { href: '/admin/dashboard/alliances', label: 'Alliances', match: '/admin/dashboard/alliances' },
       { href: '/admin/dashboard/gallery', label: 'Gallery', match: '/admin/dashboard/gallery' },
+      { href: '/admin/dashboard/tool-editing', label: 'Tool Editing', match: '/admin/dashboard/tool-editing' },
       { href: '/admin/dashboard/form-gates', label: 'Form Gates', match: '/admin/dashboard/form-gates' },
     ],
   },
@@ -27,9 +28,9 @@ const NAV_SECTIONS = [
     id: 'member',
     label: 'Member and Transfer Management',
     items: [
-      { href: '/admin/dashboard/member-pins', label: 'Member PINs', match: '/admin/dashboard/member-pins' },
-      { href: '/admin/dashboard/interest', label: 'Transfer Requests', match: '/admin/dashboard/interest' },
-      { href: '/admin/dashboard/website-requests', label: 'Website Requests', match: '/admin/dashboard/website-requests' },
+      { href: '/admin/dashboard/member-pins', label: 'Member Profiles', match: '/admin/dashboard/member-pins' },
+      { href: '/admin/dashboard/interest', label: 'Transfer Requests', badge: 'transfers', match: '/admin/dashboard/interest' },
+      { href: '/admin/dashboard/website-requests', label: 'Website Requests', badge: 'website', match: '/admin/dashboard/website-requests' },
     ],
   },
   {
@@ -44,6 +45,7 @@ const NAV_SECTIONS = [
     id: 'flamedragon',
     label: 'Flamedragon Management',
     items: [
+      { href: '/admin/dashboard/noble-advisor', label: 'Noble Advisor Schedule', match: '/admin/dashboard/noble-advisor' },
       { href: '/admin/dashboard/flamedragon', label: 'Flamedragon Tyrant', match: '/admin/dashboard/flamedragon' },
     ],
   },
@@ -74,6 +76,19 @@ function isNavActive(pathname, match) {
  */
 export default function AdminShell({ title, subtitle, actions, onLogout, counters = [], children }) {
   const pathname = usePathname();
+  const [taskCounts, setTaskCounts] = useState({});
+  useEffect(() => {
+    const controller = new AbortController();
+    async function refresh() {
+      if (document.visibilityState === 'hidden') return;
+      try { const response = await fetch('/api/admin-task-counts', { cache: 'no-store', signal: controller.signal }); if (response.ok) setTaskCounts(await response.json()); } catch {}
+    }
+    refresh();
+    const timer = setInterval(refresh, 30000);
+    window.addEventListener('focus', refresh);
+    window.addEventListener('admin-tasks-changed', refresh);
+    return () => { controller.abort(); clearInterval(timer); window.removeEventListener('focus', refresh); window.removeEventListener('admin-tasks-changed', refresh); };
+  }, [pathname]);
   const [mode, setMode] = useState('ledger');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [openSections, setOpenSections] = useState(() =>
@@ -154,6 +169,7 @@ export default function AdminShell({ title, subtitle, actions, onLogout, counter
 
   return (
     <div className={`admin-shell warroom-${mode}${sidebarCollapsed ? ' admin-sidebar-is-collapsed' : ''}`}>
+      <style>{`.admin-task-badge{display:inline-flex;align-items:center;justify-content:center;min-width:22px;padding:2px 6px;margin-left:8px;border-radius:999px;background:#c65330;color:white;font-size:11px;font-weight:800}.admin-sidebar-is-collapsed .admin-task-badge{margin-left:2px;min-width:16px;padding:1px 3px;font-size:9px}`}</style>
       <div className="warroom-atmos" aria-hidden="true" />
 
       <aside className={`admin-sidebar${sidebarCollapsed ? ' is-collapsed' : ''}`}>
@@ -219,6 +235,7 @@ export default function AdminShell({ title, subtitle, actions, onLogout, counter
                           title={item.label}
                         >
                           {sidebarCollapsed ? item.label.charAt(0) : item.label}
+                          {taskCounts[item.badge] > 0 && <span className="admin-task-badge" aria-label={`${taskCounts[item.badge]} unresolved`}>{taskCounts[item.badge]}</span>}
                         </Link>
                       );
                     })}

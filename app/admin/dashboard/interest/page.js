@@ -135,6 +135,7 @@ export default function AdminInterestPage() {
         setRowMessage((prev) => ({ ...prev, [row.id]: result.error || 'Update failed.' }));
         return;
       }
+      window.dispatchEvent(new Event('admin-tasks-changed'));
       setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, status: result.row.status, decided_at: result.row.decided_at } : r)));
       if (result.account) {
         setCredentials({

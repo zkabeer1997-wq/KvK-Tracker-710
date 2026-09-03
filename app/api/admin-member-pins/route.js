@@ -1,3 +1,4 @@
+import { mergePowerProfilesIntoRows } from '../../../lib/powerProfiles.mjs';
 import { randomInt } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { isAdminRequest } from '../../../lib/adminAuth';
@@ -25,16 +26,20 @@ export async function GET(request) {
     const supabase = createAdminSupabaseClient();
     const { data, error } = await supabase
       .from('submissions')
-      .select('name,member_id,pin_hash,updated_at')
+      .select('name,member_id,pin_hash,updated_at,current_alliance,infantry_tier,infantry_tg,cavalry_tier,cavalry_tg,archer_tier,archer_tg')
       .order('name', { ascending: true });
 
     if (error) throw error;
 
+    const { data: profiles, error: profileError } = await supabase.from('power_profiles').select('member_id,name,governor_gear,charms,pet_power,masters_power,mystic_trial_score,infantry_tier,infantry_tg,cavalry_tier,cavalry_tg,archer_tier,archer_tg,updated_at');
+    if (profileError) throw profileError;
+    const merged = mergePowerProfilesIntoRows(data || [], profiles || []);
     return noStoreJson({
-      rows: (data || []).map((row) => ({
+      rows: merged.map(({ pin_hash, power_profile, ...row }) => ({
+        ...row,
         name: row.name || '',
         member_id: row.member_id || '',
-        pin_status: pinStatus(row.pin_hash),
+        pin_status: pinStatus(pin_hash),
         updated_at: row.updated_at || null,
       })),
     });

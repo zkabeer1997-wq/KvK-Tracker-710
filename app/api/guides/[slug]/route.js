@@ -1,3 +1,5 @@
+import { readMemberSession } from '../../../../lib/memberAuth';
+import { guidesTable, canReadGuide } from '../../../../lib/guideAccess.mjs';
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { isAdminRequest } from '../../../../lib/adminAuth';
@@ -20,14 +22,15 @@ export async function GET(request, { params: paramsPromise }) {
     const admin = await isAdminRequest(request);
     const supabase = createAdminSupabaseClient();
     const { data, error } = await supabase
-      .from('kingdom_guides')
-      .select('slug, title, category, description, body, position, is_published, updated_at')
+      .from(guidesTable())
+      .select('slug, title, category, description, body, position, is_published, access_level, updated_at')
       .eq('slug', slug)
       .maybeSingle();
 
     if (error) throw error;
-    if (!data || (!data.is_published && !admin)) {
-      return NextResponse.json({ error: 'Guide not found.' }, { status: 404 });
+    const member = Boolean(await readMemberSession(request));
+    if (!canReadGuide(data, { admin, member })) {
+      return NextResponse.json({ error: data?.is_published && data?.access_level === 'members' ? 'Member login required.' : 'Guide not found.' }, { status: data?.is_published && data?.access_level === 'members' ? 401 : 404, headers: { 'Cache-Control': 'no-store' } });
     }
 
     return NextResponse.json(
@@ -77,10 +80,10 @@ export async function PUT(request, { params: paramsPromise }) {
   try {
     const supabase = createAdminSupabaseClient();
     const { data, error } = await supabase
-      .from('kingdom_guides')
+      .from(guidesTable())
       .update({ title, body, updated_at: new Date().toISOString() })
       .eq('slug', slug)
-      .select('slug, title, category, description, body, position, is_published, updated_at')
+      .select('slug, title, category, description, body, position, is_published, access_level, updated_at')
       .single();
 
     if (error) throw error;

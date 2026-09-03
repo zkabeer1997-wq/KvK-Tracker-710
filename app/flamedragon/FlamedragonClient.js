@@ -251,7 +251,7 @@ function FlamedragonForm({ initialMemberId = '', intro }) {
                 ))}
               </div>
               <h4 className="power-subheader">Power</h4>
-              {POWER_PROFILE_FIELDS.map((field) => (
+              {POWER_PROFILE_FIELDS.filter(field => field.key !== 'mystic_trial_score').map((field) => (
                 <label key={field.key}>
                   {field.label}
                   <input value={form[field.key]} onChange={(event) => updateField(field.key, event.target.value)} placeholder={field.label} />

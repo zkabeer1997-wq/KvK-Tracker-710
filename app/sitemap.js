@@ -1,3 +1,4 @@
+import { guidesTable } from '../lib/guideAccess.mjs';
 import { createAdminSupabaseClient } from '../lib/adminSupabase';
 
 const BASE_URL = 'https://k710hub.vercel.app';
@@ -17,9 +18,9 @@ async function guideEntries() {
   try {
     const supabase = createAdminSupabaseClient();
     const { data, error } = await supabase
-      .from('kingdom_guides')
+      .from(guidesTable())
       .select('slug, updated_at')
-      .eq('is_published', true);
+      .eq('is_published', true).eq('access_level', 'public');
     if (error) throw error;
     return (data || []).map((g) => ({
       url: `${BASE_URL}/guides/${g.slug}`,

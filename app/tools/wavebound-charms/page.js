@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+import { loadToolConfiguration } from '../../../lib/toolSettings';
 import Link from 'next/link';
 import WaveboundCharmOptimizer from '../WaveboundCharmOptimizer';
 
@@ -6,6 +8,7 @@ export const metadata = {
 };
 
 export default async function WaveboundCharmsPage({ searchParams: searchParamsPromise }) {
+  const configuration = await loadToolConfiguration('wavebound-charms');
   const searchParams = await searchParamsPromise;
   const memberId = typeof searchParams?.member_id === 'string' ? searchParams.member_id : '';
   const query = memberId ? `?member_id=${encodeURIComponent(memberId)}` : '';
@@ -27,7 +30,7 @@ export default async function WaveboundCharmsPage({ searchParams: searchParamsPr
           <p className="k-narrative armory-lede">Plan the Tidal Treasure merges needed to reach your target Charm level without wasting the material type you need most.</p>
         </header>
 
-        <WaveboundCharmOptimizer />
+        <WaveboundCharmOptimizer configuration={configuration} />
       </div>
 
       <style>{`
