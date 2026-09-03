@@ -2,6 +2,7 @@ import { randomInt } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { createSupabaseAdminClient } from '../../../lib/supabaseAdmin';
 import { createMemberToken, MEMBER_COOKIE_NAME, MEMBER_TOKEN_TTL_MS } from '../../../lib/memberAuth';
+import { enrollMemberForGiftCodes } from '../../../lib/giftCodes.mjs';
 
 function noStoreJson(body, init = {}) {
   const response = NextResponse.json(body, init);
@@ -60,6 +61,17 @@ export async function POST(request) {
       }, { status: 409 });
     }
 
+    // Enroll for automatic gift-code redemption (Kingdom 710). Non-blocking:
+    // registration succeeds even if enrollment fails.
+    let giftCodeNotice = null;
+    try {
+      await enrollMemberForGiftCodes(memberId, memberId, 710);
+      giftCodeNotice =
+        'We will automatically redeem available gift codes for your Kingdom 710 account.';
+    } catch (enrollErr) {
+      console.error('gift-code enrollment failed (registration still ok)', enrollErr);
+    }
+
     const token = await createMemberToken(memberId);
     const response = noStoreJson({
       ok: true,
@@ -67,6 +79,7 @@ export async function POST(request) {
       memberId,
       pin,
       message: 'Your PIN is shown only once. Save it before continuing.',
+      giftCodeNotice,
     });
 
     response.cookies.set(MEMBER_COOKIE_NAME, token, {
