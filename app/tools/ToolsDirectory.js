@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-const CATEGORIES = ['Charms', 'Governor Gear', 'Hero Gear', 'Pets', 'Masters', 'Special Event Shops'];
+const CATEGORIES = ['Charms', 'Governor Gear', 'Hero Gear', 'Pets', 'Masters', 'Special Event Shops', 'Building Costs', 'Research Costs'];
 const TOOLS = {
   Charms: [
     { key: 'charm-pack-optimizer', event: 'Governor Charms', title: 'Charm Pack Optimizer', description: 'Set all 18 charms individually, calculate every upgrade material, and build the cheapest week-by-week pack plan.', status: 'New', icon: '/images/charm-pack-forge.svg' },
@@ -17,6 +17,8 @@ const TOOLS = {
     { key: 'flamedragon-shop', event: 'Flamedragon Tyrant', title: 'Dragon’s Caravan Optimizer', description: 'Build a reward cart, prioritize the best-value shop items, and calculate the cheapest Dragon Essence pack combination.', status: 'New', icon: '/images/flamedragon-caravan.svg' },
     { key: 'adventure-stall', event: 'Adventure Stall', title: 'Adventure Stall Optimizer', description: 'Choose your event rewards and calculate the lowest-cost daily pack plan after using the Shells already in your inventory.', status: 'New', icon: '/images/adventure-stall.svg' },
   ],
+  'Building Costs': [],
+  'Research Costs': [],
 };
 
 const STATUS_TONE = {
@@ -40,6 +42,12 @@ function CategoryGlyph({ category }) {
   }
   if (category === 'Masters') {
     return <svg {...common}><path d="M9 32 L9 18 L17 25 L24 13 L31 25 L39 18 L39 32 Z" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /></svg>;
+  }
+  if (category === 'Building Costs') {
+    return <svg {...common}><path d="M8 38 V22 L24 10 L40 22 V38 Z" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /><path d="M18 38 V28 H30 V38" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" /><path d="M24 10 V6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /></svg>;
+  }
+  if (category === 'Research Costs') {
+    return <svg {...common}><path d="M16 8 H32 V20 C32 28 28 32 24 38 C20 32 16 28 16 20 Z" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /><path d="M20 14 H28 M20 20 H28" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>;
   }
   return <svg {...common}><path d="M9 18 H39 V36 H9 Z" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /><path d="M9 24 H39 M18 18 V13 C18 10 20 8 24 8 C28 8 30 10 30 13 V18" fill="none" stroke="currentColor" strokeWidth="2.2" /></svg>;
 }
