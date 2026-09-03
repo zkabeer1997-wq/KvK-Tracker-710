@@ -1,0 +1,143 @@
+import Image from 'next/image';
+import Link from 'next/link';
+
+const STATUS_TONE = {
+  New: 'tool-badge-new',
+  Available: 'tool-badge-available',
+  Calculator: 'tool-badge-available',
+  Planned: 'tool-badge-new',
+};
+
+export function CategoryGlyph({ category }) {
+  const common = { viewBox: '0 0 48 48', 'aria-hidden': true, className: 'tools-menu-glyph' };
+  if (category === 'Charms') {
+    return <svg {...common}><path d="M24 6 L38 16 L33 34 L15 34 L10 16 Z" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /></svg>;
+  }
+  if (category === 'Governor Gear') {
+    return <svg {...common}><path d="M24 5 L39 11 V23 C39 33 32 40 24 43 C16 40 9 33 9 23 V11 Z" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /></svg>;
+  }
+  if (category === 'Hero Gear') {
+    return <svg {...common}><path d="M14 8 L34 28 M28 8 L8 28" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /><circle cx="34" cy="34" r="7" fill="none" stroke="currentColor" strokeWidth="2.4" /></svg>;
+  }
+  if (category === 'Pets') {
+    return <svg {...common}><circle cx="24" cy="30" r="9" fill="none" stroke="currentColor" strokeWidth="2.4" /><circle cx="13" cy="16" r="4.2" fill="none" stroke="currentColor" strokeWidth="2.2" /><circle cx="35" cy="16" r="4.2" fill="none" stroke="currentColor" strokeWidth="2.2" /><circle cx="24" cy="10" r="4" fill="none" stroke="currentColor" strokeWidth="2.2" /></svg>;
+  }
+  if (category === 'Masters') {
+    return <svg {...common}><path d="M9 32 L9 18 L17 25 L24 13 L31 25 L39 18 L39 32 Z" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /></svg>;
+  }
+  if (category === 'Construction Costs') {
+    return <svg {...common}><path d="M8 38 V22 L24 10 L40 22 V38 Z" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /><path d="M18 38 V28 H30 V38" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" /><path d="M24 10 V6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /></svg>;
+  }
+  if (category === 'Research Costs') {
+    return <svg {...common}><path d="M16 8 H32 V20 C32 28 28 32 24 38 C20 32 16 28 16 20 Z" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /><path d="M20 14 H28 M20 20 H28" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>;
+  }
+  return <svg {...common}><path d="M9 18 H39 V36 H9 Z" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /><path d="M9 24 H39 M18 18 V13 C18 10 20 8 24 8 C28 8 30 10 30 13 V18" fill="none" stroke="currentColor" strokeWidth="2.2" /></svg>;
+}
+
+export function ToolBox({ tool }) {
+  return (
+    <Link key={tool.key || tool.href} href={tool.href} className="tool-box" role="listitem">
+      {tool.status ? <span className={`tool-box-badge ${STATUS_TONE[tool.status] || ''}`}>{tool.status}</span> : null}
+      <span className="tool-box-icon" aria-hidden="true">
+        <span className="tool-box-icon-glow" />
+        {tool.icon ? (
+          <Image className="tool-box-icon-art" src={tool.icon} alt="" width={72} height={72} />
+        ) : (
+          <span className="tool-box-icon-art tool-box-icon-glyph"><CategoryGlyph category={tool.glyph} /></span>
+        )}
+      </span>
+      {tool.event ? <span className="k-mark tool-box-event">{tool.event}</span> : null}
+      <strong className="k-display tool-box-title">{tool.title}</strong>
+      <span className="tool-box-desc">{tool.description}</span>
+      <span className="tool-box-cta">{tool.cta || 'Open tool'} <b aria-hidden="true">→</b></span>
+    </Link>
+  );
+}
+
+export function ToolBoxGrid({ tools, emptyLabel = 'tools' }) {
+  if (!tools.length) {
+    return (
+      <div className="tools-empty">
+        <span aria-hidden="true">◇</span>
+        <h3 className="k-display">No {emptyLabel} yet</h3>
+        <p className="k-narrative">Calculators added to this category will appear here.</p>
+      </div>
+    );
+  }
+  return (
+    <div className="tools-grid" role="list">
+      {tools.map((tool) => <ToolBox key={tool.key || tool.href} tool={tool} />)}
+    </div>
+  );
+}
+
+export function ToolBoxStyles() {
+  return (
+    <style>{`
+      .tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px}
+
+      .tool-box{
+        position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;
+        padding:28px 20px 24px;border:1px solid rgba(201,164,78,.24);border-radius:10px;
+        background:linear-gradient(180deg,rgba(20,17,10,.7),rgba(9,10,18,.86));
+        text-decoration:none;color:inherit;
+        transition:transform .18s var(--ease-cine,ease),border-color .18s ease,box-shadow .18s ease,background .18s ease;
+      }
+      .tool-box:hover,.tool-box:focus-visible{
+        transform:translateY(-4px);border-color:rgba(201,164,78,.7);outline:none;
+        box-shadow:0 14px 30px rgba(0,0,0,.4),0 0 0 1px rgba(201,164,78,.2);
+        background:linear-gradient(180deg,rgba(28,23,13,.82),rgba(11,12,21,.92));
+      }
+      .tool-box-badge{
+        position:absolute;top:12px;right:12px;font-family:var(--font-mono);font-size:9.5px;font-weight:700;
+        letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:999px;
+        background:rgba(201,164,78,.14);color:var(--brass);border:1px solid rgba(201,164,78,.3);
+      }
+      .tool-badge-new{background:rgba(65,164,255,.14);color:#7fbfff;border-color:rgba(65,164,255,.32)}
+      .tool-badge-available{background:rgba(201,164,78,.14);color:var(--gold-hot);border-color:rgba(201,164,78,.32)}
+
+      .tool-box-icon{position:relative;width:88px;height:88px;display:grid;place-items:center;margin-top:6px;isolation:isolate}
+      .tool-box-icon-art{position:relative;z-index:2;object-fit:contain;filter:drop-shadow(0 10px 10px rgba(0,0,0,.55));transition:transform .2s var(--ease-cine,ease)}
+      .tool-box-icon-glyph{width:72px;height:72px;display:grid;place-items:center;color:var(--gold-hot)}
+      .tool-box-icon-glyph .tools-menu-glyph{width:44px;height:44px}
+      .tool-box-icon-glow{position:absolute;z-index:1;inset:6px;border-radius:50%;background:radial-gradient(circle,rgba(65,164,255,.2),rgba(201,164,78,.09) 46%,transparent 72%);filter:blur(8px);opacity:.72}
+      .tool-box:hover .tool-box-icon-art{transform:translateY(-3px) scale(1.06)}
+
+      .tool-box-event{color:var(--brass);font-size:10px;letter-spacing:.06em}
+      .tool-box-title{font-size:clamp(16px,2vw,19px);letter-spacing:.04em;color:var(--parchment);line-height:1.25}
+      .tool-box-desc{color:var(--parchment-dim);font-size:13px;line-height:1.55}
+      .tool-box-cta{
+        margin-top:auto;padding-top:10px;font-family:var(--font-mono);font-size:11px;font-weight:700;
+        letter-spacing:.06em;text-transform:uppercase;color:var(--gold-hot);display:inline-flex;align-items:center;gap:6px;
+      }
+      .tool-box-cta b{font-family:var(--font-body);font-weight:400;font-size:14px;transition:transform .18s var(--ease-cine,ease)}
+      .tool-box:hover .tool-box-cta b{transform:translateX(3px)}
+
+      .tools-empty{min-height:160px;border:1px dashed var(--edge);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--t-muted);gap:4px}
+      .tools-empty>span{color:var(--brass);font-size:32px}
+      .tools-empty h3{color:var(--parchment);margin:6px 0 2px;letter-spacing:.06em;font-size:16px}
+      .tools-empty p{margin:0;font-size:13px}
+
+      @media(max-width:700px){
+        .tools-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+        .tool-box{padding:22px 14px 18px}
+      }
+    `}</style>
+  );
+}
+
+export function ToolCategoryHead({ label = 'Tool category', title, count }) {
+  return (
+    <div className="tools-category-head">
+      <span className="k-mark">{label}</span>
+      <h2 className="k-display">{title}</h2>
+      <span className="tools-category-count">{count} tool{count === 1 ? '' : 's'}</span>
+      <style>{`
+        .tools-category-head{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding-bottom:20px;position:relative}
+        .tools-category-head h2{margin:4px 0 0;color:var(--parchment);font-size:clamp(22px,3.6vw,32px);letter-spacing:.08em}
+        .tools-category-count{position:absolute;right:0;top:2px;color:var(--brass);font-family:var(--font-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}
+        @media(max-width:700px){.tools-category-head{padding-bottom:16px}.tools-category-count{position:static;order:-1}}
+      `}</style>
+    </div>
+  );
+}
