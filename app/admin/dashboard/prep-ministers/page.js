@@ -138,8 +138,8 @@ export default function AdminPrepMinistersPage({ noble = false }) {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState('');
   const router = useRouter();
-  const historyEndpoint = '/api/admin-prep-backpack/history';
-  const viewingHistory = !noble && Boolean(selectedCycleId);
+  const historyEndpoint = noble ? '/api/admin-noble-advisor/history' : '/api/admin-prep-backpack/history';
+  const viewingHistory = Boolean(selectedCycleId);
   const activeRows = viewingHistory ? historyRows : rows;
 
   useEffect(() => {
@@ -155,7 +155,6 @@ export default function AdminPrepMinistersPage({ noble = false }) {
   }, [api]);
 
   useEffect(() => {
-    if (noble) return;
     let cancelled = false;
     async function loadCycles() {
       try {
@@ -166,7 +165,7 @@ export default function AdminPrepMinistersPage({ noble = false }) {
     }
     loadCycles();
     return () => { cancelled = true; };
-  }, [noble]);
+  }, [historyEndpoint]);
 
   async function handleCycleChange(eventId) {
     setSelectedCycleId(eventId);
@@ -271,17 +270,17 @@ export default function AdminPrepMinistersPage({ noble = false }) {
   return (
     <AdminShell title={noble ? "Noble Advisor Schedule" : "Prep Ministers"} subtitle={noble ? "Flamedragon Troop Training appointments" : "Manage prep minister requests"} onLogout={handleLogout}>
           <p className="admin-page-lead">{noble ? "Training bookings for Flamedragon. Schedule priorities match KvK Day 4: transfers, T11 promotion, then speedup days." : "Backpack amounts and minister bookings submitted through KvK Prep."}</p>
-          {!noble && cycles.length > 0 && (
+          {cycles.length > 0 && (
             <div style={{display:'flex',gap:12,flexWrap:'wrap',marginBottom:12,alignItems:'center'}}>
               <Select
                 value={selectedCycleId}
                 onChange={(e) => handleCycleChange(e.target.value)}
-                aria-label="Previous Prep"
+                aria-label="Previous KvK"
               >
                 <option value="">Current</option>
                 {cycles.map((cycle) => (
                   <option key={cycle.id} value={cycle.id}>
-                    Previous Prep — {cycle.title}{cycle.starts_at ? ` (${new Date(cycle.starts_at).toLocaleDateString()})` : ''}
+                    Previous KvK — {cycle.title}{cycle.starts_at ? ` (${new Date(cycle.starts_at).toLocaleDateString()})` : ''}
                   </option>
                 ))}
               </Select>

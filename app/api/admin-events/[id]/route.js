@@ -5,7 +5,7 @@ import { createAdminSupabaseClient } from '../../../../lib/adminSupabase';
 
 import { validateEventSchedule } from '../../../../lib/eventRecurrence.mjs';
 
-const KINDS = ['kvk', 'championship', 'swordland', 'custom', 'prep', 'tyrant'];
+const KINDS = ['kvk', 'championship', 'swordland', 'custom'];
 const SLUG_RE = /^[a-z0-9-]{1,80}$/;
 
 async function requireAdmin(request) {

@@ -11,12 +11,12 @@ export async function GET(request) {
     const { data: cycles, error } = await supabase
       .from('event_cycle_archives')
       .select('id,event_id,occurrence_starts_at,occurrence_ends_at')
-      .eq('kind', 'prep')
+      .eq('kind', 'kvk')
       .order('occurrence_starts_at', { ascending: false });
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    const eventIds = [...new Set((cycles || []).map((cycle) => cycle.event_id))];
+    const eventIds = [...new Set((cycles || []).map((cycle) => cycle.event_id).filter(Boolean))];
     const { data: events, error: eventsError } = eventIds.length
       ? await supabase.from('events').select('id,title').in('id', eventIds)
       : { data: [], error: null };

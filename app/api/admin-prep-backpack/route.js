@@ -9,7 +9,7 @@ export async function GET(request) {
   }
   try {
     const supabase = createAdminSupabaseClient();
-    await archiveCompletedCycles(supabase, 'prep');
+    await archiveCompletedCycles(supabase, 'kvk');
     const { data, error } = await supabase
       .from('prep_backpack_submissions')
       .select('*')

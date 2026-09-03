@@ -16,7 +16,7 @@ export async function GET(request) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    const eventIds = [...new Set((cycles || []).map((cycle) => cycle.event_id))];
+    const eventIds = [...new Set((cycles || []).map((cycle) => cycle.event_id).filter(Boolean))];
     const { data: events, error: eventsError } = eventIds.length
       ? await supabase.from('events').select('id,title').in('id', eventIds)
       : { data: [], error: null };

@@ -2,11 +2,14 @@ import { NextResponse } from 'next/server';
 import { isAdminRequest } from '../../../lib/adminAuth';
 import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
 import { NOBLE_FIELDS, validateNobleAdvisor } from '../../../lib/nobleAdvisor.mjs';
+import { archiveCompletedCycles } from '../../../lib/cycleArchiving.mjs';
 export const dynamic = 'force-dynamic';
 const headers = { 'Cache-Control':'no-store' };
 export async function GET(request) {
  if (!(await isAdminRequest(request))) return NextResponse.json({error:'Unauthorized'},{status:401,headers});
- const {data,error}=await createAdminSupabaseClient().from('noble_advisor_submissions').select('*').order('created_at');
+ const supabase = createAdminSupabaseClient();
+ await archiveCompletedCycles(supabase, 'kvk');
+ const {data,error}=await supabase.from('noble_advisor_submissions').select('*').order('created_at');
  return NextResponse.json(error?{error:'Unable to load bookings.'}:{rows:data || []},{status:error?500:200,headers});
 }
 export async function PATCH(request) {
