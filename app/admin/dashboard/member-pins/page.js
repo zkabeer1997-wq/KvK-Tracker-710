@@ -14,6 +14,20 @@ import { Button, Callout, Field, Input, Panel, Table, Tag } from '../../../../co
 
 const EMPTY_MEMBER = { name: '', memberId: '', pin: '' };
 
+function giftStatusLabel(status) {
+  switch (status) {
+    case 'redeemed': return 'Redeemed';
+    case 'already_redeemed': return 'Already redeemed';
+    case 'pending':
+    case 'processing': return 'Pending';
+    case 'temporary_failure': return 'Retrying';
+    case 'expired':
+    case 'invalid_code': return 'Code invalid/expired';
+    case 'invalid_player': return 'Player issue';
+    default: return status || '—';
+  }
+}
+
 function generateSixDigitPin() {
   if (typeof window === 'undefined' || !window.crypto?.getRandomValues) return '';
   const values = new Uint32Array(1);
@@ -299,12 +313,13 @@ export default function AdminMemberPinsPage() {
               <th>Member ID</th>
               <th>Troop levels</th><th>Governor Gear</th><th>Charms</th><th>Mystic Trial total</th><th>Pet power</th><th>Master power</th>
               <th>PIN</th>
+              <th>Gift Codes</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody>
             {visibleRows.length === 0 ? (
-              <tr><td colSpan="10">No members found.</td></tr>
+              <tr><td colSpan="11">No members found.</td></tr>
             ) : visibleRows.map((row) => {
               const memberId = String(row.member_id);
               const revealedPin = revealedPins[memberId];
@@ -332,6 +347,26 @@ export default function AdminMemberPinsPage() {
                       <Tag tone={row.pin_status === 'secured' ? 'success' : 'accent'}>
                         {row.pin_status === 'secured' ? 'Protected · hidden' : 'Needs reset'}
                       </Tag>
+                    )}
+                  </td>
+                  <td>
+                    {row.gift_code?.enrolled ? (
+                      <div className="member-gift-code-cell">
+                        <Tag tone={row.gift_code.enabled ? 'success' : 'neutral'}>
+                          {row.gift_code.enabled ? 'Enrolled' : 'Paused'}
+                        </Tag>
+                        <span className="hint">
+                          {row.gift_code.latestStatus
+                            ? `${giftStatusLabel(row.gift_code.latestStatus)} · ${row.gift_code.latestCode}`
+                            : 'No attempts yet'}
+                        </span>
+                        <span className="hint">
+                          {row.gift_code.redeemed} redeemed · {row.gift_code.pending} pending
+                          {row.gift_code.failed ? ` · ${row.gift_code.failed} failed` : ''}
+                        </span>
+                      </div>
+                    ) : (
+                      <Tag tone="neutral">Not enrolled</Tag>
                     )}
                   </td>
                   <td>
@@ -367,6 +402,8 @@ export default function AdminMemberPinsPage() {
         .member-pin-reveal{display:flex;align-items:center;gap:12px;width:fit-content;max-width:100%;padding:8px 10px 8px 12px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface)}
         .member-pin-reveal-label{display:block;margin-bottom:2px;font-size:.64rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.7}
         .member-pin-code{font-family:var(--font-mono-loaded),ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1rem;font-weight:800;letter-spacing:.16em}
+        .member-gift-code-cell{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+        .member-gift-code-cell .hint{margin:0;font-size:.72rem}
         @media(max-width:900px){.member-pin-create-grid{grid-template-columns:1fr 1fr}.member-pin-create-grid>:last-child{grid-column:1/-1}}
         @media(max-width:720px){.member-pin-create-grid{grid-template-columns:1fr}.member-pin-create-grid>:last-child{grid-column:auto}.member-pin-input-row{grid-template-columns:1fr}.member-pin-create-actions{align-items:stretch;flex-direction:column-reverse}.member-pin-reveal{align-items:flex-start;flex-direction:column}}
       `}</style>

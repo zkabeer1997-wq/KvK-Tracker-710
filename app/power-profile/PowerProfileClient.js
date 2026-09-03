@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import GovernorGearOcr from '../../components/GovernorGearOcr';
+import GiftCodeRewards from '../../components/GiftCodeRewards';
 import {
 CHARM_LEVEL_OPTIONS,
 CHARM_SLOTS,
@@ -173,6 +174,7 @@ return (
 <p className="k-narrative armory-lede">Keep your troop levels, heroes, Governor Gear, charms, and power information up to date.</p>
 </header>
 {intro}
+<GiftCodeRewards />
 <form className="public-form-card war-ledger-form" onSubmit={handleSubmit}>
 <section className="identity-grid">
 <label>Your name<input value={form.name} onChange={(e) => updateField('name', e.target.value)} placeholder="Your in-game name" /></label>

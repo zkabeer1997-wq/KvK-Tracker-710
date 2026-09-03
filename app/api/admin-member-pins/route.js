@@ -1,4 +1,5 @@
 import { mergePowerProfilesIntoRows } from '../../../lib/powerProfiles.mjs';
+import { getAdminMemberGiftSummaries, mergeGiftCodeStatusIntoRows } from '../../../lib/giftCodes.mjs';
 import { randomInt } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { isAdminRequest } from '../../../lib/adminAuth';
@@ -34,8 +35,18 @@ export async function GET(request) {
     const { data: profiles, error: profileError } = await supabase.from('power_profiles').select('member_id,name,governor_gear,charms,pet_power,masters_power,mystic_trial_score,infantry_tier,infantry_tg,cavalry_tier,cavalry_tg,archer_tier,archer_tg,updated_at');
     if (profileError) throw profileError;
     const merged = mergePowerProfilesIntoRows(data || [], profiles || []);
+
+    let giftSummaries;
+    try {
+      giftSummaries = await getAdminMemberGiftSummaries();
+    } catch (giftError) {
+      console.error('admin-member-pins gift code summary failed', giftError);
+      giftSummaries = new Map();
+    }
+    const withGiftCodes = mergeGiftCodeStatusIntoRows(merged, giftSummaries);
+
     return noStoreJson({
-      rows: merged.map(({ pin_hash, power_profile, ...row }) => ({
+      rows: withGiftCodes.map(({ pin_hash, power_profile, ...row }) => ({
         ...row,
         name: row.name || '',
         member_id: row.member_id || '',
