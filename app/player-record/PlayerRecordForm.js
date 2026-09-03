@@ -1,14 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { KVK_ALLIANCES, KVK_AVAILABILITY_OPTIONS } from '../../lib/playerCombatOptions.mjs';
 
-const AVAILABILITY_OPTIONS = [
-'First half (12-14:30 UTC)',
-'Second half (14:30-17 UTC)',
-'Full battle (12-17 UTC)',
-'Not Available'
-];
-const ALLIANCES = ['710', 'RED', 'SKY'];
+const AVAILABILITY_OPTIONS = KVK_AVAILABILITY_OPTIONS;
+const ALLIANCES = KVK_ALLIANCES;
 
 export default function PlayerRecordForm({ initialMemberId = '' }) {
 const [name, setName] = useState('');
