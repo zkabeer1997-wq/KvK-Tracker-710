@@ -29,6 +29,7 @@ const NAV_SECTIONS = [
     items: [
       { href: '/admin/dashboard/member-pins', label: 'Member PINs', match: '/admin/dashboard/member-pins' },
       { href: '/admin/dashboard/interest', label: 'Transfer Requests', match: '/admin/dashboard/interest' },
+      { href: '/admin/dashboard/website-requests', label: 'Website Requests', match: '/admin/dashboard/website-requests' },
     ],
   },
   {

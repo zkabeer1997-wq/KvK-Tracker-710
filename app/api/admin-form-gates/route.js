@@ -9,6 +9,7 @@ const ROUTE_BY_KEY = {
   joiner: '/player-record/form',
   prep: '/prep-phase-backpack',
   dragon: '/flamedragon',
+  requests: '/forms/requests',
 };
 
 async function requireAdmin(request) {

@@ -194,6 +194,50 @@ function ArmoryRack({ lit }) {
   );
 }
 
+function ScrollDesk({ lit }) {
+  return (
+    <svg viewBox="0 0 200 150" className="station-art" aria-hidden="true" data-lit={lit}>
+      <defs>
+        <radialGradient id="deskGlow">
+          <stop offset="0%" stopColor="#ffcb7a" stopOpacity="0.45" />
+          <stop offset="100%" stopColor="#ffcb7a" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id="deskTop" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#6a5230" />
+          <stop offset="100%" stopColor="#3a2c18" />
+        </linearGradient>
+      </defs>
+
+      {/* desk legs */}
+      <path d="M52 100 L48 138" stroke="#3a2d18" strokeWidth="7" strokeLinecap="round" />
+      <path d="M148 100 L152 138" stroke="#3a2d18" strokeWidth="7" strokeLinecap="round" />
+
+      {/* desk top, angled like a lectern */}
+      <path d="M40 100 L160 100 L146 76 L54 76 Z" fill="url(#deskTop)" stroke="#8a6a28" strokeWidth="2" />
+      <rect x="46" y="98" width="108" height="8" rx="2" fill="#2b2114" />
+
+      {/* open ledger with a quill resting across it */}
+      <path d="M66 96 L98 92 L98 78 L66 82 Z" fill="#e6d6a8" opacity="0.92" />
+      <path d="M98 92 L132 96 L132 82 L98 78 Z" fill="#d8c69c" opacity="0.92" />
+      <path d="M72 86 q11 -2 22 -1" stroke="#6b5b3c" strokeWidth="1.4" fill="none" opacity="0.6" />
+      <path d="M72 90 q11 -2 20 -1" stroke="#6b5b3c" strokeWidth="1.4" fill="none" opacity="0.5" />
+      <path d="M104 87 q11 1 22 3" stroke="#6b5b3c" strokeWidth="1.4" fill="none" opacity="0.6" />
+
+      {/* quill and inkwell */}
+      <path d="M118 82 L150 52" stroke="#c9a44e" strokeWidth="2" strokeLinecap="round" className="station-glint" />
+      <path d="M150 52 l8 -10 l-4 12 Z" fill="#c9a44e" className="station-glint" />
+      <ellipse cx="144" cy="84" rx="8" ry="6" fill="#241b0f" stroke="#7d5a2c" strokeWidth="1.6" />
+      <ellipse cx="144" cy="82" rx="5" ry="3" fill="#3a2c18" />
+
+      {/* rolled petitions leaning at the desk edge */}
+      <rect x="34" y="80" width="10" height="30" rx="5" fill="#3a2c18" stroke="#7d5a2c" strokeWidth="1.4" />
+      <rect x="32" y="78" width="14" height="6" rx="3" fill="#8a6a28" />
+
+      <ellipse cx="100" cy="104" rx="74" ry="18" fill="url(#deskGlow)" className="station-pool" />
+    </svg>
+  );
+}
+
 /* The kingdom mark cut into the back wall — stone relief, brass rim. */
 function HallCrest() {
   return (
@@ -222,46 +266,107 @@ function HallCrest() {
   );
 }
 
-const STATIONS = [
-  {
-    key: 'lead',
-    art: CommandTable,
-    kicker: 'Account details',
-    title: 'Player Profile',
-    line: 'Record your gear, troops, and heroes.',
-    href: (id) => `/power-profile?member_id=${id}`,
+// Each variant is a distinct room: the top-level hall, or one of its
+// smaller sub-halls reached by clicking a category station there. Sharing
+// one component keeps every hall's art, depth staging, and gating logic
+// in one place instead of duplicating the room shell per page.
+const VARIANTS = {
+  top: {
+    title: 'Choose a form',
+    stations: [
+      {
+        key: 'lead',
+        art: CommandTable,
+        kicker: 'Account details',
+        title: 'Player Profile',
+        line: 'Record your gear, troops, and heroes.',
+        href: (id) => `/power-profile?member_id=${id}`,
+      },
+      {
+        key: 'kvk-hub',
+        art: MusterBoard,
+        kicker: 'KvK forms',
+        title: 'KvK Forms',
+        line: 'Availability and preparation, in one place.',
+        href: (id) => `/forms/kvk?member_id=${id}`,
+        // A category link, not a leaf form - it never carries its own
+        // "Closed" state, only the forms behind it can be closed.
+        ungated: true,
+      },
+      {
+        key: 'dragon-hub',
+        art: ArmoryRack,
+        kicker: 'Event forms',
+        title: 'Flamedragon Tyrant Forms',
+        line: 'Levels, heroes, and availability for the event.',
+        href: (id) => `/forms/flamedragon-tyrant?member_id=${id}`,
+        ungated: true,
+      },
+      {
+        key: 'requests',
+        art: ScrollDesk,
+        kicker: 'Feedback',
+        title: 'Website Requests',
+        line: 'Suggest an improvement to K710Hub.',
+        href: (id) => `/forms/requests?member_id=${id}`,
+      },
+    ],
   },
-  {
-    key: 'joiner',
-    art: MusterBoard,
-    kicker: 'KvK form',
-    title: 'KvK Availability',
-    line: 'Tell leadership when you are available.',
-    href: (id) => `/player-record/form?member_id=${id}`,
+  kvk: {
+    title: 'KvK Forms',
+    backHref: '/forms',
+    backLabel: 'Back to Forms',
+    stations: [
+      {
+        key: 'joiner',
+        art: MusterBoard,
+        kicker: 'KvK form',
+        title: 'KvK Availability',
+        line: 'Tell leadership when you are available.',
+        href: (id) => `/player-record/form?member_id=${id}`,
+      },
+      {
+        key: 'prep',
+        art: CampaignBackpack,
+        kicker: 'Preparation form',
+        title: 'KvK Prep',
+        line: 'Submit your KvK preparation items.',
+        href: (id) => `/prep-phase-backpack?member_id=${id}`,
+      },
+    ],
   },
-  {
-    key: 'prep',
-    art: CampaignBackpack,
-    kicker: 'Preparation form',
-    title: 'KvK Prep',
-    line: 'Submit your KvK preparation items.',
-    href: (id) => `/prep-phase-backpack?member_id=${id}`,
+  'flamedragon-tyrant': {
+    title: 'Flamedragon Tyrant Forms',
+    backHref: '/forms',
+    backLabel: 'Back to Forms',
+    stations: [
+      {
+        key: 'dragon',
+        art: ArmoryRack,
+        kicker: 'Event form',
+        title: 'Flamedragon Tyrant',
+        line: 'Submit levels, heroes, and availability.',
+        href: (id) => `/flamedragon?member_id=${id}`,
+      },
+    ],
   },
-  {
-    key: 'dragon',
-    art: ArmoryRack,
-    kicker: 'Event form',
-    title: 'Flamedragon Tyrant',
-    line: 'Submit levels, heroes, and availability.',
-    href: (id) => `/flamedragon?member_id=${id}`,
-  },
-];
+};
 
-const DEPTHS = [0.9, 1, 1, 0.9];
+// Outer stations stand further back - smaller, higher, dimmer - so a row
+// reads as things in a room rather than cells in a grid. Symmetric around
+// the middle regardless of how many stations a given hall has.
+function depthsFor(count) {
+  return Array.from({ length: count }, (_, i) => {
+    const distanceFromEdge = Math.min(i, count - 1 - i);
+    return distanceFromEdge === 0 ? 0.9 : 1;
+  });
+}
 
-export default function MusterHall({ memberId, closedKeys = [] }) {
+export default function MusterHall({ memberId, closedKeys = [], variant = 'top' }) {
   const [hot, setHot] = useState(null);
   const encoded = encodeURIComponent(memberId);
+  const { title, stations, backHref, backLabel } = VARIANTS[variant] || VARIANTS.top;
+  const depths = depthsFor(stations.length);
 
   return (
     <main className="k-scene muster">
@@ -285,22 +390,27 @@ export default function MusterHall({ memberId, closedKeys = [] }) {
 
       <div className="muster-inner">
         <header className="muster-head">
+          {backHref && (
+            <Link href={`${backHref}?member_id=${encoded}`} className="muster-back-link">
+              &larr; {backLabel}
+            </Link>
+          )}
           <span className="k-mark">Member forms &middot; {memberId}</span>
-          <h1 className="k-display muster-title">Choose a form</h1>
+          <h1 className="k-display muster-title">{title}</h1>
         </header>
 
         {/* Objects standing on a shared floor. Depth varies per station so
             they read as things in a room rather than cells in a grid. */}
-        <nav className="hall" aria-label="Muster hall stations">
-          {STATIONS.map((s, i) => {
+        <nav className="hall" style={{ '--hall-count': stations.length }} aria-label="Muster hall stations">
+          {stations.map((s, i) => {
             const Art = s.art;
-            const isClosed = closedKeys.includes(s.key);
+            const isClosed = !s.ungated && closedKeys.includes(s.key);
             return (
               <Link
                 key={s.key}
                 href={s.href(encoded)}
                 className="hall-station"
-                style={{ '--depth': DEPTHS[i] }}
+                style={{ '--depth': depths[i] }}
                 data-hot={hot === s.key}
                 data-closed={isClosed}
                 onMouseEnter={() => setHot(s.key)}

@@ -5,15 +5,7 @@ import { useRouter } from 'next/navigation';
 import AdminShell from '../../../../components/admin/AdminShell';
 import TableSkeleton from '../../../../components/admin/TableSkeleton';
 import { Button, Field, Input, Table } from '../../../../components/ui';
-
-const LABELS = {
-  lead: 'Player Profile',
-  joiner: 'KvK Availability',
-  prep: 'KvK Prep',
-  dragon: 'Flamedragon Tyrant',
-};
-
-const ORDER = ['lead', 'joiner', 'prep', 'dragon'];
+import { FORM_GATE_KEYS as ORDER, FORM_GATE_LABELS as LABELS } from '../../../../lib/formGates.mjs';
 
 export default function AdminFormGatesPage() {
   const [gates, setGates] = useState({});

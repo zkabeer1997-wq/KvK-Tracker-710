@@ -6,6 +6,8 @@ const TONE_BY_STATUS = {
   normal: 'success',
   reject: 'danger',
   waitlist: 'violet',
+  new: 'gold',
+  reviewed: 'success',
 };
 
 export default function StatusBadge({ status, label }) {

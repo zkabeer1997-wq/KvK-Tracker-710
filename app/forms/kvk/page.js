@@ -1,16 +1,16 @@
-import MusterHall from '../../components/kingdom/world/MusterHall';
-import { getFormGates } from '../../lib/formGates.mjs';
+import MusterHall from '../../../components/kingdom/world/MusterHall';
+import { getFormGates } from '../../../lib/formGates.mjs';
 
 export const metadata = {
-  title: 'K710 Forms',
+  title: 'K710 KvK Forms',
 };
 
-export default async function FormsPage({ searchParams: searchParamsPromise }) {
+export default async function KvkFormsPage({ searchParams: searchParamsPromise }) {
   const searchParams = await searchParamsPromise;
   const memberId = typeof searchParams?.member_id === 'string' ? searchParams.member_id : '';
   const gates = await getFormGates();
   const closedKeys = Object.values(gates)
     .filter((gate) => gate.is_open === false)
     .map((gate) => gate.form_key);
-  return <MusterHall memberId={memberId} closedKeys={closedKeys} variant="top" />;
+  return <MusterHall memberId={memberId} closedKeys={closedKeys} variant="kvk" />;
 }

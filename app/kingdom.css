@@ -1250,18 +1250,26 @@
   padding: clamp(150px, 20vh, 232px) clamp(16px, 2vw, 30px) clamp(24px, 5vh, 52px);
   display: flex; flex-direction: column; flex: 1;
 }
-.muster-head { text-align: center; }
+.muster-head { text-align: center; position: relative; }
 /* quiet header: the room is the subject, not the greeting */
 .muster-title {
   margin: 10px 0 0; font-size: clamp(17px, 2vw, 26px);
   letter-spacing: 0.20em; color: var(--parchment-dim); font-weight: 600;
 }
+.muster-back-link {
+  position: absolute; left: 0; top: 4px;
+  color: var(--brass); font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
+  text-decoration: none; opacity: 0.8; transition: opacity var(--t-ui) ease;
+}
+.muster-back-link:hover, .muster-back-link:focus-visible { opacity: 1; text-decoration: underline; }
 
-/* objects standing in the room */
+/* objects standing in the room. --hall-count sizes the room to how many
+   stations a given hall (top-level or a sub-hall) actually has, so a
+   1-2 station room doesn't stretch to the 4-station width. */
 .hall {
-  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: grid; grid-template-columns: repeat(var(--hall-count, 4), minmax(0, 1fr));
   align-items: end; gap: clamp(4px, 1vw, 18px);
-  width: min(1340px, 100%); margin: auto auto 0;
+  width: min(calc(var(--hall-count, 4) * 335px), 1340px, 100%); margin: auto auto 0;
 }
 .hall-station {
   position: relative; display: flex; flex-direction: column; align-items: center;
@@ -1312,7 +1320,8 @@
    height instead of the room, so every envelope offset here is pinned in
    pixels and the perspective floor becomes a flat one the list stands on. */
 @media (max-width: 1000px) {
-  .hall { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 30px; }
+  .hall { grid-template-columns: repeat(min(var(--hall-count, 4), 2), minmax(0, 1fr)); row-gap: 30px; justify-content: center; }
+  .muster-back-link { position: static; display: block; margin-bottom: 8px; }
   .hall-station { transform: none; opacity: 1; }
   .hall-station:hover, .hall-station:focus-visible, .hall-station[data-hot='true'] { transform: translateY(-8px); }
   .hall-plaque { min-height: 0; }
