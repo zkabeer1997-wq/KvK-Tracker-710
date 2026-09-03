@@ -3,6 +3,8 @@ import { revalidatePath } from 'next/cache';
 import { isAdminRequest } from '../../../lib/adminAuth';
 import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
 
+import { validateEventSchedule } from '../../../lib/eventRecurrence.mjs';
+
 const KINDS = ['kvk', 'championship', 'swordland', 'custom'];
 const SLUG_RE = /^[a-z0-9-]{1,80}$/;
 
@@ -56,6 +58,9 @@ export async function POST(request) {
     return NextResponse.json({ error: 'A valid start date/time is required.' }, { status: 400 });
   }
 
+  const { schedule, error: scheduleError } = validateEventSchedule(body);
+  if (scheduleError) return NextResponse.json({ error: scheduleError }, { status: 400 });
+
   const supabase = createAdminSupabaseClient();
   const { data, error } = await supabase
     .from('events')
@@ -65,8 +70,7 @@ export async function POST(request) {
       kind,
       description: String(body.description || ''),
       body_md: String(body.body_md || ''),
-      starts_at: new Date(startsAt).toISOString(),
-      ends_at: body.ends_at && !Number.isNaN(new Date(body.ends_at).getTime()) ? new Date(body.ends_at).toISOString() : null,
+      ...schedule,
       published: Boolean(body.published),
     })
     .select('*')

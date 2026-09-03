@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useState } from 'react';
+import { nextEventOccurrence, recurrenceLabel, upcomingEventSeries } from '../../lib/eventRecurrence.mjs';
 
 const KIND_LABEL = {
   kvk: 'KvK',
@@ -56,7 +57,8 @@ function eventStatus(event, now = Date.now()) {
   const startMs = new Date(event.starts_at).getTime();
   const endMs = event.ends_at ? new Date(event.ends_at).getTime() : null;
   const notStarted = now < startMs;
-  const inProgress = !notStarted && (endMs == null || now < endMs);
+  const recurring = event.recurrence_frequency && event.recurrence_frequency !== 'none';
+  const inProgress = !notStarted && (endMs == null ? !recurring : now < endMs);
   if (inProgress) return { status: 'live', startMs, endMs, notStarted, inProgress };
   if (!notStarted) return { status: 'ended', startMs, endMs, notStarted, inProgress };
   return { status: 'upcoming', startMs, endMs, notStarted, inProgress };
@@ -93,8 +95,9 @@ function EventBody({ body }) {
   );
 }
 
-function EventDetailPanel({ event }) {
-  useNow(1000);
+function EventDetailPanel({ event: series }) {
+  const now = useNow(1000);
+  const event = nextEventOccurrence(series, now) || series;
   const { status, startMs, endMs, notStarted, inProgress } = eventStatus(event);
   const range = formatRange(event.starts_at, event.ends_at);
 
@@ -107,6 +110,7 @@ function EventDetailPanel({ event }) {
         </span>
       </div>
       <h3 className="ev-card-title">{event.title}</h3>
+      {event.recurrence_frequency && event.recurrence_frequency !== 'none' && <p className="ev-recurrence">{recurrenceLabel(event)} · UTC schedule</p>}
 
       {notStarted && <CountdownBlock targetMs={startMs} label="Starts in" />}
       {inProgress && endMs && <CountdownBlock targetMs={endMs} label="Ends in" live />}
@@ -160,6 +164,7 @@ function EventCard({ event, onOpen }) {
         </div>
 
         <h3 className="ev-card-title">{event.title}</h3>
+      {event.recurrence_frequency && event.recurrence_frequency !== 'none' && <p className="ev-recurrence">{recurrenceLabel(event)} · UTC schedule</p>}
 
         {notStarted && <CountdownBlock targetMs={startMs} label="Starts in" />}
         {inProgress && endMs && <CountdownBlock targetMs={endMs} label="Ends in" live />}
@@ -240,13 +245,16 @@ function EventModal({ event, onClose }) {
  */
 export default function EventCountdownCards({ events }) {
   const [open, setOpen] = useState(null);
+  const now = useNow(1000);
+  const upcoming = upcomingEventSeries(events || [], now);
 
   if (!events?.length) return null;
 
   return (
     <div className="ev-cards">
-      {events.map((event) => (
-        <EventCard key={event.slug} event={event} onOpen={setOpen} />
+      {upcoming.length === 0 && <p>No upcoming events.</p>}
+      {upcoming.map(({ event, occurrence }) => (
+        <EventCard key={event.slug} event={occurrence} onOpen={() => setOpen(event)} />
       ))}
 
       <EventModal event={open} onClose={() => setOpen(null)} />
@@ -264,6 +272,7 @@ export default function EventCountdownCards({ events }) {
         .ev-status-upcoming{color:var(--color-ink-muted)}
         .ev-status-live{color:#3ecf8e}
         .ev-status-ended{color:var(--color-ink-muted)}
+        .ev-recurrence{margin:0;font-size:14px;color:var(--color-ink-muted)}
         .ev-card-title{margin:0;font-family:var(--font-display);font-size:clamp(20px,3vw,26px);line-height:1.2}
         .ev-countdown{display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-radius:12px;background:var(--color-surface-alt);border:1px solid var(--color-border)}
         .ev-countdown-live{border-color:rgba(62,207,142,.35)}

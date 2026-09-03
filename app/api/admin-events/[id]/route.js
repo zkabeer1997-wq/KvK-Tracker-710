@@ -3,6 +3,8 @@ import { revalidatePath } from 'next/cache';
 import { isAdminRequest } from '../../../../lib/adminAuth';
 import { createAdminSupabaseClient } from '../../../../lib/adminSupabase';
 
+import { validateEventSchedule } from '../../../../lib/eventRecurrence.mjs';
+
 const KINDS = ['kvk', 'championship', 'swordland', 'custom'];
 const SLUG_RE = /^[a-z0-9-]{1,80}$/;
 
@@ -32,7 +34,7 @@ export async function PUT(request, { params: paramsPromise }) {
 
   const { data: existing, error: fetchError } = await supabase
     .from('events')
-    .select('slug')
+    .select('*')
     .eq('id', id)
     .maybeSingle();
   if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 });
@@ -59,15 +61,9 @@ export async function PUT(request, { params: paramsPromise }) {
   }
   if (body.description !== undefined) update.description = String(body.description);
   if (body.body_md !== undefined) update.body_md = String(body.body_md);
-  if (body.starts_at !== undefined) {
-    if (!body.starts_at || Number.isNaN(new Date(body.starts_at).getTime())) {
-      return NextResponse.json({ error: 'A valid start date/time is required.' }, { status: 400 });
-    }
-    update.starts_at = new Date(body.starts_at).toISOString();
-  }
-  if (body.ends_at !== undefined) {
-    update.ends_at = body.ends_at && !Number.isNaN(new Date(body.ends_at).getTime()) ? new Date(body.ends_at).toISOString() : null;
-  }
+  const { schedule, error: scheduleError } = validateEventSchedule({ ...existing, ...body });
+  if (scheduleError) return NextResponse.json({ error: scheduleError }, { status: 400 });
+  Object.assign(update, schedule);
   if (body.published !== undefined) update.published = Boolean(body.published);
   update.updated_at = new Date().toISOString();
 

@@ -2,6 +2,7 @@ import { createAdminSupabaseClient } from '../../lib/adminSupabase';
 import { Card, EmptyState, Button } from '../../components/ui';
 import BearHuntSchedule from './BearHuntSchedule';
 import EventCountdownCards from './EventCountdownCards';
+import { RECURRENCE_FIELDS, upcomingEventSeries } from '../../lib/eventRecurrence.mjs';
 
 export const metadata = {
   title: 'Events',
@@ -13,15 +14,13 @@ export const revalidate = 300;
 
 async function loadUpcomingEvents() {
   const supabase = createAdminSupabaseClient();
-  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const { data, error } = await supabase
     .from('events')
-    .select('slug, title, kind, description, body_md, starts_at, ends_at')
+    .select(`slug, title, kind, description, body_md, starts_at, ends_at, ${RECURRENCE_FIELDS}`)
     .eq('published', true)
-    .gte('starts_at', cutoff)
     .order('starts_at', { ascending: true });
   if (error) throw error;
-  return data || [];
+  return upcomingEventSeries(data || []).map(entry => entry.event);
 }
 
 export default async function EventsPage() {

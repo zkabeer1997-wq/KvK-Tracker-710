@@ -6,6 +6,9 @@ import Link from 'next/link';
 import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
 import { Button, Tag } from '../../../components/ui';
 
+import { RECURRENCE_FIELDS } from '../../../lib/eventRecurrence.mjs';
+import EventSchedule from '../EventSchedule';
+
 const KIND_LABEL = {
   kvk: 'KvK',
   championship: 'Championship',
@@ -33,7 +36,7 @@ async function loadEvent(slug) {
   const supabase = createAdminSupabaseClient();
   const { data, error } = await supabase
     .from('events')
-    .select('slug, title, kind, description, body_md, starts_at, ends_at, published')
+    .select(`slug, title, kind, description, body_md, starts_at, ends_at, published, ${RECURRENCE_FIELDS}`)
     .eq('slug', slug)
     .eq('published', true)
     .maybeSingle();
@@ -83,10 +86,7 @@ export default async function EventPage({ params }) {
         <Link href="/events" className="event-back">← Events</Link>
         <Tag tone="accent">{KIND_LABEL[event.kind] || event.kind}</Tag>
         <h1 className="event-title">{event.title}</h1>
-        <p className="event-when">
-          {new Date(event.starts_at).toLocaleString(undefined, { dateStyle: 'full', timeStyle: 'short' })}
-          {event.ends_at ? ` – ${new Date(event.ends_at).toLocaleString(undefined, { dateStyle: 'full', timeStyle: 'short' })}` : ''}
-        </p>
+        <EventSchedule event={event} />
         {event.description && <p className="event-description">{event.description}</p>}
 
         <div className="event-actions">

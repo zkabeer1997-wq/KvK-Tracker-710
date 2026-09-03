@@ -3,6 +3,8 @@ import { createAdminSupabaseClient } from '../../../../../lib/adminSupabase';
 import { buildIcsCalendar } from '../../../../../lib/ics';
 import { readMemberSession } from '../../../../../lib/memberAuth';
 
+import { RECURRENCE_FIELDS, recurrenceRule } from '../../../../../lib/eventRecurrence.mjs';
+
 const SLUG_RE = /^[a-z0-9-]{1,80}$/;
 
 export async function GET(request, { params: paramsPromise }) {
@@ -20,7 +22,7 @@ export async function GET(request, { params: paramsPromise }) {
   const supabase = createAdminSupabaseClient();
   const { data: event, error } = await supabase
     .from('events')
-    .select('slug, title, description, starts_at, ends_at, published')
+    .select(`slug, title, description, starts_at, ends_at, published, ${RECURRENCE_FIELDS}`)
     .eq('slug', slug)
     .maybeSingle();
 
@@ -36,6 +38,7 @@ export async function GET(request, { params: paramsPromise }) {
       start: new Date(event.starts_at),
       end: event.ends_at ? new Date(event.ends_at) : null,
       summary: event.title,
+      rrule: recurrenceRule(event),
       description: event.description,
     }],
   });
