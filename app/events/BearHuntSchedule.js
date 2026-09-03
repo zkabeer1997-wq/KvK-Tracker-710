@@ -1,18 +1,21 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { HUNTS, toMinutes } from '../../lib/bearHuntSchedule';
+import { useBearSchedule } from '../../components/BearScheduleProvider';
 
 // Renders the real Bear Hunt windows in the VIEWER's local time, not UTC -
 // kingdom846.com's events page is UTC-only, real friction for a kingdom
 // with members across every timezone. Server-rendered fallback shows UTC
 // (so there's real content before hydration); once mounted, each row
 // re-renders in the browser's own timezone.
-export default function BearHuntSchedule() {
+export default function BearHuntSchedule({ initialAlliances = null }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const sorted = [...HUNTS].sort((a, b) => toMinutes(a.utc) - toMinutes(b.utc));
+  const { hunts: sorted, loading, error } = useBearSchedule(initialAlliances);
+  if (loading) return <p>Loading Bear Hunt times…</p>;
+  if (error) return <p role="status">{error}</p>;
+  if (!sorted.length) return <p>No Bear Hunt times are currently published.</p>;
 
   return (
     <div className="events-hunts">
@@ -45,7 +48,7 @@ export default function BearHuntSchedule() {
         </tbody>
       </table>
       <a href="/api/events/bear-hunt.ics" className="events-ics-link" download>
-        📅 Subscribe to Bear Hunt schedule (.ics)
+        📅 Download Bear Hunt schedule (.ics)
       </a>
     </div>
   );

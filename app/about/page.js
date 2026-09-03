@@ -1,4 +1,6 @@
+import { stripLegacyBearCopy } from '../../lib/publicBearSchedule';
 import Link from 'next/link';
+import { AllianceBearTimes } from '../../components/BearScheduleProvider';
 import EditableSection from '../../components/EditableSection';
 import { getBlocks, checkIsAdmin } from '../../lib/contentBlocks';
 import { getHomeContent } from '../../lib/homeContent';
@@ -33,7 +35,7 @@ async function loadAlliances() {
     const supabase = createAdminSupabaseClient();
     const { data, error } = await supabase
       .from('alliances')
-      .select('tag, name, blurb, timezone_focus, recruiting_status, language, roster_size')
+      .select('tag, name, blurb, timezone_focus, recruiting_status, language, roster_size, bear_times_utc')
       .eq('active', true)
       .order('sort_order', { ascending: true });
     if (error) throw error;
@@ -66,7 +68,7 @@ export default async function AboutPage() {
             <h1 className="about-title">About Kingdom 710</h1>
             <p className="about-lede">
               Kingdom 710 includes three alliances: 710, RED, and SKY. We coordinate KvK preparation,
-              run seven Bear Hunt times, and share the same events, guides, forms, and member tools.
+              run daily Bear Hunts, and share the same events, guides, forms, and member tools.
             </p>
             <nav className="about-jump" aria-label="About page sections">
               <a href="#alliances">Meet the alliances</a>
@@ -90,8 +92,8 @@ export default async function AboutPage() {
             {DOCTRINE_KEYS.map((d, i) => (
               <Card key={d.titleKey} className="about-doctrine-card">
                 <span className="k-mark">{['I', 'II', 'III'][i]}</span>
-                <h3>{homeContent[d.titleKey]?.text}</h3>
-                <p>{homeContent[d.bodyKey]?.text}</p>
+                <h3>{d.titleKey === 'why-1-title' ? 'Alliance Bear Hunt times' : homeContent[d.titleKey]?.text}</h3>
+                <p>{d.bodyKey === 'why-1-body' ? 'Each alliance’s current UTC schedule is shown below. Choose the times that work for you.' : homeContent[d.bodyKey]?.text}</p>
               </Card>
             ))}
           </div>
@@ -118,8 +120,9 @@ export default async function AboutPage() {
                       </Tag>
                     </div>
                     <h3 className="about-alliance-name">{a.name}</h3>
-                    {a.blurb && <p className="about-alliance-blurb">{a.blurb}</p>}
+                    {stripLegacyBearCopy(a.blurb) && <p className="about-alliance-blurb">{stripLegacyBearCopy(a.blurb)}</p>}
                     <dl className="about-alliance-facts">
+                      <div><dt>Bear Hunts</dt><dd><AllianceBearTimes tag={a.tag} initialTimes={a.bear_times_utc} /></dd></div>
                       {a.timezone_focus && (
                         <div><dt>Timezone</dt><dd>{a.timezone_focus}</dd></div>
                       )}

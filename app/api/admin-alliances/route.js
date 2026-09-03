@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
+import { revalidateAlliancePages } from '../../../lib/revalidateAlliancePages';
+import { validateBearTimes } from '../../../lib/bearHuntSchedule';
 import { isAdminRequest } from '../../../lib/adminAuth';
 import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
 
@@ -52,10 +53,14 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Unsupported recruiting status.' }, { status: 400 });
   }
 
+  const { times, error: timeError } = validateBearTimes(body.bear_times_utc ?? []);
+  if (timeError) return NextResponse.json({ error: timeError }, { status: 400 });
+
   const supabase = createAdminSupabaseClient();
   const { data, error } = await supabase
     .from('alliances')
     .insert({
+      bear_times_utc: times,
       tag,
       name,
       blurb: String(body.blurb || ''),
@@ -72,8 +77,7 @@ export async function POST(request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  revalidatePath('/alliances');
-  revalidatePath(`/alliances/${tag.toLowerCase()}`);
+  revalidateAlliancePages(tag);
 
   return NextResponse.json({ alliance: data });
 }

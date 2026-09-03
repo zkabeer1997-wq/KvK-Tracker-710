@@ -1,8 +1,9 @@
+import { stripLegacyBearCopy } from '../../../lib/publicBearSchedule';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
 import { Tag, Card, Button } from '../../../components/ui';
-import { HUNTS } from '../../../lib/bearHuntSchedule';
+import { AllianceBearTimes } from '../../../components/BearScheduleProvider';
 
 const STATUS_LABEL = { open: 'Recruiting', selective: 'Selective', closed: 'Closed' };
 const STATUS_TONE = { open: 'success', selective: 'accent', closed: 'neutral' };
@@ -26,7 +27,7 @@ async function loadAlliance(tagParam) {
   const supabase = createAdminSupabaseClient();
   const { data, error } = await supabase
     .from('alliances')
-    .select('tag, name, blurb, leader_player_id, timezone_focus, recruiting_status, language, roster_size')
+    .select('tag, name, blurb, leader_player_id, timezone_focus, recruiting_status, language, roster_size, bear_times_utc')
     .eq('tag', String(tagParam || '').toUpperCase())
     .eq('active', true)
     .maybeSingle();
@@ -69,7 +70,6 @@ export default async function AlliancePage({ params }) {
   }
   if (!alliance) notFound();
 
-  const windows = HUNTS.filter((h) => h.band === alliance.tag);
 
   return (
     <main className="theme-realm alliance-page">
@@ -83,7 +83,7 @@ export default async function AlliancePage({ params }) {
           </Tag>
         </div>
         <h1 className="alliance-title">{alliance.name}</h1>
-        {alliance.blurb && <p className="alliance-blurb">{alliance.blurb}</p>}
+        {stripLegacyBearCopy(alliance.blurb) && <p className="alliance-blurb">{stripLegacyBearCopy(alliance.blurb)}</p>}
 
         <Card className="alliance-facts">
           <div><dt>Timezone focus</dt><dd>{alliance.timezone_focus || 'Not listed'}</dd></div>
@@ -92,17 +92,13 @@ export default async function AlliancePage({ params }) {
           <div><dt>Leadership contact</dt><dd>{alliance.leader_player_id || 'Not listed'}</dd></div>
         </Card>
 
-        {windows.length > 0 && (
-          <section className="alliance-windows">
-            <h2 className="alliance-section-title">Bear Hunt windows</h2>
-            <div className="alliance-windows-list">
-              {windows.map((w) => (
-                <span key={w.utc} className="alliance-window-chip">{w.utc} UTC</span>
-              ))}
-            </div>
-            <Link href="/events" className="alliance-events-link">See the full event calendar in your local time →</Link>
-          </section>
-        )}
+        <section className="alliance-windows">
+          <h2 className="alliance-section-title">Bear Hunt windows</h2>
+          <div className="alliance-windows-list">
+            <AllianceBearTimes tag={alliance.tag} initialTimes={alliance.bear_times_utc} />
+          </div>
+          <Link href="/chronometer" className="alliance-events-link">See all alliance Bear Hunt times →</Link>
+        </section>
 
         <Button href="/interest" variant="struck" className="alliance-cta">Join {alliance.name}</Button>
       </div>

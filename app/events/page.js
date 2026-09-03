@@ -1,5 +1,6 @@
 import { createAdminSupabaseClient } from '../../lib/adminSupabase';
 import { Card, EmptyState, Button } from '../../components/ui';
+import { loadPublicBearScheduleOrNull } from '../../lib/publicBearSchedule';
 import BearHuntSchedule from './BearHuntSchedule';
 import EventCountdownCards from './EventCountdownCards';
 import { RECURRENCE_FIELDS, upcomingEventSeries } from '../../lib/eventRecurrence.mjs';
@@ -24,6 +25,7 @@ async function loadUpcomingEvents() {
 }
 
 export default async function EventsPage() {
+  const bearAlliances = await loadPublicBearScheduleOrNull();
   let events = [];
   let loadError = '';
   try {
@@ -51,9 +53,9 @@ export default async function EventsPage() {
         <section className="events-section events-section-hunts">
           <div className="events-section-heading">
             <div><span className="events-section-mark">Daily rhythm</span><h2 className="events-section-title">Bear Hunt schedule</h2></div>
-            <p>Two windows covering the kingdom’s core time zones. Times are shown locally on your device.</p>
+            <p>Daily times set by each alliance. Times are shown locally on your device.</p>
           </div>
-          <BearHuntSchedule />
+          <BearHuntSchedule initialAlliances={bearAlliances} />
         </section>
 
         <section className="events-section">

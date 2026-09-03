@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
+import { revalidateAlliancePages } from '../../../../lib/revalidateAlliancePages';
+import { validateBearTimes } from '../../../../lib/bearHuntSchedule';
 import { isAdminRequest } from '../../../../lib/adminAuth';
 import { createAdminSupabaseClient } from '../../../../lib/adminSupabase';
 
@@ -28,6 +29,11 @@ export async function PUT(request, { params: paramsPromise }) {
   }
 
   const update = {};
+  if (body.bear_times_utc !== undefined) {
+    const { times, error: timeError } = validateBearTimes(body.bear_times_utc);
+    if (timeError) return NextResponse.json({ error: timeError }, { status: 400 });
+    update.bear_times_utc = times;
+  }
   if (body.name !== undefined) {
     const name = String(body.name).trim();
     if (!name) return NextResponse.json({ error: 'Name is required.' }, { status: 400 });
@@ -60,8 +66,7 @@ export async function PUT(request, { params: paramsPromise }) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  revalidatePath('/alliances');
-  revalidatePath(`/alliances/${tag.toLowerCase()}`);
+  revalidateAlliancePages(tag);
 
   return NextResponse.json({ alliance: data });
 }
@@ -78,8 +83,7 @@ export async function DELETE(request, { params: paramsPromise }) {
   const { error } = await supabase.from('alliances').delete().eq('tag', tag);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  revalidatePath('/alliances');
-  revalidatePath(`/alliances/${tag.toLowerCase()}`);
+  revalidateAlliancePages(tag);
 
   return NextResponse.json({ ok: true });
 }

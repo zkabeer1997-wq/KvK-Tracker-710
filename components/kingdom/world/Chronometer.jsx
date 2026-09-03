@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { HUNTS, nextHunt, pad, toMinutes } from '../../../lib/bearHuntSchedule';
+import { nextHunt, pad, toMinutes } from '../../../lib/bearHuntSchedule';
 
-export { HUNTS, nextHunt };
+import { useBearSchedule } from '../../BearScheduleProvider';
 
 /**
  * A monumental brass instrument: 24-hour ring, alliance gemstones set at
@@ -11,8 +11,9 @@ export { HUNTS, nextHunt };
  * window physically lit. Rendered as SVG so it stays crisp, cheap,
  * accessible, and works with no WebGL.
  */
-export default function Chronometer() {
+export default function Chronometer({ initialAlliances = null }) {
   const [now, setNow] = useState(null);
+  const { hunts, loading, error } = useBearSchedule(initialAlliances);
 
   useEffect(() => {
     const tick = () => setNow(new Date());
@@ -24,14 +25,14 @@ export default function Chronometer() {
   const data = useMemo(() => {
     if (!now) return null;
     const nowMin = now.getUTCHours() * 60 + now.getUTCMinutes();
-    const nx = nextHunt(nowMin);
+    const nx = nextHunt(nowMin, error ? [] : hunts);
     return {
       nowMin,
       utc: `${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}:${pad(now.getUTCSeconds())}`,
       next: nx,
-      countdown: `${pad(Math.floor(nx.inMin / 60))}h ${pad(nx.inMin % 60)}m`,
+      countdown: nx ? `${pad(Math.floor(nx.inMin / 60))}h ${pad(nx.inMin % 60)}m` : '',
     };
-  }, [now]);
+  }, [now, hunts, error]);
 
   // Server render / pre-hydration: reserve the space, no layout shift.
   if (!data) {
@@ -48,7 +49,7 @@ export default function Chronometer() {
         className="chrono-dial"
         viewBox="0 0 480 480"
         role="img"
-        aria-label={`Kingdom watch. Current time ${data.utc} UTC. Next Bear Hunt: ${data.next.band} alliance at ${data.next.utc} UTC, in ${data.countdown}.`}
+        aria-label={`Kingdom watch. Current time ${data.utc} UTC. ${data.next ? `Next Bear Hunt: ${data.next?.band} at ${data.next?.utc} UTC, in ${data.countdown}.` : 'No Bear Hunt times available.'}`}
       >
         <defs>
           <radialGradient id="chronoFace" cx="42%" cy="34%">
@@ -107,12 +108,12 @@ export default function Chronometer() {
         })}
 
         {/* hunt gemstones set into the ring */}
-        {HUNTS.map((h) => {
+        {(error ? [] : hunts).map((h) => {
           const m = toMinutes(h.utc);
           const a = ((m / 1440) * 360 - 90) * (Math.PI / 180);
           const x = C + Math.cos(a) * (R - 4);
           const y = C + Math.sin(a) * (R - 4);
-          const isNext = h.band === data.next.band && h.utc === data.next.utc;
+          const isNext = h.band === data.next?.band && h.utc === data.next?.utc;
           const fill =
             h.band === '710' ? '#d9a94e' : h.band === 'RED' ? '#a3283c' : '#3f74bd';
           return (
@@ -144,13 +145,13 @@ export default function Chronometer() {
           <span className="chrono-unit">UTC</span>
         </div>
         <div className="chrono-rail-div" aria-hidden="true" />
-        <div className="chrono-read k-wb" data-band={data.next.band}>
+        <div className="chrono-read k-wb" data-band={data.next?.band}>
           <span className="k-mark">Next Watch</span>
           <strong className="chrono-next">
             <span className="k-gem" aria-hidden="true" />
-            {data.next.band} · {data.next.utc}
+            {data.next ? `${data.next.band} · ${data.next.utc}` : loading ? 'Loading…' : error ? 'Schedule unavailable' : 'No hunts scheduled'}
           </strong>
-          <span className="chrono-unit">in {data.countdown}</span>
+          <span className="chrono-unit">{data.next ? `in ${data.countdown}` : ''}</span>
         </div>
       </div>
     </div>

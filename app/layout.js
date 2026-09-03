@@ -11,6 +11,7 @@ import './sitewide-audit-fixes.css';
 import './home-gallery.css';
 import { Cinzel, Inter, JetBrains_Mono, Cormorant_Garamond, Fraunces } from 'next/font/google';
 import LanguageProvider from '../components/i18n/LanguageProvider';
+import BearScheduleProvider from '../components/BearScheduleProvider';
 import SiteChrome from '../components/SiteChrome';
 import FilipinoTagalogOptions from '../components/i18n/FilipinoTagalogOptions';
 
@@ -46,7 +47,7 @@ export default function RootLayout({ children }) {
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
         <LanguageProvider>
           <FilipinoTagalogOptions />
-          <SiteChrome>{children}</SiteChrome>
+          <BearScheduleProvider><SiteChrome>{children}</SiteChrome></BearScheduleProvider>
         </LanguageProvider>
       </body>
     </html>

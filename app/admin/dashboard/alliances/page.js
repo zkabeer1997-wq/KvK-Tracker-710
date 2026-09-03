@@ -7,10 +7,13 @@ import ConfirmDialog from '../../../../components/admin/ConfirmDialog';
 import TableSkeleton from '../../../../components/admin/TableSkeleton';
 import { Button, Field, Input, Select, Textarea, Table } from '../../../../components/ui';
 
+import { validateBearTimes } from '../../../../lib/bearHuntSchedule';
+import { notifyBearScheduleChanged } from '../../../../components/BearScheduleProvider';
+
 const STATUSES = ['open', 'selective', 'closed'];
 const EMPTY_FORM = {
   tag: '', name: '', blurb: '', leader_player_id: '', timezone_focus: '',
-  recruiting_status: 'open', language: '', roster_size: '', active: true, sort_order: 0,
+  recruiting_status: 'open', language: '', roster_size: '', active: true, sort_order: 0, bear_times_utc: [],
 };
 
 export default function AdminAlliancesPage() {
@@ -54,6 +57,7 @@ export default function AdminAlliancesPage() {
   function openEdit(row) {
     setError(''); setStatus(''); setEditingTag(row.tag);
     setForm({
+      bear_times_utc: row.bear_times_utc || [],
       tag: row.tag, name: row.name, blurb: row.blurb || '',
       leader_player_id: row.leader_player_id || '', timezone_focus: row.timezone_focus || '',
       recruiting_status: row.recruiting_status, language: row.language || '',
@@ -69,6 +73,8 @@ export default function AdminAlliancesPage() {
   async function save() {
     setSaving(true); setError(''); setStatus('');
     try {
+      const { error: timeError } = validateBearTimes(form.bear_times_utc);
+      if (timeError) throw new Error(timeError);
       const isNew = editingTag === 'new';
       const response = await fetch(isNew ? '/api/admin-alliances' : `/api/admin-alliances/${editingTag}`, {
         method: isNew ? 'POST' : 'PUT',
@@ -77,7 +83,8 @@ export default function AdminAlliancesPage() {
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Unable to save alliance.');
-      setStatus(isNew ? 'Alliance created.' : 'Alliance saved.');
+      notifyBearScheduleChanged();
+      setStatus(isNew ? 'Alliance created.' : 'Alliance saved. Bear Hunt times updated across the site.');
       setEditingTag(null); setForm(EMPTY_FORM);
       await load();
     } catch (err) {
@@ -93,6 +100,7 @@ export default function AdminAlliancesPage() {
       const response = await fetch(`/api/admin-alliances/${confirmRow.tag}`, { method: 'DELETE' });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Unable to delete alliance.');
+      notifyBearScheduleChanged();
       setStatus('Alliance deleted.'); setConfirmRow(null);
       await load();
     } catch (err) {
@@ -101,7 +109,7 @@ export default function AdminAlliancesPage() {
   }
 
   return (
-    <AdminShell title="Alliances" subtitle="The alliance directory shown at /alliances." onLogout={handleLogout}>
+    <AdminShell title="Alliances" subtitle="Manage alliance details and the Bear Hunt times shown across the website." onLogout={handleLogout}>
       {error && <p className="guide-message error" role="alert">{error}</p>}
       {status && <p className="guide-message success" role="status">{status}</p>}
 
@@ -111,7 +119,7 @@ export default function AdminAlliancesPage() {
 
       {editingTag !== null && (
         <div className="k-plate" style={{ padding: 20, marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: 12 }}>
             <Field label="Tag" hint="e.g. 710, RED, SKY">
               <Input tone="console" value={form.tag} disabled={editingTag !== 'new'} onChange={(e) => setForm((f) => ({ ...f, tag: e.target.value.toUpperCase() }))} />
             </Field>
@@ -142,6 +150,20 @@ export default function AdminAlliancesPage() {
               <Input tone="console" value={form.leader_player_id} onChange={(e) => setForm((f) => ({ ...f, leader_player_id: e.target.value }))} />
             </Field>
           </div>
+          <fieldset disabled={saving} style={{ border: '1px solid var(--edge)', padding: 16, display: 'grid', gap: 12, minWidth: 0 }}>
+            <legend>Bear Hunt times (UTC)</legend>
+            <p style={{ margin: 0 }}>These daily times update the Events page, public alliance schedules, clock, and calendar download.</p>
+            {form.bear_times_utc.map((time, index) => (
+              <div key={index} style={{ display: 'flex', alignItems: 'end', gap: 12 }}>
+                <Field label={`Hunt ${index + 1}`} htmlFor={`bear-time-${index}`}>
+                  <Input id={`bear-time-${index}`} tone="console" type="time" step="60" value={time} onChange={event => setForm(current => ({ ...current, bear_times_utc: current.bear_times_utc.map((value, i) => i === index ? event.target.value : value) }))} />
+                </Field>
+                <Button variant="quiet" aria-label={`Remove hunt ${index + 1}`} onClick={() => setForm(current => ({ ...current, bear_times_utc: current.bear_times_utc.filter((_, i) => i !== index) }))}>Remove</Button>
+              </div>
+            ))}
+            {form.bear_times_utc.length === 0 && <p style={{ margin: 0 }}>No Bear Hunt times set. Add a time to include this alliance in the schedule.</p>}
+            <Button variant="quiet" disabled={form.bear_times_utc.length >= 24} onClick={() => setForm(current => ({ ...current, bear_times_utc: [...current.bear_times_utc, ''] }))}>+ Add Bear Hunt time</Button>
+          </fieldset>
           <Field label="Blurb">
             <Textarea tone="console" rows={3} value={form.blurb} onChange={(e) => setForm((f) => ({ ...f, blurb: e.target.value }))} />
           </Field>
@@ -156,17 +178,18 @@ export default function AdminAlliancesPage() {
         <TableSkeleton rows={3} columns={4} />
       ) : (
         <Table>
-          <thead><tr><th>Tag</th><th>Name</th><th>Status</th><th>Active</th><th /></tr></thead>
+          <thead><tr><th>Tag</th><th>Name</th><th>Bear Hunts (UTC)</th><th>Status</th><th>Active</th><th /></tr></thead>
           <tbody>
             {rows.map((row) => (
               <tr key={row.tag}>
                 <td>{row.tag}</td>
                 <td>{row.name}</td>
+                <td>{row.bear_times_utc?.join(' · ') || 'Not set'}</td>
                 <td>{row.recruiting_status}</td>
                 <td>{row.active ? 'Yes' : 'No'}</td>
                 <td style={{ display: 'flex', gap: 8 }}>
-                  <Button variant="quiet" onClick={() => openEdit(row)}>Edit</Button>
-                  <Button variant="quiet" onClick={() => setConfirmRow(row)}>Delete</Button>
+                  <Button variant="quiet" onClick={() => openEdit(row)} disabled={editingTag !== null}>Edit</Button>
+                  <Button variant="quiet" onClick={() => setConfirmRow(row)} disabled={editingTag !== null}>Delete</Button>
                 </td>
               </tr>
             ))}

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { HUNTS, toMinutes } from '../../../../lib/bearHuntSchedule';
+import { huntsFromAlliances } from '../../../../lib/bearHuntSchedule';
+import { loadPublicBearSchedule } from '../../../../lib/publicBearSchedule';
 import { buildIcsCalendar } from '../../../../lib/ics';
 
 // A daily-recurring calendar subscription for the real Bear Hunt windows -
@@ -7,7 +8,7 @@ import { buildIcsCalendar } from '../../../../lib/ics';
 // since this is the schedule K710 actually runs on every day. One VEVENT
 // per window with RRULE:FREQ=DAILY; no recurrence library needed since
 // ICS natively expresses "every day at this UTC time."
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 function nextOccurrence(utcHHMM) {
   const now = new Date();
@@ -18,8 +19,13 @@ function nextOccurrence(utcHHMM) {
 }
 
 export async function GET() {
-  const events = [...HUNTS]
-    .sort((a, b) => toMinutes(a.utc) - toMinutes(b.utc))
+  let alliances;
+  try { alliances = await loadPublicBearSchedule(); }
+  catch (error) {
+    console.error('Bear Hunt calendar load failed', error);
+    return NextResponse.json({ error: 'The Bear Hunt calendar is temporarily unavailable.' }, { status: 503 });
+  }
+  const events = huntsFromAlliances(alliances)
     .map((hunt) => ({
       uid: `bear-hunt-${hunt.band}-${hunt.utc.replace(':', '')}@k710hub`,
       start: nextOccurrence(hunt.utc),
@@ -32,6 +38,7 @@ export async function GET() {
 
   return new NextResponse(ics, {
     headers: {
+      'Cache-Control': 'no-store',
       'Content-Type': 'text/calendar; charset=utf-8',
       'Content-Disposition': 'attachment; filename="k710-bear-hunt.ics"',
     },

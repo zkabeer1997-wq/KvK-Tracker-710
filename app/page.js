@@ -1,3 +1,5 @@
+import PublicBearAlliances from '../components/PublicBearAlliances';
+import { loadPublicBearScheduleOrNull, bearAllianceNotes } from '../lib/publicBearSchedule';
 import Link from 'next/link';
 import HomeEditableText from '../components/HomeEditableText';
 import { getHomeContent, checkIsAdmin } from '../lib/homeContent';
@@ -16,11 +18,7 @@ export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 export const revalidate = 0;
 
-const ALLIANCES = [
-  { band: '710', nameKey: 'wb-1-name', descKey: 'wb-1-desc' },
-  { band: 'RED', nameKey: 'wb-2-name', descKey: 'wb-2-desc' },
-  { band: 'SKY', nameKey: 'wb-3-name', descKey: 'wb-3-desc' },
-];
+
 
 const DOCTRINE = [
   { n: 'I', titleKey: 'why-1-title', bodyKey: 'why-1-body' },
@@ -156,10 +154,13 @@ const COPY_REWRITES = {
 
 export default async function HomePage() {
   const content = await getHomeContent();
+  const bearAlliances = await loadPublicBearScheduleOrNull();
   const isAdmin = await checkIsAdmin();
   let galleryImages = [];
   try { galleryImages = await getGalleryImages({ limit: 10 }); } catch (error) { console.error('homepage gallery load failed', error); }
   const field = (key, props = {}) => {
+    if (key === 'why-1-title') return 'Alliance Bear Hunt times';
+    if (key === 'why-1-body') return 'Check each alliance’s current UTC schedule below to find the times that work for you.';
     const c = content[key] || { id: null, text: '' };
     const rewrite = COPY_REWRITES[key];
     const initialText = rewrite && rewrite.from.includes(c.text.trim()) ? rewrite.to : c.text;
@@ -226,14 +227,7 @@ export default async function HomePage() {
       <section className="home-v2-alliances">
         <span className="k-mark">{field('wb-head-kicker')}</span>
         <h2>{field('wb-head-title')}</h2>
-        <div className="home-v2-alliance-line">
-          {ALLIANCES.map((a, index) => (
-            <div className="home-v2-alliance-fragment" key={a.band}>
-              {index > 0 && <i />}
-              <Link href={`/alliances/${a.band.toLowerCase()}`}><b>{a.band}</b><small>{field(a.nameKey)}</small><em>{field(a.descKey, { multiline: true })}</em></Link>
-            </div>
-          ))}
-        </div>
+        <PublicBearAlliances initialAlliances={bearAlliances} notes={bearAllianceNotes(content)} />
       </section>
 
       <section className="home-v2-final">
