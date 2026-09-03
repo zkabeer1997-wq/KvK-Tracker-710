@@ -17,8 +17,14 @@ const TOOLS = {
     { key: 'flamedragon-shop', event: 'Flamedragon Tyrant', title: 'Dragon’s Caravan Optimizer', description: 'Build a reward cart, prioritize the best-value shop items, and calculate the cheapest Dragon Essence pack combination.', status: 'New', icon: '/images/flamedragon-caravan.svg' },
     { key: 'adventure-stall', event: 'Adventure Stall', title: 'Adventure Stall Optimizer', description: 'Choose your event rewards and calculate the lowest-cost daily pack plan after using the Shells already in your inventory.', status: 'New', icon: '/images/adventure-stall.svg' },
   ],
-  'Building Costs': [],
-  'Research Costs': [],
+  'Building Costs': [
+    { key: 'building-costs', event: 'City Construction', title: 'Building Costs Calculator', description: 'Plan building upgrades with resource totals, construction speed modifiers, and Double Time — including Town Center through Truegold tiers.', status: 'New', icon: '/images/adventure-stall.svg' },
+  ],
+  'Research Costs': [
+    { key: 'academy-research', event: 'Academy', title: 'Academy Research Costs Calculator', description: 'Plan Growth, Economy, and Battle techs with per-level costs, time, and power from the full Academy research tables.', status: 'New', icon: '/images/charm-pack-forge.svg' },
+    { key: 'war-academy-research', event: 'War Academy', title: 'War Academy Research Costs Calculator', description: 'Infantry, Cavalry, and Archer trees with Truegold Dust costs and research speed modifiers.', status: 'New', icon: '/images/flamedragon-caravan.svg' },
+    { key: 'advanced-research', event: 'Advanced Truegold', title: 'War Academy Advanced Research Costs Calculator', description: 'Advanced Truegold research (Capacity, Combat, Economy, Special) with Truegold Dust and Tempered Truegold.', status: 'New', icon: '/images/wavebound-charm-sail.svg' },
+  ],
 };
 
 const STATUS_TONE = {
