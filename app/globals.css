@@ -168,7 +168,7 @@ button[type="submit"]:not(.k-btn):disabled { opacity: 0.5; cursor: not-allowed; 
 
 .public-form-card button[type="submit"]:not(.k-btn):hover { background: var(--ember-bright); }
 
-.panel-heading span, .rally-sidebar-header span { color: var(--ember); font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.panel-heading span, .rally-board-header span { color: var(--ember); font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
 
 .logout-btn { background: rgba(217, 169, 78, 0.1); color: #ffffff; border: 1px solid var(--line); padding: 9px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
 
@@ -214,9 +214,12 @@ button[type="submit"]:not(.k-btn):disabled { opacity: 0.5; cursor: not-allowed; 
 
 .admin-table tbody tr:active { cursor: grabbing; }
 
-.admin-workspace { display: grid; grid-template-columns: minmax(0, 1fr) 390px; gap: 20px; align-items: start; }
+.admin-workspace { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
 
-.roster-panel, .rally-sidebar { min-width: 0; }
+.roster-panel, .rally-board { min-width: 0; }
+
+.rally-assign-select { margin-top: 6px; width: 100%; max-width: 200px; font-size: 12px; padding: 5px 7px; border-radius: 6px; border: 1px solid var(--border-soft); background: rgba(255, 255, 255, 0.03); color: var(--text-muted); }
+.rally-assign-select:focus { outline: none; border-color: var(--gold); }
 
 .panel-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 10px; }
 
@@ -266,27 +269,29 @@ button[type="submit"]:not(.k-btn):disabled { opacity: 0.5; cursor: not-allowed; 
 
 .availability-pill.unavailable { background: rgba(255, 255, 255, 0.03); border-color: var(--border-soft); color: var(--text-dim); }
 
-.rally-sidebar { position: sticky; top: 18px; border: 1px solid var(--border-soft); border-radius: 12px; padding: 14px; background: var(--glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: var(--glow); min-width: 0; }
+.rally-board { border: 1px solid var(--border-soft); border-radius: 12px; padding: 14px; background: var(--glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: var(--glow); min-width: 0; margin-top: 20px; }
 
-.rally-sidebar-header { display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+.rally-board-header { display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
 
-.rally-sidebar h2, .rally-sidebar h3, .rally-sidebar p { margin: 0; }
+.rally-board h2, .rally-board h3, .rally-board p { margin: 0; }
 
-.rally-sidebar h2 { color: #ffffff; font-size: 20px; line-height: 1.1; }
+.rally-board h2 { color: #ffffff; font-size: 20px; line-height: 1.1; }
 
-.rally-sidebar-header p { color: var(--text-muted); font-size: 12px; font-weight: 800; margin-top: 3px; font-family: var(--font-body); text-transform: none; }
+.rally-board-header p { color: var(--text-muted); font-size: 12px; font-weight: 800; margin-top: 3px; font-family: var(--font-body); text-transform: none; }
 
 .create-rally-btn { width: auto; flex: 0 0 auto; background: var(--gold); color: var(--ink); border: none; padding: 9px 11px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
 
 .create-rally-btn:hover { background: var(--gold-bright); }
 
-.rally-list { display: flex; flex-direction: column; gap: 12px; }
+/* Kanban lanes: rallies sit side by side and scroll horizontally instead of
+   stacking, so the fill state of every rally is visible at a glance. */
+.rally-list { display: flex; flex-direction: row; align-items: flex-start; gap: 12px; overflow-x: auto; padding-bottom: 6px; }
 
 .rally-empty-state, .rally-dropzone { border: 1px solid var(--border-soft); border-radius: 10px; background: rgba(255, 255, 255, 0.02); }
 
-.rally-empty-state { padding: 16px; color: var(--text-muted); font-size: 13px; }
+.rally-empty-state { padding: 16px; color: var(--text-muted); font-size: 13px; flex: 0 0 auto; }
 
-.rally-dropzone { min-height: 118px; padding: 12px; border-top: 3px solid var(--gold); transition: border-color 0.15s ease, background 0.15s ease; }
+.rally-dropzone { min-height: 118px; padding: 12px; border-top: 3px solid var(--gold); transition: border-color 0.15s ease, background 0.15s ease; flex: 0 0 340px; width: 340px; }
 
 .rally-dropzone:hover { border-color: var(--ember); background: rgba(255, 255, 255, 0.03); }
 
@@ -310,17 +315,29 @@ button[type="submit"]:not(.k-btn):disabled { opacity: 0.5; cursor: not-allowed; 
 
 .lead-heroes-header { display: flex; justify-content: space-between; color: var(--text-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; }
 
+.lead-heroes-hint { color: var(--text-dim); font-size: 11px; line-height: 1.4; margin: -2px 0 0; }
+
 .lead-heroes-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 
 .lead-hero-btn, .auto-assign-btn { border: 1px solid var(--border-soft); border-radius: 7px; cursor: pointer; font-size: 12px; font-weight: 700; }
 
-.lead-hero-btn { background: rgba(255, 255, 255, 0.03); color: var(--text-muted); padding: 6px 7px; }
+.lead-hero-btn { position: relative; background: rgba(255, 255, 255, 0.03); color: var(--text-muted); padding: 6px 18px 6px 7px; }
 
 .lead-hero-btn.selected { background: var(--gold); border-color: var(--gold); color: var(--ink); }
 
 .lead-hero-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+.lead-hero-count { position: absolute; top: -7px; right: -7px; min-width: 17px; height: 17px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: var(--ember); color: #241a00; font-size: 10.5px; font-weight: 800; line-height: 1; border: 1px solid var(--ink); cursor: pointer; }
+
+.lead-hero-count:hover { background: #ff8f5c; }
+
 .auto-assign-btn { width: 100%; background: var(--ember); border-color: var(--ember); color: #241a00; padding: 9px 10px; }
+
+.auto-assign-summary { border: 1px solid var(--border-soft); border-radius: 8px; background: rgba(255, 255, 255, 0.03); padding: 9px 10px; display: flex; flex-direction: column; gap: 4px; }
+
+.auto-assign-summary p { margin: 0; font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+
+.auto-assign-summary p:first-child { color: var(--parchment); font-weight: 700; }
 
 .rally-dropzone-header span { min-width: 26px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: var(--gold); color: var(--ink); font-size: 12px; font-weight: 700; }
 
@@ -354,7 +371,7 @@ button[type="submit"]:not(.k-btn):disabled { opacity: 0.5; cursor: not-allowed; 
 
 .rally-member button { flex: 0 0 auto; width: 24px; height: 24px; border: none; border-radius: 999px; background: rgba(255, 107, 107, 0.18); color: #ff8f8f; font-weight: 700; line-height: 1; cursor: pointer; }
 
-@media (max-width: 960px) { .public-page { padding: 16px; align-items: flex-start; } .public-shell { grid-template-columns: minmax(0, 1fr); } .home-hub { grid-template-columns: minmax(0, 1fr); } .public-intro { position: static; min-height: auto; gap: 34px; } .unit-card-grid, .identity-grid, .availability-grid, .pin-panel, .power-field-grid, .governor-gear-grid, .charm-grid { grid-template-columns: minmax(0, 1fr); } .power-field-grid > label:last-child { grid-column: auto; } .admin-workspace { grid-template-columns: minmax(0, 1fr); } .admin-actions { flex-direction: column; align-items: stretch; } .rally-sidebar { position: static; border-left: none; } .dashboard-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .admin-hero, .rally-sidebar-header { flex-direction: column; } }
+@media (max-width: 960px) { .public-page { padding: 16px; align-items: flex-start; } .public-shell { grid-template-columns: minmax(0, 1fr); } .home-hub { grid-template-columns: minmax(0, 1fr); } .public-intro { position: static; min-height: auto; gap: 34px; } .unit-card-grid, .identity-grid, .availability-grid, .pin-panel, .power-field-grid, .governor-gear-grid, .charm-grid { grid-template-columns: minmax(0, 1fr); } .power-field-grid > label:last-child { grid-column: auto; } .admin-workspace { grid-template-columns: minmax(0, 1fr); } .admin-actions { flex-direction: column; align-items: stretch; } .rally-dropzone { width: 280px; flex-basis: 280px; } .dashboard-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .admin-hero, .rally-board-header { flex-direction: column; } }
 @media (max-width: 600px) { .gear-ocr-panel { grid-template-columns: 1fr; } .gear-ocr-button { width: 100% !important; } }
 
 .radio-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; }
@@ -466,14 +483,14 @@ body { -webkit-font-smoothing: antialiased; }
 
 *:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 3px; border-radius: 2px; }
 
-.public-kicker, .form-section-header span, .section-title-row span, .panel-heading span, .rally-sidebar-header span { font-family: var(--font-mono); letter-spacing: 0.18em; color: var(--gold); }
+.public-kicker, .form-section-header span, .section-title-row span, .panel-heading span, .rally-board-header span { font-family: var(--font-mono); letter-spacing: 0.18em; color: var(--gold); }
 
 button[type=submit] { background: var(--gold); color: var(--ink); }
 button[type=submit]:hover { background: var(--gold-bright); }
 .create-rally-btn, .lead-hero-btn.selected { background: var(--gold); color: var(--ink); border-color: var(--gold); }
 .create-rally-btn:hover { background: var(--gold-bright); }
 
-.card, .public-form-card, .rally-sidebar { border-color: var(--line); }
+.card, .public-form-card, .rally-board { border-color: var(--line); }
 .card { background: linear-gradient(180deg, var(--ink-soft-2), var(--ink-soft)); }
 
 .site-header { background: rgba(16, 20, 42, 0.86); border-bottom: 1px solid var(--line); }
@@ -860,7 +877,3 @@ tr.row-dragging { opacity: 0.5; }
 .member-details-drawer .admin-drawer-close { flex-shrink: 0; }
 .member-details-drawer .admin-drawer-field strong { white-space: pre-wrap; line-height: 1.65; }
 
-.kvk-members-workspace { grid-template-columns: minmax(0, 1fr) 320px; }
-@media (max-width: 1440px) {
-  .kvk-members-workspace { grid-template-columns: minmax(0, 1fr); }
-}

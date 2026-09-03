@@ -2,12 +2,16 @@ import assert from 'node:assert/strict';
 import {
   DEFAULT_TROOP_WEIGHTS,
   MAX_LEAD_HEROES,
+  assignLeadHeroesForRally,
   assignMemberToRally,
   autoAssignRallyMembers,
   createNextRally,
+  decrementRallyLeadHero,
   formatRallyRows,
+  getLeadHeroTotal,
   getMatchingLeadHeroes,
   getTroopLevelSummary,
+  incrementRallyLeadHero,
   normalizeRalliesForRows,
   parseStoredRallies,
   removeMemberFromRallies,
@@ -17,7 +21,6 @@ import {
   serializeRalliesForSave,
   setRallyLead,
   setRallyTroopWeight,
-  toggleRallyLeadHero,
 } from '../app/admin/dashboard/rallyState.mjs';
 
 function rally(id, overrides = {}) {
@@ -27,7 +30,21 @@ function rally(id, overrides = {}) {
     memberIds: [],
     leadMemberId: '',
     troopWeights: { ...DEFAULT_TROOP_WEIGHTS },
-    leadHeroes: [],
+    leadHeroes: {},
+    leadHeroAssignments: {},
+    ...overrides,
+  };
+}
+
+function member(id, overrides = {}) {
+  return {
+    member_id: id,
+    name: id,
+    heroes: [],
+    availability: 'Full battle (12-17 UTC)',
+    infantry_tier: '', infantry_tg: '',
+    cavalry_tier: '', cavalry_tg: '',
+    archer_tier: '', archer_tg: '',
     ...overrides,
   };
 }
@@ -42,7 +59,8 @@ assert.deepEqual(created[0], {
   memberIds: [],
   leadMemberId: '',
   troopWeights: { infantry: 0, cavalry: 0, archer: 0 },
-  leadHeroes: [],
+  leadHeroes: {},
+  leadHeroAssignments: {},
 });
 assert.equal(createNextRally(created, 'rally-2')[1].name, 'Rally 2', 'names follow list length');
 
@@ -105,34 +123,40 @@ assert.equal(
   'non-numeric input falls back to 0',
 );
 
-// --- toggleRallyLeadHero ---------------------------------------------------
+// --- incrementRallyLeadHero / decrementRallyLeadHero ------------------------
 
-let heroes = [rally('a')];
-for (const hero of ['Chenko', 'Yeonwoo', 'Amane', 'Amadeus']) {
-  heroes = toggleRallyLeadHero(heroes, 'a', hero);
-}
-assert.deepEqual(heroes[0].leadHeroes, ['Chenko', 'Yeonwoo', 'Amane', 'Amadeus']);
+// The same hero can be selected more than once (e.g. 3x Saul), up to a
+// combined total of MAX_LEAD_HEROES across every hero.
+let withHeroes = [rally('a')];
+withHeroes = incrementRallyLeadHero(withHeroes, 'a', 'Saul');
+withHeroes = incrementRallyLeadHero(withHeroes, 'a', 'Saul');
+withHeroes = incrementRallyLeadHero(withHeroes, 'a', 'Saul');
+withHeroes = incrementRallyLeadHero(withHeroes, 'a', 'Thrud');
+assert.deepEqual(withHeroes[0].leadHeroes, { Saul: 3, Thrud: 1 });
+assert.equal(getLeadHeroTotal(withHeroes[0]), MAX_LEAD_HEROES);
 
-// A march carries at most MAX_LEAD_HEROES; the fifth is refused.
-const overCap = toggleRallyLeadHero(heroes, 'a', 'Vivian');
-assert.equal(overCap[0].leadHeroes.length, MAX_LEAD_HEROES);
-assert.ok(!overCap[0].leadHeroes.includes('Vivian'), 'hero beyond the cap is not added');
+// The cap applies to the combined total, not per hero.
+const overCap = incrementRallyLeadHero(withHeroes, 'a', 'Saul');
+assert.deepEqual(overCap[0].leadHeroes, { Saul: 3, Thrud: 1 }, 'a hero beyond the combined cap is refused');
 
-// Toggling an existing hero removes it, which frees a slot.
-const toggledOff = toggleRallyLeadHero(heroes, 'a', 'Amane');
-assert.deepEqual(toggledOff[0].leadHeroes, ['Chenko', 'Yeonwoo', 'Amadeus']);
-assert.ok(
-  toggleRallyLeadHero(toggledOff, 'a', 'Vivian')[0].leadHeroes.includes('Vivian'),
-  'a freed slot accepts a new hero',
+const decremented = decrementRallyLeadHero(withHeroes, 'a', 'Saul');
+assert.deepEqual(decremented[0].leadHeroes, { Saul: 2, Thrud: 1 });
+assert.equal(getLeadHeroTotal(decremented[0]), 3, 'a freed slot lowers the total');
+
+const droppedToZero = decrementRallyLeadHero(
+  decrementRallyLeadHero(decrementRallyLeadHero(withHeroes, 'a', 'Thrud'), 'nope', 'Thrud'),
+  'a',
+  'Missing',
 );
+assert.deepEqual(droppedToZero[0].leadHeroes, { Saul: 3 }, 'a hero count reaching zero is removed entirely');
 
 // --- getMatchingLeadHeroes -------------------------------------------------
 
 assert.deepEqual(
-  getMatchingLeadHeroes({ heroes: ['Chenko', 'Zoe'] }, { leadHeroes: ['Chenko', 'Amane'] }),
+  getMatchingLeadHeroes({ heroes: ['Chenko', 'Zoe'] }, { leadHeroes: { Chenko: 1, Amane: 1 } }),
   ['Chenko'],
 );
-assert.deepEqual(getMatchingLeadHeroes({}, { leadHeroes: ['Chenko'] }), [], 'member with no heroes');
+assert.deepEqual(getMatchingLeadHeroes({}, { leadHeroes: { Chenko: 1 } }), [], 'member with no heroes');
 assert.deepEqual(getMatchingLeadHeroes({ heroes: ['Chenko'] }, {}), [], 'rally with no lead heroes');
 
 // --- getTroopLevelSummary --------------------------------------------------
@@ -151,62 +175,125 @@ assert.deepEqual(
   'troop types with no data are omitted entirely',
 );
 
-// --- autoAssignRallyMembers ------------------------------------------------
+// --- assignLeadHeroesForRally -----------------------------------------------
 
-const roster = [
-  { member_id: 'inf-high', heroes: [], infantry_tier: 'T11', infantry_tg: 'TG8', cavalry_tier: 'T8', cavalry_tg: 'TG4', archer_tier: 'T8', archer_tg: 'TG4' },
-  { member_id: 'inf-low', heroes: [], infantry_tier: 'T10', infantry_tg: 'TG7', cavalry_tier: 'T8', cavalry_tg: 'TG4', archer_tier: 'T8', archer_tg: 'TG4' },
-  { member_id: 'cav-high', heroes: [], infantry_tier: 'T8', infantry_tg: 'TG4', cavalry_tier: 'T11', cavalry_tg: 'TG8', archer_tier: 'T8', archer_tg: 'TG4' },
-  { member_id: 'benched', heroes: [], availability: 'Not available', infantry_tier: 'T11', infantry_tg: 'TG8', cavalry_tier: 'T11', cavalry_tg: 'TG8', archer_tier: 'T11', archer_tg: 'TG8' },
+const heroRally = rally('a', { leadHeroes: { Saul: 2, Thrud: 1 } });
+const heroMembers = [
+  member('has-saul-1', { heroes: ['Saul'] }),
+  member('has-saul-2', { heroes: ['Saul'] }),
+  member('no-heroes', {}),
+];
+const heroAssign = assignLeadHeroesForRally(heroRally, heroMembers);
+assert.deepEqual(heroAssign.assignments, { 'has-saul-1': 'Saul', 'has-saul-2': 'Saul' });
+assert.ok(heroAssign.lines.some((line) => line.includes('has-saul-1') && line.includes('Saul')));
+assert.ok(heroAssign.lines.some((line) => line.includes('Thrud: 0/1')), 'shortfall is reported when a hero has no eligible members');
+
+// A member is only ever assigned one lead hero, even if they'd match two.
+const dualMatch = rally('a', { leadHeroes: { Saul: 1, Thrud: 1 } });
+const dualMembers = [member('dual', { heroes: ['Saul', 'Thrud'] })];
+const dualAssign = assignLeadHeroesForRally(dualMatch, dualMembers);
+assert.equal(Object.keys(dualAssign.assignments).length, 1, 'one member covers only one hero slot');
+
+// --- autoAssignRallyMembers: troop-level ordering ---------------------------
+// TG8+T11 > TG8+T10 > TG7+T11 > TG6+T11 > TG7+T10 > TG5+T11 > TG6+T10 > TG5+T10
+
+const orderedRoster = [
+  member('tg8-t10', { infantry_tier: 'T10', infantry_tg: 'TG8' }),
+  member('tg8-t11', { infantry_tier: 'T11', infantry_tg: 'TG8' }),
+  member('tg5-t10', { infantry_tier: 'T10', infantry_tg: 'TG5' }),
+  member('tg7-t11', { infantry_tier: 'T11', infantry_tg: 'TG7' }),
+];
+const infantryOnly = [rally('a', { troopWeights: { infantry: 100, cavalry: 0, archer: 0 } })];
+const orderedResult = autoAssignRallyMembers(infantryOnly, 'a', orderedRoster);
+assert.deepEqual(
+  orderedResult.rallies[0].memberIds,
+  ['tg8-t11', 'tg8-t10', 'tg7-t11', 'tg5-t10'],
+  'members are ranked by the explicit troop-level order, best first',
+);
+
+// --- autoAssignRallyMembers: cavalry-heavy vs archer-heavy formations -------
+
+const formationRoster = [
+  member('cav-specialist', {
+    infantry_tier: 'T11', infantry_tg: 'TG8',
+    cavalry_tier: 'T11', cavalry_tg: 'TG8',
+    archer_tier: 'T10', archer_tg: 'TG5',
+  }),
+  member('arch-specialist', {
+    infantry_tier: 'T11', infantry_tg: 'TG8',
+    cavalry_tier: 'T11', cavalry_tg: 'TG7',
+    archer_tier: 'T11', archer_tg: 'TG8',
+  }),
 ];
 
-// An infantry-weighted rally should rank infantry specialists above cavalry ones.
-const infantryRally = [rally('a', { troopWeights: { infantry: 100, cavalry: 0, archer: 0 } })];
-const autoInfantry = autoAssignRallyMembers(infantryRally, 'a', roster, 2);
-assert.deepEqual(autoInfantry[0].memberIds, ['inf-high', 'inf-low'], 'sorted by weighted troop score');
+// 60/40/0: cavalry > archer, so only infantry+cavalry are weighed.
+const cavHeavy = [rally('a', { troopWeights: { infantry: 60, cavalry: 40, archer: 0 } })];
+const cavHeavyResult = autoAssignRallyMembers(cavHeavy, 'a', formationRoster);
+assert.equal(cavHeavyResult.rallies[0].memberIds[0], 'cav-specialist', 'cavalry-heavy formation favors the cavalry specialist');
 
-const cavalryRally = [rally('a', { troopWeights: { infantry: 0, cavalry: 100, archer: 0 } })];
-assert.equal(
-  autoAssignRallyMembers(cavalryRally, 'a', roster, 1)[0].memberIds[0],
-  'cav-high',
-  'weights steer selection',
-);
+// 50/1/49: archer >= cavalry, so infantry+archer+cavalry are all weighed.
+const archHeavy = [rally('a', { troopWeights: { infantry: 50, cavalry: 1, archer: 49 } })];
+const archHeavyResult = autoAssignRallyMembers(archHeavy, 'a', formationRoster);
+assert.equal(archHeavyResult.rallies[0].memberIds[0], 'arch-specialist', 'archer-heavy formation favors the archer specialist');
 
-assert.ok(
-  !autoAssignRallyMembers(infantryRally, 'a', roster, 4)[0].memberIds.includes('benched'),
-  'members marked not available are skipped despite the best stats',
-);
+// --- autoAssignRallyMembers: 8-target with first/second-half backfill ------
 
-assert.equal(
-  autoAssignRallyMembers(infantryRally, 'a', roster, 1)[0].memberIds.length,
-  1,
-  'limit is respected',
-);
+function fullBattle(id) { return member(id, { availability: 'Full battle (12-17 UTC)' }); }
+function firstHalf(id) { return member(id, { availability: 'First half (12-14:30 UTC)' }); }
+function secondHalf(id) { return member(id, { availability: 'Second half (14:30-17 UTC)' }); }
+function notAvailable(id) { return member(id, { availability: 'Not Available' }); }
+
+// Exactly 8 full-battle members: fills the rally with no backfill needed.
+const eightFull = Array.from({ length: 8 }, (_, i) => fullBattle(`full-${i}`));
+const eightResult = autoAssignRallyMembers([rally('a')], 'a', eightFull);
+assert.equal(eightResult.rallies[0].memberIds.length, 8);
+assert.equal(eightResult.summary.fullCount, 8);
+assert.equal(eightResult.summary.addedCount, 8);
+
+// 6 full-battle + a deep bench of first/second half: 2 remaining slots pull
+// 2 first-half + 2 second-half members (10 total), not 2.
+const sixFullRoster = [
+  ...Array.from({ length: 6 }, (_, i) => fullBattle(`full-${i}`)),
+  ...Array.from({ length: 4 }, (_, i) => firstHalf(`first-${i}`)),
+  ...Array.from({ length: 4 }, (_, i) => secondHalf(`second-${i}`)),
+  notAvailable('benched'),
+];
+const backfillResult = autoAssignRallyMembers([rally('a')], 'a', sixFullRoster);
+const backfillIds = backfillResult.rallies[0].memberIds;
+assert.equal(backfillIds.length, 10, '6 full-time + 2 remaining slots -> 2 first + 2 second half');
+assert.equal(backfillResult.summary.fullCount, 6);
+assert.equal(backfillResult.summary.firstHalfCount, 2);
+assert.equal(backfillResult.summary.secondHalfCount, 2);
+assert.ok(!backfillIds.includes('benched'), 'members marked not available are skipped despite the best stats');
+
+// More than 8 full-battle members: only the best 8 are picked, no backfill.
+const twelveFull = Array.from({ length: 12 }, (_, i) => fullBattle(`full-${i}`));
+const overflowResult = autoAssignRallyMembers([rally('a')], 'a', twelveFull);
+assert.equal(overflowResult.rallies[0].memberIds.length, 8);
+assert.equal(overflowResult.summary.firstHalfCount, 0);
+assert.equal(overflowResult.summary.secondHalfCount, 0);
 
 // Members already committed to another rally are not poached.
-const contested = [rally('a'), rally('b', { memberIds: ['inf-high'] })];
-assert.ok(
-  !autoAssignRallyMembers(contested, 'a', roster, 4)[0].memberIds.includes('inf-high'),
-  'members assigned elsewhere are excluded',
-);
-
-// Matching a rally's lead heroes is worth a bonus over raw troop levels.
-const heroRally = [rally('a', { troopWeights: { ...DEFAULT_TROOP_WEIGHTS }, leadHeroes: ['Chenko'] })];
-const heroRoster = [
-  { member_id: 'plain', heroes: [], infantry_tier: 'T11', infantry_tg: 'TG8' },
-  { member_id: 'has-hero', heroes: ['Chenko'], infantry_tier: 'T1', infantry_tg: 'TG1' },
-];
-assert.equal(
-  autoAssignRallyMembers(heroRally, 'a', heroRoster, 1)[0].memberIds[0],
-  'has-hero',
-  'lead-hero match outranks troop levels when weights are zero',
-);
+const contested = [rally('a'), rally('b', { memberIds: ['full-0'] })];
+const contestedResult = autoAssignRallyMembers(contested, 'a', eightFull);
+assert.ok(!contestedResult.rallies[0].memberIds.includes('full-0'), 'members assigned elsewhere are excluded');
 
 assert.deepEqual(
-  autoAssignRallyMembers([rally('a')], 'missing', roster, 4),
-  [rally('a')],
+  autoAssignRallyMembers([rally('a')], 'missing', eightFull),
+  { rallies: [rally('a')], summary: null },
   'unknown rally id is a no-op',
 );
+
+// Auto assign also runs lead-hero assignment across the final roster.
+const heroCarrier = { ...fullBattle('saul-carrier'), heroes: ['Saul'] };
+const heroAutoRoster = [
+  ...Array.from({ length: 7 }, (_, i) => fullBattle(`full-${i}`)),
+  heroCarrier,
+];
+const heroAutoRally = [rally('a', { leadHeroes: { Saul: 1 } })];
+const heroAutoResult = autoAssignRallyMembers(heroAutoRally, 'a', heroAutoRoster);
+assert.equal(heroAutoResult.rallies[0].leadHeroAssignments['saul-carrier'], 'Saul');
+assert.ok(heroAutoResult.summary.leadHeroLines.some((line) => line.includes('saul-carrier') && line.includes('Saul')));
 
 // --- normalizeRalliesForRows / removeRowsAndAssignments ---------------------
 
@@ -231,16 +318,24 @@ assert.deepEqual(parseStoredRallies('not json'), [], 'malformed JSON does not th
 assert.deepEqual(parseStoredRallies('{"a":1}'), [], 'non-array payload');
 assert.deepEqual(parseStoredRallies('[{"id":"a"}]'), [], 'entries missing a name are dropped');
 
+// Legacy stored state (leadHeroes as a plain array, from before hero counts)
+// still loads, with each hero converted to a count of 1.
 const stored = parseStoredRallies(JSON.stringify([
   { id: 'a', name: 'Rally 1', memberIds: [101], leadHeroes: ['H1', 'H2', 'H3', 'H4', 'H5'] },
 ]));
 assert.deepEqual(stored[0].memberIds, ['101'], 'ids normalised to strings');
 assert.equal(
-  stored[0].leadHeroes.length,
+  Object.values(stored[0].leadHeroes).reduce((sum, n) => sum + n, 0),
   MAX_LEAD_HEROES,
   'persisted state cannot smuggle in more lead heroes than the cap',
 );
 assert.deepEqual(stored[0].troopWeights, DEFAULT_TROOP_WEIGHTS, 'missing weights get defaults');
+
+// A stored count above the cap is trimmed, not rejected outright.
+const overCapStored = parseStoredRallies(JSON.stringify([
+  { id: 'a', name: 'Rally 1', memberIds: [], leadHeroes: { Saul: 6 } },
+]));
+assert.equal(overCapStored[0].leadHeroes.Saul, MAX_LEAD_HEROES);
 
 // --- serializeRalliesForSave / formatRallyRows round trip -------------------
 
@@ -250,7 +345,8 @@ const inMemory = [
     memberIds: ['101', '202'],
     leadMemberId: '101',
     troopWeights: { infantry: 70, cavalry: 20, archer: 10 },
-    leadHeroes: ['Chenko'],
+    leadHeroes: { Saul: 2, Thrud: 1 },
+    leadHeroAssignments: { 101: 'Saul' },
   }),
 ];
 
@@ -261,11 +357,27 @@ assert.deepEqual(saved, [{
   position: 0,
   member_ids: ['101', '202'],
   lead_member_id: '101',
-  // The DB stores weights and lead heroes together in one `formation` column.
-  formation: { infantry: 70, cavalry: 20, archer: 10, leadHeroes: ['Chenko'] },
+  // The DB stores weights, lead-hero counts, and hero assignments together
+  // in one `formation` column.
+  formation: {
+    infantry: 70, cavalry: 20, archer: 10,
+    leadHeroes: { Saul: 2, Thrud: 1 },
+    leadHeroAssignments: { 101: 'Saul' },
+  },
 }]);
 
-assert.deepEqual(formatRallyRows(saved), inMemory, 'save/load round trips losslessly');
+assert.deepEqual(
+  formatRallyRows(saved),
+  [rally('a', {
+    name: 'Bear Squad',
+    memberIds: ['101', '202'],
+    leadMemberId: '101',
+    troopWeights: { infantry: 70, cavalry: 20, archer: 10 },
+    leadHeroes: { Saul: 2, Thrud: 1 },
+    leadHeroAssignments: { 101: 'Saul' },
+  })],
+  'save/load round trips losslessly',
+);
 
 assert.equal(
   serializeRalliesForSave([rally('a', { name: 123 })])[0].name,

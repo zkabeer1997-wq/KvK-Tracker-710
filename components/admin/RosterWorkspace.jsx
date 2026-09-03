@@ -22,8 +22,11 @@ import {
   assignMemberToRally,
   autoAssignRallyMembers,
   createNextRally,
+  decrementRallyLeadHero,
+  getLeadHeroTotal,
   getMatchingLeadHeroes,
   getTroopLevelSummary,
+  incrementRallyLeadHero,
   normalizeRalliesForRows,
   parseStoredRallies,
   removeRowsAndAssignments,
@@ -32,7 +35,6 @@ import {
   removeMemberFromRallies,
   setRallyLead,
   setRallyTroopWeight,
-  toggleRallyLeadHero,
   MAX_LEAD_HEROES,
 } from '../../app/admin/dashboard/rallyState.mjs';
 
@@ -106,6 +108,7 @@ export default function RosterWorkspace({
   const [draggingMemberId, setDraggingMemberId] = useState(null);
   const [dragOverRallyId, setDragOverRallyId] = useState(null);
   const [collapsedRallyIds, setCollapsedRallyIds] = useState([]);
+  const [autoAssignSummaries, setAutoAssignSummaries] = useState({});
   const router = useRouter();
 
   useEscapeToClose(showAddMember, () => setShowAddMember(false));
@@ -298,12 +301,27 @@ export default function RosterWorkspace({
     setRallies((current) => setRallyTroopWeight(current, rallyId, troopType, value));
   }
 
-  function handleToggleLeadHero(rallyId, hero) {
-    setRallies((current) => toggleRallyLeadHero(current, rallyId, hero));
+  function handleIncrementLeadHero(rallyId, hero) {
+    setRallies((current) => incrementRallyLeadHero(current, rallyId, hero));
+  }
+
+  function handleDecrementLeadHero(rallyId, hero) {
+    setRallies((current) => decrementRallyLeadHero(current, rallyId, hero));
   }
 
   function handleAutoAssign(rallyId) {
-    setRallies((current) => autoAssignRallyMembers(current, rallyId, rows));
+    const result = autoAssignRallyMembers(rallies, rallyId, rows);
+    if (!result.summary) return;
+    setRallies(result.rallies);
+    setAutoAssignSummaries((current) => ({ ...current, [rallyId]: result.summary }));
+  }
+
+  function handleAssignFromDropdown(memberId, rallyId) {
+    if (!rallyId) {
+      setRallies((current) => removeMemberFromRallies(current, memberId));
+      return;
+    }
+    setRallies((current) => assignMemberToRally(current, rallyId, memberId));
   }
 
   function handleRenameRally(rallyId, name) {
@@ -410,6 +428,14 @@ export default function RosterWorkspace({
     const assignments = new Map();
     rallies.forEach((rally) => {
       rally.memberIds.forEach((memberId) => assignments.set(String(memberId), rally.name));
+    });
+    return assignments;
+  }, [rallies]);
+
+  const rallyIdByMemberId = useMemo(() => {
+    const assignments = new Map();
+    rallies.forEach((rally) => {
+      rally.memberIds.forEach((memberId) => assignments.set(String(memberId), rally.id));
     });
     return assignments;
   }, [rallies]);
@@ -657,6 +683,18 @@ export default function RosterWorkspace({
                           <span className="rally-badge">{rallyByMemberId.get(String(row.member_id))}</span>
                         )}
                       </div>
+                      <select
+                        className="rally-assign-select"
+                        aria-label={`Assign ${row.name} to a rally`}
+                        value={rallyIdByMemberId.get(String(row.member_id)) || ''}
+                        onClick={(event) => event.stopPropagation()}
+                        onChange={(event) => { event.stopPropagation(); handleAssignFromDropdown(row.member_id, event.target.value); }}
+                      >
+                        <option value="">Unassigned</option>
+                        {rallies.map((rally) => (
+                          <option key={rally.id} value={rally.id}>{rally.name}</option>
+                        ))}
+                      </select>
                     </td>
                     <td>
                       <div className="member-troop-stack">
@@ -684,23 +722,28 @@ export default function RosterWorkspace({
             </Table>
             {filteredSorted.length === 0 && <p>No results found.</p>}
           </section>
-          <aside className="rally-sidebar" aria-label="Rally planner">
-            <div className="rally-sidebar-header">
-              <div>
-                <span>Planner</span>
-                <h2>Rallies</h2>
-                <p>{assignedCount} members assigned</p>
-              </div>
-              <button type="button" onClick={handleCreateRally} className="create-rally-btn">
-                Create Rally {rallies.length + 1}
-              </button>
+        </div>
+      )}
+      {!loading && !error && (
+        <section className="rally-board" aria-label="Rally planner">
+          <div className="rally-board-header">
+            <div>
+              <span>Planner</span>
+              <h2>Rallies</h2>
+              <p>{assignedCount} members assigned</p>
             </div>
-            <div className="rally-list">
+            <button type="button" onClick={handleCreateRally} className="create-rally-btn">
+              Create Rally {rallies.length + 1}
+            </button>
+          </div>
+          <div className="rally-list">
               {rallies.length === 0 && (
                 <div className="rally-empty-state">Create Rally 1 to start assigning members.</div>
               )}
               {rallies.map((rally) => {
                 const isCollapsed = collapsedRallyIds.includes(rally.id);
+                const leadHeroTotal = getLeadHeroTotal(rally);
+                const summary = autoAssignSummaries[rally.id];
                 return (
                   <section
                     key={rally.id}
@@ -775,21 +818,40 @@ export default function RosterWorkspace({
                           <div className="lead-heroes-block">
                             <div className="lead-heroes-header">
                               <span>Lead Heroes</span>
-                              <span>{(rally.leadHeroes || []).length}/{MAX_LEAD_HEROES}</span>
+                              <span>{leadHeroTotal}/{MAX_LEAD_HEROES}</span>
                             </div>
+                            <p className="lead-heroes-hint">Click a hero to add a slot; click its badge to remove one. Up to {MAX_LEAD_HEROES} total, any mix.</p>
                             <div className="lead-heroes-grid">
                               {HEROES.map((hero) => {
-                                const selected = (rally.leadHeroes || []).includes(hero);
-                                const disabled = !selected && (rally.leadHeroes || []).length >= MAX_LEAD_HEROES;
+                                const count = (rally.leadHeroes || {})[hero] || 0;
+                                const disabled = count === 0 && leadHeroTotal >= MAX_LEAD_HEROES;
                                 return (
                                   <button
                                     key={hero}
                                     type="button"
-                                    className={selected ? 'lead-hero-btn selected' : 'lead-hero-btn'}
-                                    onClick={() => handleToggleLeadHero(rally.id, hero)}
+                                    className={count > 0 ? 'lead-hero-btn selected' : 'lead-hero-btn'}
+                                    onClick={() => handleIncrementLeadHero(rally.id, hero)}
                                     disabled={disabled}
                                   >
                                     {hero}
+                                    {count > 0 && (
+                                      <span
+                                        className="lead-hero-count"
+                                        role="button"
+                                        tabIndex={0}
+                                        aria-label={`Remove one ${hero} slot`}
+                                        onClick={(event) => { event.stopPropagation(); handleDecrementLeadHero(rally.id, hero); }}
+                                        onKeyDown={(event) => {
+                                          if (event.key === 'Enter' || event.key === ' ') {
+                                            event.preventDefault();
+                                            event.stopPropagation();
+                                            handleDecrementLeadHero(rally.id, hero);
+                                          }
+                                        }}
+                                      >
+                                        {count}
+                                      </span>
+                                    )}
                                   </button>
                                 );
                               })}
@@ -800,8 +862,22 @@ export default function RosterWorkspace({
                             className="auto-assign-btn"
                             onClick={() => handleAutoAssign(rally.id)}
                           >
-                            Auto assign 16
+                            Auto assign 8
                           </button>
+                          {summary && (
+                            <div className="auto-assign-summary" role="status">
+                              <p>
+                                Added {summary.addedCount} ({summary.fullCount} full battle
+                                {summary.firstHalfCount > 0 || summary.secondHalfCount > 0
+                                  ? `, ${summary.firstHalfCount} first half, ${summary.secondHalfCount} second half`
+                                  : ''}
+                                ) - {summary.totalMembers} total.
+                              </p>
+                              {summary.leadHeroLines.map((line) => (
+                                <p key={line}>{line}</p>
+                              ))}
+                            </div>
+                          )}
                         </div>
                         {rally.memberIds.length === 0 ? (
                           <p className="rally-drop-hint">Drop members here</p>
@@ -810,6 +886,7 @@ export default function RosterWorkspace({
                             {rally.memberIds.map((memberId) => {
                               const member = membersById.get(String(memberId));
                               if (!member) return null;
+                              const assignedHero = (rally.leadHeroAssignments || {})[String(memberId)];
                               const matchingLeadHeroes = getMatchingLeadHeroes(member, rally);
                               const troopLevels = getTroopLevelSummary(member);
                               return (
@@ -825,9 +902,10 @@ export default function RosterWorkspace({
                                       </div>
                                     )}
                                     <div className="rally-member-heroes">
-                                      <span>Use:</span>
+                                      <span>{assignedHero ? 'Assigned:' : 'Use:'}</span>
                                       <strong>
-                                        {matchingLeadHeroes.length > 0 ? matchingLeadHeroes.join(', ') : 'No selected lead hero match'}
+                                        {assignedHero
+                                          || (matchingLeadHeroes.length > 0 ? matchingLeadHeroes.join(', ') : 'No selected lead hero match')}
                                       </strong>
                                     </div>
                                   </div>
@@ -848,9 +926,8 @@ export default function RosterWorkspace({
                   </section>
                 );
               })}
-            </div>
-          </aside>
-        </div>
+          </div>
+        </section>
       )}
       {selectedMemberId && membersById.has(selectedMemberId) && (
         <MemberDetailsDrawer
