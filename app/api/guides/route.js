@@ -1,3 +1,4 @@
+import { guideSummary } from '../../../lib/guideValidation.mjs';
 import { readMemberSession } from '../../../lib/memberAuth';
 import { isAdminRequest } from '../../../lib/adminAuth';
 import { guidesTable } from '../../../lib/guideAccess.mjs';
@@ -20,7 +21,7 @@ export async function GET(request) {
     const allowed = Boolean(await readMemberSession(request)) || await isAdminRequest(request);
     let query = supabase
       .from(guidesTable())
-      .select('slug, title, category, description, access_level, position, updated_at')
+      .select('slug, title, category, description, body, access_level, position, updated_at')
       .eq('is_published', true)
       .order('position', { ascending: true })
       .order('title', { ascending: true });
@@ -28,7 +29,7 @@ export async function GET(request) {
     const { data, error } = await query;
 
     if (error) throw error;
-    return NextResponse.json({ guides: data || [] }, { headers: NO_STORE_HEADERS });
+    return NextResponse.json({ guides: (data || []).map(guideSummary) }, { headers: NO_STORE_HEADERS });
   } catch (error) {
     console.error('guides directory GET failed', error);
     return NextResponse.json({ error: 'Unable to load guides.' }, { status: 500, headers: NO_STORE_HEADERS });

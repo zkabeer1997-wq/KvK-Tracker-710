@@ -6,11 +6,6 @@ import { Field, Input } from '../../components/ui';
 import GuideIcon from './GuideIcon';
 import { guideCategories } from '../../lib/guideValidation.mjs';
 
-function readingTime(body) {
-  const words = String(body || '').trim().split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.round(words / 200));
-}
-
 export default function GuidesDirectory({ guides, categories: savedCategories = [], query, backHref }) {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState(null);
@@ -69,7 +64,7 @@ export default function GuidesDirectory({ guides, categories: savedCategories = 
                 <strong className="guide-entry-title">{guide.title}</strong>
                 <span className="guide-description">{guide.description}</span>
                 <span className="guide-entry-sub">
-                  {readingTime(guide.body)} min read
+                  {guide.reading_minutes || 1} min read
                   {guide.updated_at ? ` · Updated ${new Date(guide.updated_at).toLocaleDateString()}` : ''}
                 </span>
               </span>

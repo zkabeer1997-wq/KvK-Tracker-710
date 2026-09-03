@@ -3339,7 +3339,7 @@
   "slug",
   "Slug",
   "Slug must be lowercase letters, numbers, and hyphens only.",
-  "slug, title, category, description, access_level, position, updated_at",
+  "slug, title, category, description, body, access_level, position, updated_at",
   "slug, title, category, description, body, position, is_published, access_level, created_at, updated_at",
   "slug, title, category, description, body, position, is_published, access_level, updated_at",
   "slug, updated_at",

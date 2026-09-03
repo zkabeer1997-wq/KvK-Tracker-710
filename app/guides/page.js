@@ -5,7 +5,7 @@ import { guidesTable } from '../../lib/guideAccess.mjs';
 import { createAdminSupabaseClient } from '../../lib/adminSupabase';
 import Link from 'next/link';
 import GuidesDirectory from './GuidesDirectory';
-import { guideCategories } from '../../lib/guideValidation.mjs';
+import { guideCategories, guideSummary } from '../../lib/guideValidation.mjs';
 
 export const metadata = {
   title: 'K710 Guides',
@@ -21,7 +21,7 @@ async function loadGuides() {
   const supabase = createAdminSupabaseClient();
   let query = supabase
     .from(guidesTable())
-    .select('slug, title, category, description, access_level, position, updated_at')
+    .select('slug, title, category, description, body, access_level, position, updated_at')
     .eq('is_published', true)
     .order('position', { ascending: true })
     .order('title', { ascending: true });
@@ -29,7 +29,7 @@ async function loadGuides() {
   const { data, error } = await query;
 
   if (error) throw error;
-  return data || [];
+  return (data || []).map(guideSummary);
 }
 
 export default async function GuidesPage({ searchParams }) {
