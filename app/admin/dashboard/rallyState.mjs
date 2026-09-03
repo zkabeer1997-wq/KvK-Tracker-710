@@ -85,8 +85,20 @@ leadHeroAssignments: normalizeLeadHeroAssignments(rally.leadHeroAssignments),
 };
 }
 
+/** Every member currently holding a Rally Lead role, across all rallies. */
+export function getRallyLeadMemberIds(rallies) {
+return new Set(
+(rallies || [])
+.map((rally) => rally.leadMemberId)
+.filter(Boolean)
+.map(String),
+);
+}
+
+/** A Rally Lead cannot also be assigned as a regular joiner - in this rally or any other. */
 export function assignMemberToRally(rallies, rallyId, memberId) {
 const normalizedMemberId = String(memberId);
+if (getRallyLeadMemberIds(rallies).has(normalizedMemberId)) return rallies;
 return rallies.map((rally) => {
 const memberIds = rally.memberIds.filter((id) => id !== normalizedMemberId);
 if (rally.id !== rallyId) {
@@ -111,10 +123,16 @@ export function removeRallyById(rallies, rallyId) {
 return rallies.filter((rally) => rally.id !== rallyId);
 }
 
+/** Setting a Rally Lead also pulls that member out of every rally's joiner list. */
 export function setRallyLead(rallies, rallyId, memberId) {
-return rallies.map((rally) => (
-rally.id === rallyId ? { ...rally, leadMemberId: String(memberId || '') } : rally
-));
+const normalizedMemberId = String(memberId || '');
+return rallies.map((rally) => {
+const memberIds = normalizedMemberId
+? rally.memberIds.filter((id) => id !== normalizedMemberId)
+: rally.memberIds;
+if (rally.id !== rallyId) return { ...rally, memberIds };
+return { ...rally, memberIds, leadMemberId: normalizedMemberId };
+});
 }
 
 export function setRallyTroopWeight(rallies, rallyId, troopType, value) {
@@ -276,9 +294,12 @@ if (rally.id === rallyId) return;
 rally.memberIds.forEach((memberId) => assignedElsewhere.add(String(memberId)));
 });
 const currentMemberIds = new Set(targetRally.memberIds.map(String));
+const leadMemberIds = getRallyLeadMemberIds(rallies);
 
 const eligible = rows.filter((row) => (
-!assignedElsewhere.has(String(row.member_id)) && !currentMemberIds.has(String(row.member_id))
+!assignedElsewhere.has(String(row.member_id))
+&& !currentMemberIds.has(String(row.member_id))
+&& !leadMemberIds.has(String(row.member_id))
 ));
 
 const byAvailability = { full: [], first: [], second: [] };

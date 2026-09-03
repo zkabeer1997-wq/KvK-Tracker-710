@@ -25,6 +25,7 @@ import {
   decrementRallyLeadHero,
   getLeadHeroTotal,
   getMatchingLeadHeroes,
+  getRallyLeadMemberIds,
   getTroopLevelSummary,
   incrementRallyLeadHero,
   normalizeRalliesForRows,
@@ -440,6 +441,17 @@ export default function RosterWorkspace({
     return assignments;
   }, [rallies]);
 
+  const rallyLeadNameByMemberId = useMemo(() => {
+    const names = new Map();
+    rallies.forEach((rally) => {
+      if (rally.leadMemberId) names.set(String(rally.leadMemberId), rally.name);
+    });
+    return names;
+  }, [rallies]);
+
+  // A Rally Lead cannot also be assigned as a joiner - here or on any other rally.
+  const leadMemberIds = useMemo(() => getRallyLeadMemberIds(rallies), [rallies]);
+
   const assignedCount = rallyByMemberId.size;
   const availableCount = rows.filter((row) => (
     !String(row.availability || '').toLowerCase().includes('not available')
@@ -655,7 +667,9 @@ export default function RosterWorkspace({
                 </tr>
               </thead>
               <tbody>
-                {filteredSorted.map((row) => (
+                {filteredSorted.map((row) => {
+                  const isRallyLead = leadMemberIds.has(String(row.member_id));
+                  return (
                   <tr
                     key={row.member_id}
                     className={'admin-row-clickable' + (draggingMemberId === String(row.member_id) ? ' row-dragging' : '')}
@@ -665,15 +679,15 @@ export default function RosterWorkspace({
                       <div className="member-name-cell">
                         <span className="member-name-row">
                           <span
-                            className="rally-drag-handle"
+                            className={isRallyLead ? 'rally-drag-handle is-disabled' : 'rally-drag-handle'}
                             onClick={(event) => event.stopPropagation()}
-                            draggable
-                            onDragStart={(event) => handleDragStart(event, row.member_id)}
+                            draggable={!isRallyLead}
+                            onDragStart={(event) => (isRallyLead ? event.preventDefault() : handleDragStart(event, row.member_id))}
                             onDragEnd={handleDragEnd}
                             role="button"
                             tabIndex={-1}
-                            aria-label={`Drag ${row.name} to a rally`}
-                            title="Drag to assign to a rally"
+                            aria-label={isRallyLead ? `${row.name} is a Rally Lead and can't be dragged as a joiner` : `Drag ${row.name} to a rally`}
+                            title={isRallyLead ? "Rally Leads can't be assigned as joiners" : 'Drag to assign to a rally'}
                           >
                             &#8942;&#8942;
                           </span>
@@ -682,19 +696,26 @@ export default function RosterWorkspace({
                         {rallyByMemberId.has(String(row.member_id)) && (
                           <span className="rally-badge">{rallyByMemberId.get(String(row.member_id))}</span>
                         )}
+                        {isRallyLead && (
+                          <span className="rally-badge rally-lead-badge">Lead - {rallyLeadNameByMemberId.get(String(row.member_id))}</span>
+                        )}
                       </div>
-                      <select
-                        className="rally-assign-select"
-                        aria-label={`Assign ${row.name} to a rally`}
-                        value={rallyIdByMemberId.get(String(row.member_id)) || ''}
-                        onClick={(event) => event.stopPropagation()}
-                        onChange={(event) => { event.stopPropagation(); handleAssignFromDropdown(row.member_id, event.target.value); }}
-                      >
-                        <option value="">Unassigned</option>
-                        {rallies.map((rally) => (
-                          <option key={rally.id} value={rally.id}>{rally.name}</option>
-                        ))}
-                      </select>
+                      {isRallyLead ? (
+                        <p className="rally-assign-locked" title="Rally Leads can't be assigned as joiners">Rally Lead - not a joiner</p>
+                      ) : (
+                        <select
+                          className="rally-assign-select"
+                          aria-label={`Assign ${row.name} to a rally`}
+                          value={rallyIdByMemberId.get(String(row.member_id)) || ''}
+                          onClick={(event) => event.stopPropagation()}
+                          onChange={(event) => { event.stopPropagation(); handleAssignFromDropdown(row.member_id, event.target.value); }}
+                        >
+                          <option value="">Unassigned</option>
+                          {rallies.map((rally) => (
+                            <option key={rally.id} value={rally.id}>{rally.name}</option>
+                          ))}
+                        </select>
+                      )}
                     </td>
                     <td>
                       <div className="member-troop-stack">
@@ -717,7 +738,8 @@ export default function RosterWorkspace({
                     </td>
                     <td className="updated-cell">{row.updated_at ? new Date(row.updated_at).toLocaleString() : ''}</td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </Table>
             {filteredSorted.length === 0 && <p>No results found.</p>}
@@ -894,6 +916,9 @@ export default function RosterWorkspace({
                                   <div className="rally-member-details">
                                     <strong>{member.name}</strong>
                                     <span className="rally-member-id">{member.member_id}</span>
+                                    <span className={`availability-pill rally-member-availability ${availabilityTone(member.availability)}`}>
+                                      {member.availability || 'Availability unknown'}
+                                    </span>
                                     {troopLevels.length > 0 && (
                                       <div className="rally-member-troops">
                                         {troopLevels.map((troopLevel) => (

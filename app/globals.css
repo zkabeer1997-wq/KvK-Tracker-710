@@ -221,6 +221,15 @@ button[type="submit"]:not(.k-btn):disabled { opacity: 0.5; cursor: not-allowed; 
 .rally-assign-select { margin-top: 6px; width: 100%; max-width: 200px; font-size: 12px; padding: 5px 7px; border-radius: 6px; border: 1px solid var(--border-soft); background: rgba(255, 255, 255, 0.03); color: var(--text-muted); }
 .rally-assign-select:focus { outline: none; border-color: var(--gold); }
 
+.rally-assign-locked { margin: 6px 0 0; font-size: 11px; font-weight: 700; color: var(--gold-bright); text-transform: uppercase; letter-spacing: 0.03em; }
+
+.rally-lead-badge { background: rgba(217, 169, 78, 0.22); }
+
+.rally-drag-handle.is-disabled { cursor: not-allowed; opacity: 0.35; }
+.rally-drag-handle.is-disabled:hover { color: var(--text-dim); background: transparent; }
+
+.rally-member-availability { margin-top: 2px; align-self: flex-start; font-size: 10.5px; padding: 2px 7px; }
+
 .panel-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 10px; }
 
 .panel-heading h2, .panel-heading p { margin: 0; }

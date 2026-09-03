@@ -10,6 +10,7 @@ import {
   formatRallyRows,
   getLeadHeroTotal,
   getMatchingLeadHeroes,
+  getRallyLeadMemberIds,
   getTroopLevelSummary,
   incrementRallyLeadHero,
   normalizeRalliesForRows,
@@ -87,6 +88,18 @@ assert.deepEqual(
   'numeric ids are coerced to strings',
 );
 
+// A Rally Lead (of this rally or any other) cannot be assigned as a joiner.
+const leadGuardRallies = [rally('a', { leadMemberId: '303' }), rally('b')];
+assert.deepEqual(
+  assignMemberToRally(leadGuardRallies, 'b', '303'),
+  leadGuardRallies,
+  'assigning a rally lead as a joiner is a no-op',
+);
+assert.deepEqual(
+  getRallyLeadMemberIds([rally('a', { leadMemberId: '303' }), rally('b', { leadMemberId: '' })]),
+  new Set(['303']),
+);
+
 // --- removeMemberFromRallies / removeRallyById ------------------------------
 
 const populated = [rally('a', { memberIds: ['101', '202'] }), rally('b', { memberIds: ['101'] })];
@@ -100,6 +113,16 @@ assert.deepEqual(removeRallyById(populated, 'a').map((r) => r.id), ['b']);
 
 assert.equal(setRallyLead([rally('a')], 'a', '303')[0].leadMemberId, '303');
 assert.equal(setRallyLead([rally('a')], 'a', null)[0].leadMemberId, '', 'clearing yields empty string');
+
+// Promoting a member to Rally Lead removes them from every rally's joiner list.
+const promoted = setRallyLead(
+  [rally('a', { memberIds: ['303', '404'] }), rally('b', { memberIds: ['303'] })],
+  'a',
+  '303',
+);
+assert.equal(promoted[0].leadMemberId, '303');
+assert.deepEqual(promoted[0].memberIds, ['404'], 'the new lead is dropped as a joiner in their own rally');
+assert.deepEqual(promoted[1].memberIds, [], 'the new lead is dropped as a joiner in every other rally too');
 
 // --- setRallyTroopWeight ---------------------------------------------------
 
@@ -277,6 +300,11 @@ assert.equal(overflowResult.summary.secondHalfCount, 0);
 const contested = [rally('a'), rally('b', { memberIds: ['full-0'] })];
 const contestedResult = autoAssignRallyMembers(contested, 'a', eightFull);
 assert.ok(!contestedResult.rallies[0].memberIds.includes('full-0'), 'members assigned elsewhere are excluded');
+
+// A member who is a Rally Lead anywhere is never auto-assigned as a joiner.
+const leadGuardAuto = [rally('a'), rally('b', { leadMemberId: 'full-0' })];
+const leadGuardResult = autoAssignRallyMembers(leadGuardAuto, 'a', eightFull);
+assert.ok(!leadGuardResult.rallies[0].memberIds.includes('full-0'), 'rally leads are excluded from auto assign');
 
 assert.deepEqual(
   autoAssignRallyMembers([rally('a')], 'missing', eightFull),
