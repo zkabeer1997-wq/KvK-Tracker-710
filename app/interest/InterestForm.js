@@ -106,7 +106,11 @@ useEffect(() => {
 }, []);
 
 useEffect(() => {
-  document.getElementById(ACTS[step].id)?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
+  const section = document.getElementById(ACTS[step].id);
+  section?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
+  // Move focus to the new step's heading so keyboard/screen-reader users
+  // perceive the step change, not just a visual scroll.
+  section?.querySelector('.petition-act-title')?.focus();
 }, [step, reducedMotion]);
 
 function updateField(key, value) {
@@ -308,7 +312,7 @@ return (
 <section id="identity" className="petition-act">
 <header className="petition-act-head">
 <span className="petition-act-num k-display">I</span>
-<h2 className="petition-act-title k-display">Who Approaches</h2>
+<h2 className="petition-act-title k-display" tabIndex={-1}>Who Approaches</h2>
 <span className="petition-act-rule" aria-hidden="true" />
 </header>
 <div className="petition-act-body">
@@ -329,7 +333,7 @@ return (
 <section id="intake" className="petition-act">
 <header className="petition-act-head">
 <span className="petition-act-num k-display">II</span>
-<h2 className="petition-act-title k-display">The Crossing</h2>
+<h2 className="petition-act-title k-display" tabIndex={-1}>The Crossing</h2>
 <span className="petition-act-rule" aria-hidden="true" />
 </header>
 <div className="petition-act-body">
@@ -371,7 +375,7 @@ return (
 <section id="troops" className="petition-act">
 <header className="petition-act-head">
 <span className="petition-act-num k-display">III</span>
-<h2 className="petition-act-title k-display">Strength of Arms</h2>
+<h2 className="petition-act-title k-display" tabIndex={-1}>Strength of Arms</h2>
 <span className="petition-act-rule" aria-hidden="true" />
 </header>
 <div className="petition-act-body">
@@ -436,7 +440,7 @@ return (
 <section id="commitment" className="petition-act">
 <header className="petition-act-head">
 <span className="petition-act-num k-display">IV</span>
-<h2 className="petition-act-title k-display">The Oath</h2>
+<h2 className="petition-act-title k-display" tabIndex={-1}>The Oath</h2>
 <span className="petition-act-rule" aria-hidden="true" />
 </header>
 <div className="petition-act-body">
@@ -518,7 +522,7 @@ return (
 <section id="battle-report" className="petition-act">
 <header className="petition-act-head">
 <span className="petition-act-num k-display">V</span>
-<h2 className="petition-act-title k-display">Proof</h2>
+<h2 className="petition-act-title k-display" tabIndex={-1}>Proof</h2>
 <span className="petition-act-rule" aria-hidden="true" />
 </header>
 <div className="petition-act-body">
@@ -549,7 +553,11 @@ return (
 </section>
 )}
 
-{status && <div className={isError ? 'status error' : 'status'}>{status}</div>}
+{status && (
+  <div className={isError ? 'status error' : 'status'} role="alert" aria-live="assertive">
+    {status}
+  </div>
+)}
 
 <div className="petition-step-nav">
   <span className="petition-step-count k-mark">Step {step + 1} of {ACTS.length}</span>

@@ -932,6 +932,13 @@
 .registry-head { text-align: center; margin-bottom: clamp(28px, 4vh, 46px); }
 .registry-title { margin: 12px 0 0; font-size: clamp(26px, 4.6vw, 48px); letter-spacing: 0.10em; }
 .registry-lede { max-width: 54ch; margin: 16px auto 0; }
+.registry-head-link {
+  display: inline-block; margin-top: 14px;
+  font-family: var(--font-body); font-size: 13px; letter-spacing: 0.04em;
+  color: var(--color-ink-dim); text-decoration: none; border-bottom: 1px solid transparent;
+  transition: color var(--t-fast), border-color var(--t-fast);
+}
+.registry-head-link:hover { color: var(--parchment); border-color: var(--color-border-strong); }
 .registry-notice { margin-bottom: 22px; }
 /* Same treatment as the Armory: the petition is not a glass card holding
    eleven rounded sub-cards. Each question group is a course in the

@@ -82,23 +82,8 @@ const processedFileError = validateProcessedInterestFiles(screenshots);
 if (processedFileError) {
   return NextResponse.json({ error: processedFileError }, { status: 413 });
 }
-const screenshotUrls = [];
-for (const file of screenshots) {
-const arrayBuffer = await file.arrayBuffer();
-const originalName = file.name || 'screenshot.png';
-const ext = originalName.includes('.') ? originalName.split('.').pop() : 'png';
-const path = Date.now() + '-' + Math.random().toString(36).slice(2) + '.' + ext;
-const { error: uploadError } = await supabase.storage
-.from('interest-screenshots')
-.upload(path, Buffer.from(arrayBuffer), { contentType: file.type || 'application/octet-stream' });
-if (uploadError) {
-return NextResponse.json({ error: uploadError.message }, { status: 500 });
-}
-const { data: publicUrlData } = supabase.storage.from('interest-screenshots').getPublicUrl(path);
-screenshotUrls.push(publicUrlData.publicUrl);
-}
 
-const payload = {
+const fields = {
 intake_period: String(formData.get('intake_period') || ''),
 in_game_name: String(formData.get('in_game_name') || ''),
 player_id: String(formData.get('player_id') || ''),
@@ -119,20 +104,56 @@ willing_save_resources: String(formData.get('willing_save_resources') || ''),
 participates_battles: String(formData.get('participates_battles') || ''),
 spending_archetype: String(formData.get('spending_archetype') || ''),
 main_language: String(formData.get('main_language') || ''),
-screenshot_urls: screenshotUrls,
 };
 
-if (!payload.in_game_name || !payload.player_id || !payload.discord_username) {
+// Mirrors InterestForm.js's ACTS[*].required lists (in camelCase there,
+// snake_case on the wire here) so a submission posted straight to this
+// endpoint - skipping the 5-step wizard's own required-field checks -
+// can't reach the review queue missing the vetting data admins rely on.
+// Checked before the (slow, per-file) storage upload below so an
+// incomplete submission fails fast instead of leaving orphaned files.
+const REQUIRED_FIELDS = [
+  'in_game_name', 'player_id', 'discord_username', 'current_server', 'current_alliance',
+  'intake_period', 'migrate_alliance',
+  'highest_troop_level', 'current_tg', 'mystic_trial_stages', 'total_power',
+  'active_commit', 'willing_save_resources', 'participates_battles', 'spending_archetype', 'main_language',
+];
+const missingField = REQUIRED_FIELDS.find((key) => !fields[key]);
+if (missingField) {
 return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 });
 }
+if (!fields.t11_units.length) {
+return NextResponse.json({ error: 'Select at least one T11 option.' }, { status: 400 });
+}
+
+const screenshotUrls = [];
+for (const file of screenshots) {
+const arrayBuffer = await file.arrayBuffer();
+const originalName = file.name || 'screenshot.png';
+const ext = originalName.includes('.') ? originalName.split('.').pop() : 'png';
+const path = Date.now() + '-' + Math.random().toString(36).slice(2) + '.' + ext;
+const { error: uploadError } = await supabase.storage
+.from('interest-screenshots')
+.upload(path, Buffer.from(arrayBuffer), { contentType: file.type || 'application/octet-stream' });
+if (uploadError) {
+console.error('interest screenshot upload failed', uploadError);
+return NextResponse.json({ error: 'Could not upload your screenshot. Please try again.' }, { status: 500 });
+}
+const { data: publicUrlData } = supabase.storage.from('interest-screenshots').getPublicUrl(path);
+screenshotUrls.push(publicUrlData.publicUrl);
+}
+
+const payload = { ...fields, screenshot_urls: screenshotUrls };
 
 const { error } = await supabase.from('interest_submissions').insert(payload);
 if (error) {
-return NextResponse.json({ error: error.message }, { status: 500 });
+console.error('interest_submissions insert failed', error);
+return NextResponse.json({ error: 'Something went wrong saving your petition. Please try again.' }, { status: 500 });
 }
 
 return NextResponse.json({ ok: true });
 } catch (error) {
-return NextResponse.json({ error: error.message }, { status: 500 });
+console.error('interest submission failed', error);
+return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 });
 }
 }

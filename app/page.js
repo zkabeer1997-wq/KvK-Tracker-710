@@ -183,7 +183,7 @@ export default async function HomePage() {
           <h1>{field('hero-title', { as: 'span' })}</h1>
           <p>{field('hero-sub', { as: 'span', multiline: true })}</p>
           <div className="home-v2-actions">
-            <Link href="/chronometer" className="home-v2-primary">Apply for a transfer</Link>
+            <Link href="/interest" className="home-v2-primary">Apply for a transfer</Link>
             <Link href="/tools" className="home-v2-secondary">View member tools →</Link>
           </div>
         </div>
@@ -232,7 +232,7 @@ export default async function HomePage() {
 
       <section className="home-v2-final">
         <div><span className="k-mark">KINGDOM TRANSFERS</span><h2>Interested in moving<br/>to Kingdom 710?</h2></div>
-        <Link href="/chronometer">Open the transfer form</Link>
+        <Link href="/interest">Open the transfer form</Link>
       </section>
     </main>
   );
