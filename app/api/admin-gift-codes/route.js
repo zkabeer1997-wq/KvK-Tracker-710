@@ -3,7 +3,6 @@ import { isAdminRequest } from '../../../lib/adminAuth';
 import {
   getAdminGiftOverview,
   discoverWikiCodes,
-  processRedemptionQueue,
   enrollMemberForGiftCodes,
 } from '../../../lib/giftCodes.mjs';
 import { createSupabaseAdminClient } from '../../../lib/supabaseAdmin';
@@ -61,16 +60,10 @@ export async function POST(request) {
       return noStoreJson({ ok: true, discovery });
     }
 
-    if (action === 'process_queue') {
-      const queue = await processRedemptionQueue({
-        limit: Math.min(Number(body?.limit) || 10, 25),
-        workerId: 'admin',
-      });
-      return noStoreJson({ ok: true, queue });
-    }
-
     if (action === 'add_code') {
-      const code = String(body?.code || '').trim().toUpperCase();
+      // Keep exact casing - codes like "Kingshot888" must match what
+      // Century Games expects, not an upper-cased version of it.
+      const code = String(body?.code || '').trim();
       if (!code || code.length < 4 || code.length > 32) {
         return noStoreJson({ error: 'Invalid code.' }, { status: 400 });
       }
@@ -97,7 +90,7 @@ export async function POST(request) {
     }
 
     if (action === 'set_code_active') {
-      const code = String(body?.code || '').trim().toUpperCase();
+      const code = String(body?.code || '').trim();
       const active = Boolean(body?.active);
       await client
         .from('gift_codes')
@@ -116,21 +109,6 @@ export async function POST(request) {
       if (!memberId) return noStoreJson({ error: 'memberId required' }, { status: 400 });
       const id = await enrollMemberForGiftCodes(memberId, playerId, 710);
       return noStoreJson({ ok: true, enrollmentId: id });
-    }
-
-    if (action === 'retry_failures') {
-      await client
-        .from('gift_code_redemptions')
-        .update({
-          status: 'pending',
-          next_retry_at: null,
-          locked_at: null,
-          locked_by: null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('status', 'temporary_failure');
-      const queue = await processRedemptionQueue({ limit: 15, workerId: 'admin-retry' });
-      return noStoreJson({ ok: true, queue });
     }
 
     return noStoreJson({ error: 'Unknown action.' }, { status: 400 });

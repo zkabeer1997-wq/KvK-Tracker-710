@@ -73,13 +73,13 @@ export default function AdminGiftCodesPage() {
   return (
     <AdminShell
       title="Gift Codes"
-      subtitle="Automatic code discovery for Kingdom 710 — redemption is simulated, not submitted to Century Games"
+      subtitle="Automatic code discovery + member alerts for Kingdom 710 — members redeem themselves"
       onLogout={handleLogout}
       counters={[
-        { label: 'Pending', value: totals.pending ?? '—' },
+        { label: 'Ready to redeem', value: totals.pending ?? '—' },
         { label: 'Redeemed', value: totals.redeemed ?? '—' },
-        { label: 'Already', value: totals.already_redeemed ?? '—' },
-        { label: 'Failed', value: totals.failed ?? '—' },
+        { label: 'Already had it', value: totals.already_redeemed ?? '—' },
+        { label: 'Skipped', value: totals.skipped ?? '—' },
       ]}
     >
       {error ? <Callout tone="danger">{error}</Callout> : null}
@@ -87,11 +87,11 @@ export default function AdminGiftCodesPage() {
 
       <Panel title="Automation status">
         <p style={{ marginBottom: '0.75rem' }}>
-          Mode: <Tag>{data?.liveMode ? 'LIVE' : 'SIMULATED'}</Tag>
-          {' · '}
-          Redemption submission to Century Games (ks-giftcode.centurygame.com) is not
-          automated — their redemption API requires a signed request we cannot forge without
-          their authorization. Discovery and queueing below are real; the results are simulated.
+          Discovery and per-member queueing are automatic (daily wiki check). Submission to
+          Century Games (ks-giftcode.centurygame.com) is not automated — their redemption API
+          requires a signed request we cannot forge without their authorization. Each enrolled
+          member sees new codes in their own Gift Code Rewards panel and redeems themselves,
+          then confirms the result there.
         </p>
         <p style={{ marginBottom: '0.75rem', opacity: 0.85 }}>
           Last wiki check:{' '}
@@ -102,12 +102,6 @@ export default function AdminGiftCodesPage() {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
           <Button disabled={!!busy} onClick={() => runAction('check_wiki')}>
             {busy === 'check_wiki' ? 'Checking…' : 'Check for codes'}
-          </Button>
-          <Button disabled={!!busy} onClick={() => runAction('process_queue', { limit: 10 })}>
-            {busy === 'process_queue' ? 'Processing…' : 'Process queue'}
-          </Button>
-          <Button disabled={!!busy} onClick={() => runAction('retry_failures')}>
-            {busy === 'retry_failures' ? 'Retrying…' : 'Retry temporary failures'}
           </Button>
         </div>
       </Panel>
@@ -160,8 +154,8 @@ export default function AdminGiftCodesPage() {
           <Field label="Add code">
             <Input
               value={newCode}
-              onChange={(e) => setNewCode(e.target.value.toUpperCase())}
-              placeholder="e.g. FAMILY25"
+              onChange={(e) => setNewCode(e.target.value)}
+              placeholder="e.g. Kingshot888 (exact spelling matters)"
             />
           </Field>
           <Button

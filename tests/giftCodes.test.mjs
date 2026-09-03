@@ -2,7 +2,6 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   parseWikiGiftCodes,
-  simulateRedemption,
   summarizeGiftCodeStatusByMember,
   mergeGiftCodeStatusIntoRows,
 } from '../lib/giftCodes.mjs';
@@ -53,14 +52,6 @@ describe('parseWikiGiftCodes', () => {
     const { codes, warning } = parseWikiGiftCodes(html);
     assert.equal(codes.length, 0);
     assert.equal(warning, 'unexpected_page_structure');
-  });
-});
-
-describe('simulateRedemption', () => {
-  it('returns a known status shape', () => {
-    const r = simulateRedemption('12345', 'TESTCODE');
-    assert.ok(['redeemed', 'already_redeemed', 'expired', 'temporary_failure'].includes(r.status));
-    assert.ok(typeof r.response === 'string');
   });
 });
 

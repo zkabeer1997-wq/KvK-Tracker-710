@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { discoverWikiCodes, processRedemptionQueue } from '../../../../lib/giftCodes.mjs';
+import { discoverWikiCodes } from '../../../../lib/giftCodes.mjs';
 
 function noStoreJson(body, init = {}) {
   const response = NextResponse.json(body, init);
@@ -8,7 +8,9 @@ function noStoreJson(body, init = {}) {
 }
 
 /**
- * Daily discovery + light queue processing.
+ * Daily wiki check. When a new code is found, it's queued (status 'pending')
+ * for every enrolled member - see discoverWikiCodes(). There is no automated
+ * redemption step: members complete and self-report redemption themselves.
  * Secure with CRON_SECRET (Vercel Cron Authorization header) or admin password Bearer.
  */
 export async function GET(request) {
@@ -26,13 +28,7 @@ export async function GET(request) {
 
   try {
     const discovery = await discoverWikiCodes();
-    const queue = await processRedemptionQueue({ limit: 10, workerId: 'cron' });
-    return noStoreJson({
-      ok: true,
-      discovery,
-      queue,
-      liveMode: process.env.GIFT_CODE_LIVE_MODE === '1',
-    });
+    return noStoreJson({ ok: true, discovery });
   } catch (error) {
     console.error('gift-codes cron failed', error);
     return noStoreJson({ error: 'Cron failed', detail: error?.message }, { status: 500 });

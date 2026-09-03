@@ -2,15 +2,36 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
+const REDEMPTION_SITE_URL = 'https://ks-giftcode.centurygame.com/';
+
+const STATUS_LABEL = {
+  redeemed: 'Redeemed',
+  already_redeemed: 'Already had it',
+  pending: 'Ready to redeem',
+  processing: 'Ready to redeem',
+  skipped: "Didn't work / skipped",
+  expired: 'Code invalid/expired',
+  invalid_code: 'Code invalid/expired',
+  invalid_player: 'Player issue',
+  temporary_failure: 'Retrying',
+};
+
+function statusLabel(status) {
+  return STATUS_LABEL[status] || status || '—';
+}
+
 /**
  * Compact Gift Code Rewards for signed-in members.
- * "Check your in-game mail" only after a confirmed successful redemption.
+ *
+ * Discovery is automatic (daily wiki check); redemption itself is not - the
+ * member redeems each new code themselves at Century Games' own site, then
+ * confirms the outcome here.
  */
 export default function GiftCodeRewards({ className = '' }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [data, setData] = useState(null);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -37,7 +58,7 @@ export default function GiftCodeRewards({ className = '' }) {
   }, [load]);
 
   async function setEnabled(enabled) {
-    setBusy(true);
+    setBusy('toggle');
     setError('');
     try {
       const res = await fetch('/api/gift-codes', {
@@ -51,7 +72,26 @@ export default function GiftCodeRewards({ className = '' }) {
     } catch (err) {
       setError(err.message || 'Unable to update preference.');
     } finally {
-      setBusy(false);
+      setBusy('');
+    }
+  }
+
+  async function confirm(redemptionId, result) {
+    setBusy(redemptionId);
+    setError('');
+    try {
+      const res = await fetch('/api/gift-codes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ redemptionId, result }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Unable to update redemption.');
+      setData(json);
+    } catch (err) {
+      setError(err.message || 'Unable to update redemption.');
+    } finally {
+      setBusy('');
     }
   }
 
@@ -59,29 +99,8 @@ export default function GiftCodeRewards({ className = '' }) {
   if (!loading && !data && !error) return null;
 
   const history = data?.history || [];
-  const hasConfirmedRedeemed = history.some((h) => h.status === 'redeemed');
-  const recent = history.slice(0, 8);
-
-  const statusLabel = (status) => {
-    switch (status) {
-      case 'redeemed':
-        return 'Redeemed';
-      case 'already_redeemed':
-        return 'Already redeemed';
-      case 'pending':
-      case 'processing':
-        return 'Pending';
-      case 'temporary_failure':
-        return 'Retrying';
-      case 'expired':
-      case 'invalid_code':
-        return 'Code invalid/expired';
-      case 'invalid_player':
-        return 'Player issue';
-      default:
-        return status || '—';
-    }
-  };
+  const readyToRedeem = history.filter((h) => h.status === 'pending' || h.status === 'processing');
+  const pastResults = history.filter((h) => h.status !== 'pending' && h.status !== 'processing').slice(0, 8);
 
   return (
     <section className={`gift-code-rewards ledger-block ${className}`.trim()} aria-labelledby="gift-code-rewards-title">
@@ -89,12 +108,12 @@ export default function GiftCodeRewards({ className = '' }) {
         <span className="ledger-block-kicker">Kingdom 710</span>
         <h3 id="gift-code-rewards-title">Gift Code Rewards</h3>
         <p>
-          Code discovery is automatic (checked daily). Redemption results shown here are
-          simulated for now — completing a redemption still requires visiting{' '}
-          <a href="https://ks-giftcode.centurygame.com/" target="_blank" rel="noreferrer">
+          New codes are discovered automatically from the wiki every day. When one appears, redeem
+          it yourself at{' '}
+          <a href={REDEMPTION_SITE_URL} target="_blank" rel="noreferrer">
             ks-giftcode.centurygame.com
           </a>{' '}
-          yourself with your Player ID and Kingdom 710.
+          using your Player ID and Kingdom 710 shown below, then confirm the result here.
         </p>
       </div>
 
@@ -107,46 +126,85 @@ export default function GiftCodeRewards({ className = '' }) {
             <span>
               Status:{' '}
               <strong>
-                {!data.enrolled
-                  ? 'Not enrolled'
-                  : data.enabled
-                    ? 'Auto-redeem on'
-                    : 'Auto-redeem off'}
+                {!data.enrolled ? 'Not enrolled' : data.enabled ? 'Code alerts on' : 'Code alerts off'}
               </strong>
             </span>
             {data.playerId ? (
               <span className="hint" style={{ margin: 0 }}>
-                Player ID {data.playerId}
+                Player ID {data.playerId} · Kingdom {data.kingdom || 710}
               </span>
             ) : null}
             <button
               type="button"
               className="secondary-btn"
-              disabled={busy}
+              disabled={busy === 'toggle'}
               onClick={() => setEnabled(!(data.enabled && data.enrolled))}
               style={{ marginLeft: 'auto' }}
             >
-              {busy
+              {busy === 'toggle'
                 ? 'Saving…'
                 : data.enabled && data.enrolled
-                  ? 'Turn off auto-redeem'
-                  : 'Turn on auto-redeem'}
+                  ? 'Turn off code alerts'
+                  : 'Turn on code alerts'}
             </button>
           </div>
 
-          {hasConfirmedRedeemed ? (
-            <p className="status" role="status">
-              Shown as redeemed here (simulated) — this has not been submitted to Century Games.
-              Redeem it yourself at{' '}
-              <a href="https://ks-giftcode.centurygame.com/" target="_blank" rel="noreferrer">
-                ks-giftcode.centurygame.com
-              </a>{' '}
-              to actually receive it, then check your in-game mail.
-            </p>
+          {readyToRedeem.length > 0 ? (
+            <div className="gift-code-ready-list">
+              {readyToRedeem.map((h) => (
+                <div className="gift-code-ready-card" key={h.id}>
+                  <div className="gift-code-ready-head">
+                    <span className="gift-code-ready-badge">New code</span>
+                    <code>{h.code}</code>
+                  </div>
+                  <p className="hint" style={{ margin: '4px 0 10px' }}>
+                    Player ID <strong>{data.playerId}</strong> · Kingdom <strong>{data.kingdom || 710}</strong>
+                  </p>
+                  <div className="gift-code-ready-actions">
+                    <a
+                      className="primary-btn"
+                      href={REDEMPTION_SITE_URL}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Redeem now →
+                    </a>
+                    <button
+                      type="button"
+                      className="secondary-btn"
+                      disabled={busy === h.id}
+                      onClick={() => confirm(h.id, 'redeemed')}
+                    >
+                      Mark redeemed
+                    </button>
+                    <button
+                      type="button"
+                      className="secondary-btn"
+                      disabled={busy === h.id}
+                      onClick={() => confirm(h.id, 'already_redeemed')}
+                    >
+                      Already had it
+                    </button>
+                    <button
+                      type="button"
+                      className="secondary-btn"
+                      disabled={busy === h.id}
+                      onClick={() => confirm(h.id, 'skipped')}
+                    >
+                      Didn't work
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : null}
 
-          {recent.length === 0 ? (
-            <p className="hint">No redemption attempts yet. Codes are checked daily from the wiki.</p>
+          {pastResults.length === 0 ? (
+            <p className="hint">
+              {readyToRedeem.length > 0
+                ? ''
+                : 'No codes yet. Codes are checked daily from the wiki.'}
+            </p>
           ) : (
             <div className="gift-code-rewards-table-wrap" style={{ overflowX: 'auto' }}>
               <table className="gift-code-rewards-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
@@ -158,7 +216,7 @@ export default function GiftCodeRewards({ className = '' }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {recent.map((h) => (
+                  {pastResults.map((h) => (
                     <tr key={h.id}>
                       <td style={{ padding: '0.35rem 0.5rem' }}>
                         <code>{h.code}</code>
@@ -177,6 +235,20 @@ export default function GiftCodeRewards({ className = '' }) {
           )}
         </>
       ) : null}
+
+      <style>{`
+        .gift-code-ready-list{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+        .gift-code-ready-card{border:1px solid var(--border-soft, #3a3a3a);border-radius:10px;padding:12px 14px;background:rgba(255,255,255,0.03)}
+        .gift-code-ready-head{display:flex;align-items:center;gap:8px;font-size:1.05rem}
+        .gift-code-ready-head code{font-size:1.1rem;font-weight:700}
+        .gift-code-ready-badge{font-size:0.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:rgba(65,164,255,.16);color:#7fbfff}
+        .gift-code-ready-actions{display:flex;flex-wrap:wrap;gap:8px}
+        .gift-code-rewards .primary-btn{display:inline-flex;align-items:center;justify-content:center;background:var(--gold, #d9a94e);color:var(--ink, #14141c);font-weight:800;padding:8px 14px;border-radius:8px;text-decoration:none;font-size:0.85rem;border:1px solid var(--gold, #d9a94e)}
+        .gift-code-rewards .primary-btn:hover{background:var(--gold-bright, #f0c368)}
+        .gift-code-rewards .secondary-btn{background:transparent;color:inherit;border:1px solid var(--border-soft, #3a3a3a);padding:8px 14px;border-radius:8px;font-size:0.85rem;cursor:pointer}
+        .gift-code-rewards .secondary-btn:hover:not(:disabled){border-color:var(--gold, #d9a94e);color:var(--gold, #d9a94e)}
+        .gift-code-rewards .secondary-btn:disabled{opacity:.5;cursor:not-allowed}
+      `}</style>
     </section>
   );
 }
