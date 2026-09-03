@@ -7,23 +7,50 @@ import {
   mergeGiftCodeStatusIntoRows,
 } from '../lib/giftCodes.mjs';
 
+// A trimmed but structurally verbatim sample of kingshotwiki.com/giftcodes/,
+// as captured 2026-09-03.
+const REAL_WIKI_HTML = `
+<div style="font-family: Arial, Tahoma, sans-serif;">
+<strong>Hello, Governors!</strong><br>
+We'll keep this page updated with any new codes.<strong>Active Codes:</strong><p></p>
+<ul>
+<li><span class="code">Kingshot888</span><button class="copy-btn">Copy</button></li>
+<li><span class="code">VIP777</span><button class="copy-btn">Copy</button></li>
+</ul>
+<p><strong><strong class="svelte-x57wqa"><span class="svelte-x57wqa fade-in">Concierge</span></strong><span class="svelte-x57wqa fade-in"> member codes:</span></strong></p>
+<ul>
+<li></li>
+</ul>
+</div>
+`;
+
 describe('parseWikiGiftCodes', () => {
-  it('extracts bold codes from wiki-like HTML', () => {
-    const html = `
-      <table>
-        <tr><td>Shared</td><td></td><td><b>ACODEBURGER</b></td></tr>
-        <tr><td>Expired</td><td></td><td><strong>KSFB200l</strong></td></tr>
-      </table>
-      NEW CODE: FAMILY25
-    `;
-    const { codes } = parseWikiGiftCodes(html);
-    assert.ok(codes.includes('ACODEBURGER'));
-    assert.ok(codes.includes('KSFB200L') || codes.includes('KSFB200l'.toUpperCase()));
-    assert.ok(codes.includes('FAMILY25'));
+  it('extracts active codes from the real kingshotwiki.com markup, preserving case', () => {
+    const { codes, warning } = parseWikiGiftCodes(REAL_WIKI_HTML);
+    assert.equal(warning, undefined);
+    assert.deepEqual(codes, ['Kingshot888', 'VIP777']);
+    // Case must survive exactly - the redemption spec requires original spelling.
+    assert.ok(!codes.includes('KINGSHOT888'));
   });
 
-  it('flags unexpected structure', () => {
+  it('does not pick up codes from the Concierge (VIP-only) section', () => {
+    const html = REAL_WIKI_HTML.replace(
+      '<li></li>',
+      '<li><span class="code">VIPONLYCODE</span></li>'
+    );
+    const { codes } = parseWikiGiftCodes(html);
+    assert.ok(!codes.includes('VIPONLYCODE'));
+  });
+
+  it('flags unexpected structure when there is no Active Codes heading', () => {
     const { codes, warning } = parseWikiGiftCodes('<html><body>hello</body></html>');
+    assert.equal(codes.length, 0);
+    assert.equal(warning, 'unexpected_page_structure');
+  });
+
+  it('flags unexpected structure when the heading exists but no codes parse out', () => {
+    const html = '<strong>Active Codes:</strong><ul><li>no span here</li></ul>';
+    const { codes, warning } = parseWikiGiftCodes(html);
     assert.equal(codes.length, 0);
     assert.equal(warning, 'unexpected_page_structure');
   });

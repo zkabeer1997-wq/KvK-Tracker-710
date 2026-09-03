@@ -89,8 +89,12 @@ export default function GiftCodeRewards({ className = '' }) {
         <span className="ledger-block-kicker">Kingdom 710</span>
         <h3 id="gift-code-rewards-title">Gift Code Rewards</h3>
         <p>
-          Automatic redemption is being tested. New codes from the wiki are queued for enrolled
-          accounts; results appear here when processed.
+          Code discovery is automatic (checked daily). Redemption results shown here are
+          simulated for now — completing a redemption still requires visiting{' '}
+          <a href="https://ks-giftcode.centurygame.com/" target="_blank" rel="noreferrer">
+            ks-giftcode.centurygame.com
+          </a>{' '}
+          yourself with your Player ID and Kingdom 710.
         </p>
       </div>
 
@@ -132,7 +136,12 @@ export default function GiftCodeRewards({ className = '' }) {
 
           {hasConfirmedRedeemed ? (
             <p className="status" role="status">
-              Check your in-game mail for redeemed rewards.
+              Shown as redeemed here (simulated) — this has not been submitted to Century Games.
+              Redeem it yourself at{' '}
+              <a href="https://ks-giftcode.centurygame.com/" target="_blank" rel="noreferrer">
+                ks-giftcode.centurygame.com
+              </a>{' '}
+              to actually receive it, then check your in-game mail.
             </p>
           ) : null}
 

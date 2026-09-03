@@ -73,7 +73,7 @@ export default function AdminGiftCodesPage() {
   return (
     <AdminShell
       title="Gift Codes"
-      subtitle="Automatic redemption for Kingdom 710 (testing mode until live worker is validated)"
+      subtitle="Automatic code discovery for Kingdom 710 — redemption is simulated, not submitted to Century Games"
       onLogout={handleLogout}
       counters={[
         { label: 'Pending', value: totals.pending ?? '—' },
@@ -89,8 +89,9 @@ export default function AdminGiftCodesPage() {
         <p style={{ marginBottom: '0.75rem' }}>
           Mode: <Tag>{data?.liveMode ? 'LIVE' : 'SIMULATED'}</Tag>
           {' · '}
-          Automatic redemption is being tested. Confirmed live redemptions from the
-          deployed worker are required before enabling production processing for everyone.
+          Redemption submission to Century Games (ks-giftcode.centurygame.com) is not
+          automated — their redemption API requires a signed request we cannot forge without
+          their authorization. Discovery and queueing below are real; the results are simulated.
         </p>
         <p style={{ marginBottom: '0.75rem', opacity: 0.85 }}>
           Last wiki check:{' '}
