@@ -126,6 +126,27 @@ if (!fields.t11_units.length) {
 return NextResponse.json({ error: 'Select at least one T11 option.' }, { status: 400 });
 }
 
+// InterestForm.js sends the "Other" radio options as "Other: <detail>" -
+// catches a blank detail that would otherwise pass the presence check
+// above (the literal string "Other:" is still truthy).
+const OTHER_MISSING_DETAIL = /^other:\s*$/i;
+if (OTHER_MISSING_DETAIL.test(fields.migrate_alliance.trim())) {
+return NextResponse.json({ error: 'Please specify which alliance you want to migrate to.' }, { status: 400 });
+}
+if (OTHER_MISSING_DETAIL.test(fields.main_language.trim())) {
+return NextResponse.json({ error: 'Please specify your main language.' }, { status: 400 });
+}
+
+// Digits with optional thousands commas - mirrors InterestForm.js's
+// isNumericValue. Only checked when present, since passes_required/
+// current_passes are optional.
+const NUMERIC_FIELDS = ['current_tg', 'mystic_trial_stages', 'total_power', 'passes_required', 'current_passes'];
+const NUMERIC_RE = /^[0-9][0-9,]*$/;
+const invalidNumericField = NUMERIC_FIELDS.find((key) => fields[key] && !NUMERIC_RE.test(fields[key].trim()));
+if (invalidNumericField) {
+return NextResponse.json({ error: 'Troop and power fields should contain numbers only.' }, { status: 400 });
+}
+
 const screenshotUrls = [];
 for (const file of screenshots) {
 const arrayBuffer = await file.arrayBuffer();
@@ -145,13 +166,24 @@ screenshotUrls.push(publicUrlData.publicUrl);
 
 const payload = { ...fields, screenshot_urls: screenshotUrls };
 
-const { error } = await supabase.from('interest_submissions').insert(payload);
+const { data: insertedRow, error } = await supabase
+  .from('interest_submissions')
+  .insert(payload)
+  .select('id')
+  .single();
 if (error) {
 console.error('interest_submissions insert failed', error);
 return NextResponse.json({ error: 'Something went wrong saving your petition. Please try again.' }, { status: 500 });
 }
 
-return NextResponse.json({ ok: true });
+// A short, applicant-facing reference so they have something concrete to
+// confirm receipt with (or quote if they need to follow up) - not a lookup
+// key for a status page, just derived from the row id.
+const reference = insertedRow?.id
+  ? 'K710-' + String(insertedRow.id).replace(/-/g, '').slice(0, 8).toUpperCase()
+  : null;
+
+return NextResponse.json({ ok: true, reference });
 } catch (error) {
 console.error('interest submission failed', error);
 return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 });

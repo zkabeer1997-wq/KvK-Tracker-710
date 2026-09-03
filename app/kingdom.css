@@ -902,6 +902,12 @@
 .sealed-copy.is-in { opacity: 1; transform: none; }
 .sealed-title { margin: 10px 0 0; font-size: clamp(20px, 3vw, 30px); letter-spacing: 0.10em; }
 .sealed-note { margin: 12px 0 0; }
+.sealed-reference {
+  margin: 16px 0 0; padding: 10px 16px; display: inline-block;
+  font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.04em;
+  color: var(--parchment); border: 1px solid var(--color-border-strong); border-radius: 2px;
+  background: rgba(201,164,78,0.08);
+}
 .sealed-wink { margin: 8px 0 0; color: var(--brass); font-style: italic; }
 .sealed-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 24px; }
 .sealed-skip {

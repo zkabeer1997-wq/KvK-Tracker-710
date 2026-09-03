@@ -136,12 +136,22 @@ const FIELD_LABELS = {
   currentTg: 'Current amount of TG',
   mysticTrialStages: 'Current Mystic Trial total stages',
   totalPower: 'Total Power',
+  passesRequired: 'Number of passes required to transfer',
+  currentPasses: 'Your current number of transfer passes',
   activeCommit: 'Active commitment',
   willingSaveResources: 'Willing to save resources',
   participatesBattles: 'Participation in battles',
   spendingArchetype: 'Spending archetype',
   mainLanguage: 'Main language',
 };
+
+// Digits only, with optional thousands commas (e.g. "245,000,000") - loose
+// enough for power/TG figures pasted straight from in-game, strict enough
+// to catch stray letters or negative numbers before they reach admin review.
+const NUMERIC_FIELDS = ['currentTg', 'mysticTrialStages', 'totalPower', 'passesRequired', 'currentPasses'];
+function isNumericValue(value) {
+  return /^[0-9][0-9,]*$/.test(String(value || '').trim());
+}
 
 function validateStep(index) {
   const act = ACTS[index];
@@ -151,6 +161,23 @@ function validateStep(index) {
       setStatus(`Please fill in: ${FIELD_LABELS[key]}.`);
       return false;
     }
+  }
+  for (const key of NUMERIC_FIELDS) {
+    if (key in form && form[key] && !isNumericValue(form[key])) {
+      setIsError(true);
+      setStatus(`${FIELD_LABELS[key]} should be numbers only.`);
+      return false;
+    }
+  }
+  if (act.id === 'intake' && form.migrateAlliance === 'Other' && !form.migrateAllianceOther.trim()) {
+    setIsError(true);
+    setStatus('Please specify which alliance you want to migrate to.');
+    return false;
+  }
+  if (act.id === 'commitment' && form.mainLanguage === 'Other' && !form.mainLanguageOther.trim()) {
+    setIsError(true);
+    setStatus('Please specify your main language.');
+    return false;
   }
   if (act.requiresT11 && form.t11.length === 0) {
     setIsError(true);
@@ -255,7 +282,7 @@ return;
 }
 setIsError(false);
 setStatus('');
-setConfirmedInfo({ intakePeriod: form.intakePeriod, discordUsername: form.discordUsername });
+setConfirmedInfo({ intakePeriod: form.intakePeriod, discordUsername: form.discordUsername, reference: result.reference || null });
 setForm(initialForm);
 setScreenshots([]);
 if (screenshotInput.current) screenshotInput.current.value = '';
@@ -274,6 +301,7 @@ return (
     onClose={() => setSealed(false)}
     intakePeriod={confirmedInfo.intakePeriod}
     discordUsername={confirmedInfo.discordUsername}
+    reference={confirmedInfo.reference}
   />
 )}
 <form className="public-form-card interest-petition" onSubmit={handleSubmit}>
@@ -393,7 +421,7 @@ return (
 </div>
 
 <div className="identity-grid">
-<label>Current amount of TG<input value={form.currentTg} onChange={(e) => updateField('currentTg', e.target.value)} placeholder="We need to understand how far you can push your TG level" /></label>
+<label>Current amount of TG<input inputMode="numeric" value={form.currentTg} onChange={(e) => updateField('currentTg', e.target.value)} placeholder="We need to understand how far you can push your TG level" /></label>
 </div>
 
 <div className="troop-section public-section">
@@ -411,8 +439,8 @@ return (
 
 <Chapter id="power-fields" title="Power">
 <div className="identity-grid">
-<label>Current Mystic Trial TOTAL STAGES<input value={form.mysticTrialStages} onChange={(e) => updateField('mysticTrialStages', e.target.value)} /></label>
-<label>Total Power<input value={form.totalPower} onChange={(e) => updateField('totalPower', e.target.value)} /></label>
+<label>Current Mystic Trial TOTAL STAGES<input inputMode="numeric" value={form.mysticTrialStages} onChange={(e) => updateField('mysticTrialStages', e.target.value)} /></label>
+<label>Total Power<input inputMode="numeric" value={form.totalPower} onChange={(e) => updateField('totalPower', e.target.value)} /></label>
 </div>
 
 <div className="troop-section public-section">
@@ -428,8 +456,8 @@ return (
 </div>
 
 <div className="identity-grid">
-<label>Number of passes required for you to transfer to 710<input value={form.passesRequired} onChange={(e) => updateField('passesRequired', e.target.value)} /></label>
-<label>Your current number of transfer passes<input value={form.currentPasses} onChange={(e) => updateField('currentPasses', e.target.value)} /></label>
+<label>Number of passes required for you to transfer to 710<input inputMode="numeric" value={form.passesRequired} onChange={(e) => updateField('passesRequired', e.target.value)} /></label>
+<label>Your current number of transfer passes<input inputMode="numeric" value={form.currentPasses} onChange={(e) => updateField('currentPasses', e.target.value)} /></label>
 </div>
 </Chapter>
 </div>

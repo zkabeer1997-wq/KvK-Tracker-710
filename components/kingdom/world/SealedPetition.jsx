@@ -13,7 +13,7 @@ import Link from 'next/link';
  * through the crest -> document rolls -> courier carries it toward the
  * fortress. Skippable throughout; reduced motion jumps to the result.
  */
-export default function SealedPetition({ onClose, reducedMotion = false, intakePeriod, discordUsername }) {
+export default function SealedPetition({ onClose, reducedMotion = false, intakePeriod, discordUsername, reference }) {
   const [beat, setBeat] = useState(reducedMotion ? 4 : 0);
   const timers = useRef([]);
 
@@ -83,6 +83,11 @@ export default function SealedPetition({ onClose, reducedMotion = false, intakeP
           Leadership reviews every application before that window opens
           {discordUsername ? <> and will reach you on Discord as <strong>{discordUsername}</strong></> : ''}.
         </p>
+        {reference && (
+          <p className="sealed-reference">
+            Reference <strong>{reference}</strong> — keep this for your records.
+          </p>
+        )}
         <p className="k-narrative sealed-wink">We&rsquo;ll see you at the gates.</p>
         <div className="sealed-actions">
           <button type="button" className="k-btn" onClick={onClose}>
