@@ -82,7 +82,7 @@ export default async function EventsPage() {
               description="When an admin publishes an event, it will appear here with a live countdown."
             />
           ) : (
-            <EventCountdownCards events={events} />
+            <EventCountdownCards events={events} initialNow={Date.now()} />
           )}
         </section>
 

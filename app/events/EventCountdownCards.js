@@ -24,18 +24,18 @@ function splitDuration(ms) {
   return { days, hours, minutes, seconds };
 }
 
-function formatRange(startsAt, endsAt) {
+function formatRange(startsAt, endsAt, useLocal = true) {
   const start = new Date(startsAt);
-  const optsDate = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
-  const optsTime = { hour: '2-digit', minute: '2-digit' };
-  const startDate = start.toLocaleDateString(undefined, optsDate);
-  const startTime = start.toLocaleTimeString(undefined, optsTime);
+  const optsDate = { ...(useLocal ? {} : { timeZone: 'UTC' }), weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+  const optsTime = { ...(useLocal ? {} : { timeZone: 'UTC' }), hour: '2-digit', minute: '2-digit' };
+  const startDate = start.toLocaleDateString(useLocal ? undefined : 'en-US', optsDate);
+  const startTime = start.toLocaleTimeString(useLocal ? undefined : 'en-US', optsTime);
   if (!endsAt) {
     return { local: `${startDate} · ${startTime}`, utc: `${start.toISOString().slice(0, 16).replace('T', ' ')} UTC` };
   }
   const end = new Date(endsAt);
-  const endDate = end.toLocaleDateString(undefined, optsDate);
-  const endTime = end.toLocaleTimeString(undefined, optsTime);
+  const endDate = end.toLocaleDateString(useLocal ? undefined : 'en-US', optsDate);
+  const endTime = end.toLocaleTimeString(useLocal ? undefined : 'en-US', optsTime);
   const sameDay = startDate === endDate;
   const local = sameDay
     ? `${startDate} · ${startTime} – ${endTime}`
@@ -44,8 +44,8 @@ function formatRange(startsAt, endsAt) {
   return { local, utc };
 }
 
-function useNow(tickMs = 1000) {
-  const [now, setNow] = useState(() => Date.now());
+function useNow(tickMs = 1000, initialNow = Date.now()) {
+  const [now, setNow] = useState(initialNow);
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), tickMs);
     return () => clearInterval(id);
@@ -64,9 +64,9 @@ function eventStatus(event, now = Date.now()) {
   return { status: 'upcoming', startMs, endMs, notStarted, inProgress };
 }
 
-function CountdownBlock({ targetMs, label, live }) {
-  const parts = splitDuration(targetMs - Date.now());
-  const done = targetMs <= Date.now();
+function CountdownBlock({ targetMs, label, live, now = Date.now() }) {
+  const parts = splitDuration(targetMs - now);
+  const done = targetMs <= now;
   return (
     <div className={`ev-countdown ${done ? 'ev-countdown-done' : ''}`}>
       <span className="ev-countdown-label">{done ? (live ? 'Ended' : 'Started') : label}</span>
@@ -148,10 +148,9 @@ function EventDetailPanel({ event: series }) {
   );
 }
 
-function EventCard({ event, onOpen }) {
-  useNow(1000);
-  const { status, startMs, endMs, notStarted, inProgress } = eventStatus(event);
-  const range = formatRange(event.starts_at, event.ends_at);
+function EventCard({ event, onOpen, now, local }) {
+  const { status, startMs, endMs, notStarted, inProgress } = eventStatus(event, now);
+  const range = formatRange(event.starts_at, event.ends_at, local);
 
   return (
     <article className={`ev-card ev-card-${status}`}>
@@ -166,8 +165,8 @@ function EventCard({ event, onOpen }) {
         <h3 className="ev-card-title">{event.title}</h3>
       {event.recurrence_frequency && event.recurrence_frequency !== 'none' && <p className="ev-recurrence">{recurrenceLabel(event)} · UTC schedule</p>}
 
-        {notStarted && <CountdownBlock targetMs={startMs} label="Starts in" />}
-        {inProgress && endMs && <CountdownBlock targetMs={endMs} label="Ends in" live />}
+        {notStarted && <CountdownBlock now={now} targetMs={startMs} label="Starts in" />}
+        {inProgress && endMs && <CountdownBlock now={now} targetMs={endMs} label="Ends in" live />}
         {inProgress && !endMs && (
           <div className="ev-countdown ev-countdown-live">
             <span className="ev-countdown-label">In progress</span>
@@ -176,7 +175,7 @@ function EventCard({ event, onOpen }) {
 
         <div className="ev-timings">
           <div className="ev-timing-row">
-            <span className="ev-timing-label">Your local time</span>
+            <span className="ev-timing-label">{local ? 'Your local time' : 'UTC'}</span>
             <span className="ev-timing-value">{range.local}</span>
           </div>
           <div className="ev-timing-row">
@@ -243,9 +242,11 @@ function EventModal({ event, onClose }) {
 /**
  * @param {{ events: Array<{ slug: string, title: string, kind: string, description?: string, body_md?: string, starts_at: string, ends_at?: string }> }}
  */
-export default function EventCountdownCards({ events }) {
+export default function EventCountdownCards({ events, initialNow }) {
   const [open, setOpen] = useState(null);
-  const now = useNow(1000);
+  const [local, setLocal] = useState(false);
+  useEffect(() => setLocal(true), []);
+  const now = useNow(1000, initialNow);
   const upcoming = upcomingEventSeries(events || [], now);
 
   if (!events?.length) return null;
@@ -254,7 +255,7 @@ export default function EventCountdownCards({ events }) {
     <div className="ev-cards">
       {upcoming.length === 0 && <p>No upcoming events.</p>}
       {upcoming.map(({ event, occurrence }) => (
-        <EventCard key={event.slug} event={occurrence} onOpen={() => setOpen(event)} />
+        <EventCard key={event.slug} now={now} local={local} event={occurrence} onOpen={() => setOpen(event)} />
       ))}
 
       <EventModal event={open} onClose={() => setOpen(null)} />
