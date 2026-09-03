@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { isAdminRequest } from '../../../lib/adminAuth';
 import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
+import { archiveCompletedCycles } from '../../../lib/cycleArchiving.mjs';
 
 export async function GET(request) {
   if (!(await isAdminRequest(request))) {
@@ -8,7 +9,7 @@ export async function GET(request) {
   }
   try {
     const supabase = createAdminSupabaseClient();
-    await supabase.rpc('archive_prep_cycle');
+    await archiveCompletedCycles(supabase, 'prep');
     const { data, error } = await supabase
       .from('prep_backpack_submissions')
       .select('*')

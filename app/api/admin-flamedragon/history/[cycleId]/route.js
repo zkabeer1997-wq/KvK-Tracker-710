@@ -7,16 +7,16 @@ export async function GET(request, { params: paramsPromise }) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   const params = await paramsPromise;
-  const eventId = params?.eventId;
-  if (!eventId) {
-    return NextResponse.json({ error: 'Missing event id.' }, { status: 400 });
+  const cycleId = params?.cycleId;
+  if (!cycleId) {
+    return NextResponse.json({ error: 'Missing cycle id.' }, { status: 400 });
   }
   try {
     const supabase = createAdminSupabaseClient();
     const { data, error } = await supabase
-      .from('submissions_archive')
+      .from('flamedragon_forms_archive')
       .select('*')
-      .eq('event_id', eventId)
+      .eq('cycle_archive_id', cycleId)
       .order('name', { ascending: true });
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

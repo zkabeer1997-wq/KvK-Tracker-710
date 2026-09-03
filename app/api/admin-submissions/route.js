@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { isAdminRequest } from '../../../lib/adminAuth';
 import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
 import { mergePowerProfilesIntoRows } from '../../../lib/powerProfiles.mjs';
+import { archiveCompletedCycles } from '../../../lib/cycleArchiving.mjs';
 
 const ADMIN_COLUMNS = [
 'name',
@@ -49,7 +50,7 @@ return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 }
 try {
 const supabase = createAdminSupabaseClient();
-await supabase.rpc('archive_kvk_cycle');
+await archiveCompletedCycles(supabase, 'kvk');
 const { data, error } = await supabase
 .from('submissions')
 .select(ADMIN_COLUMNS)

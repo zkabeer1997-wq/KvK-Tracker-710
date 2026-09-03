@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { isAdminRequest } from '../../../lib/adminAuth';
 import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
 import { mergePowerProfilesIntoRows } from '../../../lib/powerProfiles.mjs';
+import { archiveCompletedCycles } from '../../../lib/cycleArchiving.mjs';
 
 const ADMIN_COLUMNS = 'member_id,name,current_alliance,infantry_tier,infantry_tg,cavalry_tier,cavalry_tg,archer_tier,archer_tg,heroes,charms,governor_gear,pet_power,masters_power,mystic_trial_score,availability,voice_chat,auto_help,updated_at';
 const POWER_COLUMNS = 'member_id,name,governor_gear,charms,hero_gear,pet_power,masters_power,mystic_trial_score,infantry_tier,infantry_tg,cavalry_tier,cavalry_tg,archer_tier,archer_tg,heroes,updated_at';
@@ -18,7 +19,7 @@ export async function GET(request) {
   }
   try {
     const supabase = createAdminSupabaseClient();
-    await supabase.rpc('archive_tyrant_cycle');
+    await archiveCompletedCycles(supabase, 'tyrant');
     const [formResult, profileResult] = await Promise.all([
       supabase.from('flamedragon_forms').select(ADMIN_COLUMNS).order('updated_at', { ascending: false }),
       supabase.from('power_profiles').select(POWER_COLUMNS),
