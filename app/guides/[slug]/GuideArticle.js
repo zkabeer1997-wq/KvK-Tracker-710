@@ -243,6 +243,7 @@ export default function GuideArticle({ slug, initialGuide, initialIsAdmin = fals
         .guide-volume:before{content:'';position:absolute;inset:10px;border:1px solid rgba(201,164,78,.11);pointer-events:none}
         .guide-volume-spine{position:absolute;left:0;top:0;bottom:0;width:8px;background:linear-gradient(90deg,#1a120b,#79592b,#2b1d10);border-right:1px solid rgba(201,164,78,.35)}
         .guide-body{position:relative;z-index:1;color:#e6dcc2;font-size:17px;line-height:1.82;letter-spacing:.005em}
+        .guide-body :global(img){display:block;max-width:100%;height:auto;margin:1.2em auto;border-radius:6px}
         .guide-body :global(p){margin:0 0 1.1em}
         .guide-body :global(h2){margin:1.6em 0 .6em;font-family:var(--font-display);font-size:26px;letter-spacing:.04em;color:var(--parchment)}
         .guide-body :global(h3){margin:1.4em 0 .5em;font-family:var(--font-display);font-size:20px;letter-spacing:.03em;color:var(--parchment)}

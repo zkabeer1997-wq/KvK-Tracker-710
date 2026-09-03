@@ -3,7 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { isAdminRequest } from '../../../lib/adminAuth';
 import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
 
-const SLUG_RE = /^[a-z0-9-]{1,80}$/;
+import { GUIDE_FIELDS, validateGuide } from '../../../lib/guideValidation.mjs';
 
 async function requireAdmin(request) {
   if (!(await isAdminRequest(request))) {
@@ -45,47 +45,16 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 });
   }
 
-  const slug = String(payload?.slug || '').trim();
-  const title = String(payload?.title || '').trim();
-  const category = String(payload?.category || '').trim();
-  const description = String(payload?.description || '').trim();
-  const body = typeof payload?.body === 'string' ? payload.body : '';
-  const position = Number(payload?.position);
-
-  if (!SLUG_RE.test(slug)) {
-    return NextResponse.json({ error: 'Slug must use lowercase letters, numbers, and hyphens only.' }, { status: 400 });
-  }
-  if (!title || title.length > 180) {
-    return NextResponse.json({ error: 'Title is required and must be 180 characters or fewer.' }, { status: 400 });
-  }
-  if (!category || category.length > 80) {
-    return NextResponse.json({ error: 'Category is required and must be 80 characters or fewer.' }, { status: 400 });
-  }
-  if (description.length > 500) {
-    return NextResponse.json({ error: 'Description must be 500 characters or fewer.' }, { status: 400 });
-  }
-  if (body.length > 120000) {
-    return NextResponse.json({ error: 'Guide text is too long.' }, { status: 413 });
-  }
-  if (!Number.isInteger(position) || position < 0 || position > 100000) {
-    return NextResponse.json({ error: 'Position must be a whole number between 0 and 100000.' }, { status: 400 });
-  }
+  const { guide, error: validationError } = validateGuide(payload);
+  if (validationError) return NextResponse.json({ error: validationError }, { status: 400 });
+  const { slug } = guide;
 
   const now = new Date().toISOString();
   const supabase = createAdminSupabaseClient();
   const { data, error } = await supabase
     .from('kingdom_guides')
-    .insert({
-      slug,
-      title,
-      category,
-      description,
-      body,
-      position,
-      is_published: Boolean(payload?.is_published),
-      updated_at: now,
-    })
-    .select('slug, title, category, description, body, position, is_published, created_at, updated_at')
+    .insert({ ...guide, updated_at: now })
+    .select(GUIDE_FIELDS)
     .single();
 
   if (error) {

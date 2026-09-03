@@ -4,25 +4,25 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { Field, Input } from '../../components/ui';
 import GuideIcon from './GuideIcon';
+import { guideCategories } from '../../lib/guideValidation.mjs';
 
 function readingTime(body) {
   const words = String(body || '').trim().split(/\s+/).filter(Boolean).length;
   return Math.max(1, Math.round(words / 200));
 }
 
-export default function GuidesDirectory({ guides, query, backHref }) {
+export default function GuidesDirectory({ guides, categories: savedCategories = [], query, backHref }) {
   const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('All');
+  const [category, setCategory] = useState(null);
 
   const categories = useMemo(() => {
-    const set = new Set(guides.map((g) => g.category).filter(Boolean));
-    return ['All', ...Array.from(set)];
-  }, [guides]);
+    return guideCategories(guides, savedCategories);
+  }, [guides, savedCategories]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return guides.filter((g) => {
-      const matchesCategory = category === 'All' || g.category === category;
+      const matchesCategory = category === null || g.category === category;
       const matchesSearch =
         !q ||
         g.title.toLowerCase().includes(q) ||
@@ -42,24 +42,23 @@ export default function GuidesDirectory({ guides, query, backHref }) {
             onChange={(e) => setSearch(e.target.value)}
           />
         </Field>
-        <div className="guides-categories" role="tablist" aria-label="Filter by category">
-          {categories.map((c) => (
+        <div className="guides-categories" role="group" aria-label="Filter by category">
+          {[null, ...categories].map((c) => (
             <button
-              key={c}
+              key={c ?? "all-guides"}
               type="button"
-              role="tab"
-              aria-selected={category === c}
+              aria-pressed={category === c}
               className={`guides-category-tab ${category === c ? 'is-active' : ''}`}
               onClick={() => setCategory(c)}
             >
-              {c}
+              {c ?? 'All'}
             </button>
           ))}
         </div>
       </div>
 
       {filtered.length === 0 ? (
-        <div className="guides-error k-narrative">No guides match your search.</div>
+        <div className="guides-error k-narrative">{search.trim() ? 'No guides match your search.' : 'No published guides in this category yet.'}</div>
       ) : (
         <div className="guides-directory" role="list">
           {filtered.map((guide, index) => (

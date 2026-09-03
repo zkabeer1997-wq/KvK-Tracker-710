@@ -1,6 +1,7 @@
 import { createAdminSupabaseClient } from '../../lib/adminSupabase';
 import Link from 'next/link';
 import GuidesDirectory from './GuidesDirectory';
+import { guideCategories } from '../../lib/guideValidation.mjs';
 
 export const metadata = {
   title: 'K710 Guides',
@@ -29,14 +30,18 @@ export default async function GuidesPage({ searchParams }) {
 
   let guides = [];
   let loadError = '';
+  let categories = [];
   try {
     guides = await loadGuides();
+    const result = await createAdminSupabaseClient().from('guide_categories').select('name').order('name');
+    if (result.error) throw result.error;
+    categories = guideCategories(guides, result.data || []);
   } catch (error) {
     console.error('guides page load failed', error);
     loadError = 'Guides could not be loaded. Please try again.';
   }
 
-  const categoryCount = new Set(guides.map((guide) => guide.category).filter(Boolean)).size;
+  const categoryCount = categories.length;
   const latest = guides
     .filter((guide) => guide.updated_at)
     .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0];
@@ -107,7 +112,7 @@ export default async function GuidesPage({ searchParams }) {
         {loadError ? (
           <div className="guides-error">{loadError}</div>
         ) : (
-          <GuidesDirectory guides={guides} query={query} backHref={backHref} />
+          <GuidesDirectory categories={categories} guides={guides} query={query} backHref={backHref} />
         )}
       </section>
 
