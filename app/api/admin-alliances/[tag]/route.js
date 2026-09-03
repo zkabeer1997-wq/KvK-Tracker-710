@@ -1,3 +1,4 @@
+import { validateAllianceEvents } from '../../../../lib/allianceEvents.mjs';
 import { NextResponse } from 'next/server';
 import { revalidateAlliancePages } from '../../../../lib/revalidateAlliancePages';
 import { validateBearTimes } from '../../../../lib/bearHuntSchedule';
@@ -29,6 +30,11 @@ export async function PUT(request, { params: paramsPromise }) {
   }
 
   const update = {};
+  if (body.scheduled_events !== undefined) {
+    const { events, error: eventError } = validateAllianceEvents(body.scheduled_events);
+    if (eventError) return NextResponse.json({ error: eventError }, { status: 400 });
+    update.scheduled_events = events;
+  }
   if (body.bear_times_utc !== undefined) {
     const { times, error: timeError } = validateBearTimes(body.bear_times_utc);
     if (timeError) return NextResponse.json({ error: timeError }, { status: 400 });

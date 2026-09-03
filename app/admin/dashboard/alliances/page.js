@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminShell from '../../../../components/admin/AdminShell';
+import AllianceEventEditor from '../../../../components/admin/AllianceEventEditor';
+import { validateAllianceEvents } from '../../../../lib/allianceEvents.mjs';
 import ConfirmDialog from '../../../../components/admin/ConfirmDialog';
 import TableSkeleton from '../../../../components/admin/TableSkeleton';
 import { Button, Field, Input, Select, Textarea, Table } from '../../../../components/ui';
@@ -13,7 +15,7 @@ import { notifyBearScheduleChanged } from '../../../../components/BearSchedulePr
 const STATUSES = ['open', 'selective', 'closed'];
 const EMPTY_FORM = {
   tag: '', name: '', blurb: '', leader_player_id: '', timezone_focus: '',
-  recruiting_status: 'open', language: '', roster_size: '', active: true, sort_order: 0, bear_times_utc: [],
+  recruiting_status: 'open', language: '', roster_size: '', active: true, sort_order: 0, bear_times_utc: [], scheduled_events: [],
 };
 
 export default function AdminAlliancesPage() {
@@ -58,6 +60,7 @@ export default function AdminAlliancesPage() {
     setError(''); setStatus(''); setEditingTag(row.tag);
     setForm({
       bear_times_utc: row.bear_times_utc || [],
+      scheduled_events: row.scheduled_events || [],
       tag: row.tag, name: row.name, blurb: row.blurb || '',
       leader_player_id: row.leader_player_id || '', timezone_focus: row.timezone_focus || '',
       recruiting_status: row.recruiting_status, language: row.language || '',
@@ -75,6 +78,8 @@ export default function AdminAlliancesPage() {
     try {
       const { error: timeError } = validateBearTimes(form.bear_times_utc);
       if (timeError) throw new Error(timeError);
+      const { error: eventError } = validateAllianceEvents(form.scheduled_events);
+      if (eventError) throw new Error(eventError);
       const isNew = editingTag === 'new';
       const response = await fetch(isNew ? '/api/admin-alliances' : `/api/admin-alliances/${editingTag}`, {
         method: isNew ? 'POST' : 'PUT',
@@ -84,7 +89,7 @@ export default function AdminAlliancesPage() {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Unable to save alliance.');
       notifyBearScheduleChanged();
-      setStatus(isNew ? 'Alliance created.' : 'Alliance saved. Bear Hunt times updated across the site.');
+      setStatus(isNew ? 'Alliance created.' : 'Alliance saved. Bear Hunt times and event dates updated across the site.');
       setEditingTag(null); setForm(EMPTY_FORM);
       await load();
     } catch (err) {
@@ -109,7 +114,7 @@ export default function AdminAlliancesPage() {
   }
 
   return (
-    <AdminShell title="Alliances" subtitle="Manage alliance details and the Bear Hunt times shown across the website." onLogout={handleLogout}>
+    <AdminShell title="Alliances" subtitle="Manage alliance details, Bear Hunt times, and event dates shown on the website." onLogout={handleLogout}>
       {error && <p className="guide-message error" role="alert">{error}</p>}
       {status && <p className="guide-message success" role="status">{status}</p>}
 
@@ -164,6 +169,7 @@ export default function AdminAlliancesPage() {
             {form.bear_times_utc.length === 0 && <p style={{ margin: 0 }}>No Bear Hunt times set. Add a time to include this alliance in the schedule.</p>}
             <Button variant="quiet" disabled={form.bear_times_utc.length >= 24} onClick={() => setForm(current => ({ ...current, bear_times_utc: [...current.bear_times_utc, ''] }))}>+ Add Bear Hunt time</Button>
           </fieldset>
+          <AllianceEventEditor events={form.scheduled_events} disabled={saving} onChange={events => setForm(current => ({ ...current, scheduled_events: events }))} />
           <Field label="Blurb">
             <Textarea tone="console" rows={3} value={form.blurb} onChange={(e) => setForm((f) => ({ ...f, blurb: e.target.value }))} />
           </Field>
@@ -178,13 +184,14 @@ export default function AdminAlliancesPage() {
         <TableSkeleton rows={3} columns={4} />
       ) : (
         <Table>
-          <thead><tr><th>Tag</th><th>Name</th><th>Bear Hunts (UTC)</th><th>Status</th><th>Active</th><th /></tr></thead>
+          <thead><tr><th>Tag</th><th>Name</th><th>Bear Hunts (UTC)</th><th>Event dates</th><th>Status</th><th>Active</th><th /></tr></thead>
           <tbody>
             {rows.map((row) => (
               <tr key={row.tag}>
                 <td>{row.tag}</td>
                 <td>{row.name}</td>
                 <td>{row.bear_times_utc?.join(' · ') || 'Not set'}</td>
+                <td>{row.scheduled_events?.length || 0}</td>
                 <td>{row.recruiting_status}</td>
                 <td>{row.active ? 'Yes' : 'No'}</td>
                 <td style={{ display: 'flex', gap: 8 }}>

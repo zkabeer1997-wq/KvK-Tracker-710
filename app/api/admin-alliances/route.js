@@ -1,3 +1,4 @@
+import { validateAllianceEvents } from '../../../lib/allianceEvents.mjs';
 import { NextResponse } from 'next/server';
 import { revalidateAlliancePages } from '../../../lib/revalidateAlliancePages';
 import { validateBearTimes } from '../../../lib/bearHuntSchedule';
@@ -53,6 +54,9 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Unsupported recruiting status.' }, { status: 400 });
   }
 
+  const { events, error: eventError } = validateAllianceEvents(body.scheduled_events ?? []);
+  if (eventError) return NextResponse.json({ error: eventError }, { status: 400 });
+
   const { times, error: timeError } = validateBearTimes(body.bear_times_utc ?? []);
   if (timeError) return NextResponse.json({ error: timeError }, { status: 400 });
 
@@ -61,6 +65,7 @@ export async function POST(request) {
     .from('alliances')
     .insert({
       bear_times_utc: times,
+      scheduled_events: events,
       tag,
       name,
       blurb: String(body.blurb || ''),

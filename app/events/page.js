@@ -1,6 +1,8 @@
 import { createAdminSupabaseClient } from '../../lib/adminSupabase';
 import { Card, EmptyState, Button } from '../../components/ui';
 import { loadPublicBearScheduleOrNull } from '../../lib/publicBearSchedule';
+import { loadPublicAllianceEventsOrNull } from '../../lib/publicAllianceEvents';
+import AllianceEventSchedule from './AllianceEventSchedule';
 import BearHuntSchedule from './BearHuntSchedule';
 import EventCountdownCards from './EventCountdownCards';
 import { RECURRENCE_FIELDS, upcomingEventSeries } from '../../lib/eventRecurrence.mjs';
@@ -25,7 +27,7 @@ async function loadUpcomingEvents() {
 }
 
 export default async function EventsPage() {
-  const bearAlliances = await loadPublicBearScheduleOrNull();
+  const [bearAlliances, allianceEvents] = await Promise.all([loadPublicBearScheduleOrNull(), loadPublicAllianceEventsOrNull()]);
   let events = [];
   let loadError = '';
   try {
@@ -56,6 +58,14 @@ export default async function EventsPage() {
             <p>Daily times set by each alliance. Times are shown locally on your device.</p>
           </div>
           <BearHuntSchedule initialAlliances={bearAlliances} />
+        </section>
+
+        <section className="events-section" aria-labelledby="alliance-events-heading">
+          <div className="events-section-heading">
+            <div><span className="events-section-mark">By alliance</span><h2 id="alliance-events-heading" className="events-section-title">Alliance events</h2></div>
+            <p>Swordland, Tri-Alliance, and Vikings Vengeance dates set by each alliance. Today’s events and upcoming dates, with both your local time and UTC.</p>
+          </div>
+          <AllianceEventSchedule initialEvents={allianceEvents} initialNow={Date.now()} />
         </section>
 
         <section className="events-section">

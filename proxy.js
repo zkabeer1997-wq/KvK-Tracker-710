@@ -14,11 +14,8 @@ import { readMemberSession } from './lib/memberAuth';
 //
 // /player-record itself (the Gatehouse login/register screen) is
 // deliberately NOT in ADMIN or MEMBER prefixes below: it's where an
-// unauthenticated visitor is supposed to land. Events and Tools are
-// member-gated (full lock, including sub-pages) per a later decision to
-// trade their public/SEO surface for members-only access; see the plan
-// addendum for the reasoning. Guides was gated the same way and then
-// reverted to public — see Addendum 2.
+// unauthenticated visitor is supposed to land. Events and Guides are public;
+// Tools and member forms still require a member session.
 const ADMIN_PREFIXES = ['/admin/dashboard'];
 const MEMBER_PREFIXES = [
   '/forms',
@@ -26,7 +23,6 @@ const MEMBER_PREFIXES = [
   '/power-profile',
   '/flamedragon',
   '/prep-phase-backpack',
-  '/events',
   '/tools',
 ];
 
@@ -44,8 +40,6 @@ export const config = {
     '/flamedragon/:path*',
     '/prep-phase-backpack',
     '/prep-phase-backpack/:path*',
-    '/events',
-    '/events/:path*',
     '/tools',
     '/tools/:path*',
   ],

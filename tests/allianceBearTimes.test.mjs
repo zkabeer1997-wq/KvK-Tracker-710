@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { registerHooks } from 'node:module';
 import { mintAdminToken } from '../lib/adminAuth.js';
+import { ALLIANCE_EVENT_TYPES, validateAllianceEvents, currentAllianceEvents } from '../lib/allianceEvents.mjs';
 import { validateBearTimes, huntsFromAlliances, nextHunt } from '../lib/bearHuntSchedule.js';
 
 const state = { rows: [{ tag: 'RED', name: 'RED', active: true, bear_times_utc: ['11:05', '19:00', '23:20'], leader_player_id: 'private-test-field', updated_at: '2026-09-03' }], paths: [], writes: 0 };
@@ -11,7 +12,7 @@ registerHooks({
     if (specifier.endsWith('/lib/adminSupabase') || specifier === './adminSupabase') return { url: 'test:bear-database', shortCircuit: true };
     if (specifier === 'next/cache') return { url: 'test:bear-cache', shortCircuit: true };
     if (specifier === 'next/server') return next('next/server.js', context);
-    if (/\/(adminAuth|bearHuntSchedule|publicBearSchedule|revalidateAlliancePages|ics)$/.test(specifier)) return next(`${specifier}.js`, context);
+    if (/\/(adminAuth|memberAuth|bearHuntSchedule|publicBearSchedule|publicAllianceEvents|revalidateAlliancePages|ics)$/.test(specifier)) return next(`${specifier}.js`, context);
     return next(specifier, context);
   },
   load(url, context, next) {
@@ -45,6 +46,8 @@ state.client = { from() {
 const { PUT, DELETE } = await import('../app/api/admin-alliances/[tag]/route.js');
 const { POST } = await import('../app/api/admin-alliances/route.js');
 const { GET: publicGet } = await import('../app/api/bear-schedule/route.js');
+const { GET: allianceEventsGet } = await import('../app/api/alliance-events/route.js');
+const { proxy, config: proxyConfig } = await import('../proxy.js');
 const { GET: calendarGet } = await import('../app/api/events/bear-hunt.ics/route.js');
 process.env.ADMIN_PASSWORD = 'bear-test-only';
 const token = await mintAdminToken();
@@ -114,4 +117,80 @@ test('deletion removes that alliance from the shared schedule', async () => {
   await DELETE(request({}), params);
   const { alliances } = await (await publicGet()).json();
   assert.ok(alliances.every(alliance => alliance.tag !== 'RED'));
+});
+
+const newParams = { params: Promise.resolve({ tag: 'NEW' }) };
+const eventDates = Object.keys(ALLIANCE_EVENT_TYPES).map((type, index) => ({ type, date: '2030-04-20', time_utc: `0${index}:15` }));
+test('Events is public while admin and member forms remain gated', async () => {
+  for (const path of ['/events', '/events/example']) {
+    const url = new URL(`https://example.com${path}`);
+    const response = await proxy({ url: url.href, nextUrl: url, cookies: { get: () => undefined } });
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('location'), null);
+  }
+  assert.ok(proxyConfig.matcher.every(path => !path.startsWith('/events')));
+  for (const path of ['/admin/dashboard/alliances', '/tools', '/forms', '/player-record/form']) {
+    const url = new URL(`https://example.com${path}`);
+    const response = await proxy({ url: url.href, nextUrl: url, cookies: { get: () => undefined } });
+    assert.equal(response.status, 307);
+  }
+});
+test('all seven event types accept valid UTC dates; malformed and duplicate entries are rejected', () => {
+  assert.equal(validateAllianceEvents(eventDates).events.length, 7);
+  const valid = eventDates[0];
+  for (const entries of [null, {}, [{ ...valid, type: 'unknown' }], [{ ...valid, type: 'toString' }], [{ ...valid, date: '2030-02-30' }], [{ ...valid, date: '' }], [{ ...valid, date: '2027-02-29' }], [{ ...valid, time_utc: '24:00' }], [{ ...valid, time_utc: '' }], [valid, valid], Array(101).fill(valid)]) assert.ok(validateAllianceEvents(entries).error);
+  assert.ok(validateAllianceEvents([{ ...valid, date: '2028-02-29', time_utc: '00:00' }]).events);
+  assert.equal(validateAllianceEvents([valid, { ...valid, date: '2030-04-21' }]).events.length, 2);
+});
+test('invalid or unauthorized event writes leave saved data unchanged', async () => {
+  const before = state.writes;
+  assert.equal((await PUT(request({ scheduled_events: eventDates }, false), newParams)).status, 401);
+  assert.equal((await PUT(request({ scheduled_events: [{ ...eventDates[0], date: '2030-02-30' }] }), newParams)).status, 400);
+  assert.equal((await POST(request({ tag: 'BAD', name: 'Bad', scheduled_events: [{ type: 'unknown' }] }))).status, 400);
+  assert.equal(state.writes, before);
+});
+test('saving all event types makes dates and alliance labels public without private fields', async () => {
+  assert.equal((await PUT(request({ scheduled_events: eventDates }), newParams)).status, 200);
+  const response = await allianceEventsGet();
+  assert.equal(response.headers.get('cache-control'), 'no-store');
+  const { events } = await response.json();
+  assert.equal(events.length, 7);
+  assert.deepEqual(events.map(event => event.title), Object.values(ALLIANCE_EVENT_TYPES));
+  assert.equal(events[0].starts_at, '2030-04-20T00:15:00.000Z');
+  assert.equal(events[0].alliance_tag, 'NEW');
+  assert.ok(events.every(event => event.leader_player_id === undefined));
+  assert.ok(state.paths.includes('/api/alliance-events'));
+});
+test('editing event dates replaces old values and partial edits preserve schedules and Bear times', async () => {
+  await PUT(request({ language: 'English' }), newParams);
+  assert.equal((await (await allianceEventsGet()).json()).events.length, 7);
+  const revised = [{ ...eventDates[0], date: '2030-05-01', time_utc: '23:59' }];
+  await PUT(request({ scheduled_events: revised }), newParams);
+  const { events } = await (await allianceEventsGet()).json();
+  assert.equal(events.length, 1);
+  assert.equal(events[0].starts_at, '2030-05-01T23:59:00.000Z');
+  assert.deepEqual(state.rows.find(row => row.tag === 'NEW').bear_times_utc, ['14:10']);
+});
+test('hidden and removed alliance schedules disappear; clearing is persisted', async () => {
+  await PUT(request({ active: false }), newParams);
+  assert.deepEqual((await (await allianceEventsGet()).json()).events, []);
+  await PUT(request({ active: true }), newParams);
+  assert.equal((await (await allianceEventsGet()).json()).events.length, 1);
+  await PUT(request({ scheduled_events: [] }), newParams);
+  assert.deepEqual((await (await allianceEventsGet()).json()).events, []);
+  await PUT(request({ scheduled_events: eventDates }), newParams);
+  await DELETE(request({}), newParams);
+  assert.deepEqual((await (await allianceEventsGet()).json()).events, []);
+});
+test('new alliance can save event dates on creation and database outages report errors', async () => {
+  assert.equal((await POST(request({ tag: 'ADD', name: 'Added alliance', scheduled_events: eventDates }))).status, 200);
+  assert.equal((await (await allianceEventsGet()).json()).events.length, 7);
+  state.failRead = true;
+  assert.equal((await allianceEventsGet()).status, 503);
+  state.failRead = false;
+});
+test('public schedule keeps today and future UTC dates and retires older events at midnight', () => {
+  const dates = ['2030-04-19', '2030-04-20', '2030-04-21'].map(date => ({ date }));
+  assert.deepEqual(currentAllianceEvents(dates, Date.parse('2030-04-20T23:59:00Z')).map(event => event.date), ['2030-04-20', '2030-04-21']);
+  assert.deepEqual(currentAllianceEvents(dates, Date.parse('2030-04-21T00:00:00Z')).map(event => event.date), ['2030-04-21']);
 });

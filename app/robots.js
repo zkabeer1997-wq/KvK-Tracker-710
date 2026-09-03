@@ -6,7 +6,7 @@ export default function robots() {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/admin', '/api', '/player-record/form', '/power-profile', '/flamedragon', '/prep-phase-backpack', '/forms', '/events', '/tools'],
+        disallow: ['/admin', '/api', '/player-record/form', '/power-profile', '/flamedragon', '/prep-phase-backpack', '/forms', '/tools'],
       },
     ],
     sitemap: `${BASE_URL}/sitemap.xml`,

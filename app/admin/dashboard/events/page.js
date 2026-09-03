@@ -166,7 +166,7 @@ export default function AdminEventsPage() {
   return (
     <AdminShell
       title="Events"
-      subtitle="Schedule one-time or recurring kingdom events. Edit Bear Hunt times in the Alliances tab."
+      subtitle="Schedule one-time or recurring kingdom events. Edit Bear Hunt times and alliance event dates in the Alliances tab."
       onLogout={handleLogout}
     >
       {error && <p className="guide-message error" role="alert">{error}</p>}
