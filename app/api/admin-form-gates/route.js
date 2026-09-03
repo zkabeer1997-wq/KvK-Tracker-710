@@ -9,6 +9,7 @@ const ROUTE_BY_KEY = {
   joiner: '/player-record/form',
   prep: '/prep-phase-backpack',
   dragon: '/flamedragon',
+  noble: '/forms/flamedragon-tyrant/noble-advisor',
   requests: '/forms/requests',
 };
 
@@ -38,27 +39,34 @@ export async function PATCH(request) {
     return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 });
   }
 
-  const formKey = String(body.form_key || '');
+  const formKey = String(body?.form_key || '');
   if (!FORM_GATE_KEYS.includes(formKey)) {
     return NextResponse.json({ error: 'Unknown form key.' }, { status: 400 });
   }
 
-  const supabase = createAdminSupabaseClient();
-  const { data, error } = await supabase
-    .from('form_gates')
-    .upsert({
-      form_key: formKey,
-      is_open: body.is_open !== false,
-      message: body.message ? String(body.message) : '',
-      updated_at: new Date().toISOString(),
-    })
-    .select('*')
-    .single();
+  try {
+    const supabase = createAdminSupabaseClient();
+    const { data, error } = await supabase
+      .from('form_gates')
+      .upsert({
+        form_key: formKey,
+        is_open: body.is_open !== false,
+        message: body.message ? String(body.message) : '',
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'form_key' })
+      .select('*')
+      .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) return NextResponse.json({ error: 'Unable to save form status. Please try again.' }, { status: 500 });
 
-  revalidatePath('/forms');
-  revalidatePath(ROUTE_BY_KEY[formKey]);
+    revalidatePath('/forms');
+    revalidatePath('/forms/kvk');
+    revalidatePath('/forms/flamedragon-tyrant');
+    revalidatePath(ROUTE_BY_KEY[formKey]);
 
-  return NextResponse.json({ gate: data });
+    return NextResponse.json({ gate: data });
+  } catch (error) {
+    console.error('admin-form-gates PATCH failed', error);
+    return NextResponse.json({ error: 'Unable to confirm form status. Reload the page before trying again.' }, { status: 500 });
+  }
 }

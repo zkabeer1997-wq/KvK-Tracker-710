@@ -21,8 +21,8 @@ export default function AdminFormGatesPage() {
     setError('');
     try {
       const response = await fetch('/api/admin-form-gates', { cache: 'no-store' });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Unable to load form gates.');
+      const result = await response.json().catch(() => null);
+      if (!response.ok || !Array.isArray(result?.gates)) throw new Error(result?.error || 'Unable to load form status. Please reload the page.');
       const byKey = {};
       const nextDrafts = {};
       for (const gate of result.gates || []) {
@@ -66,8 +66,8 @@ export default function AdminFormGatesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ form_key: formKey, is_open: isOpen, message }),
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Unable to save form gate.');
+      const result = await response.json().catch(() => null);
+      if (!response.ok || result?.gate?.form_key !== formKey) throw new Error(result?.error || 'Unable to confirm form status. Reload the page before trying again.');
       setGates((prev) => ({ ...prev, [formKey]: result.gate }));
       setStatus(`${LABELS[formKey]} ${isOpen ? 'opened' : 'closed'}.`);
     } catch (err) {

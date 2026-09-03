@@ -23,7 +23,7 @@ registerHooks({
  },
  load(u,c,next){
   if(u==='test:workflow-db')return {format:'module',shortCircuit:true,source:'export const createAdminSupabaseClient=()=>globalThis.__workflowTest.client;'};
-  if(u==='test:workflow-cache')return {format:'module',shortCircuit:true,source:'export const revalidatePath=p=>globalThis.__workflowTest.paths.push(p);'};
+  if(u==='test:workflow-cache')return {format:'module',shortCircuit:true,source:'export const revalidatePath=p=>{if(typeof p!=="string")throw Error("Invalid revalidation path");globalThis.__workflowTest.paths.push(p);};'};
   return next(u,c);
  }
 });
@@ -38,13 +38,14 @@ state.client={from(table){const q={filters:[],fields:'*',options:{},changes:null
   if(state.fail)return {data:null,error:{message:'fixture unavailable'}};
   const rows=state.tables[table] ||= [];
   if(this.upsertValue){const old=rows.find(r=>r[this.conflict]===this.upsertValue[this.conflict]);if(old)Object.assign(old,this.upsertValue);else rows.push({id:'booking-1',...this.upsertValue});state.writes.push({table,value:this.upsertValue});}
-  const filtered=rows.filter(r=>this.filters.every(f=>f(r)));
+  const filtered=rows.filter(r=>(!this.upsertValue || r[this.conflict]===this.upsertValue[this.conflict]) && this.filters.every(f=>f(r)));
   if(this.changes){filtered.forEach(r=>Object.assign(r,this.changes));state.writes.push({table,value:this.changes});}
   const data=filtered.map(r=>this.fields==='*'?{...r}:Object.fromEntries(this.fields.split(',').map(k=>[k.trim(),r[k.trim()]])));
   return {data:this.options.head?null:single?data[0]||null:data,error:null,count:filtered.length};
  },maybeSingle(){return Promise.resolve(this.execute(true));},single(){return this.maybeSingle();},then(a,b){return Promise.resolve(this.execute()).then(a,b);}};return q;},
  storage:{from(){return {async download(){state.downloads++;return {data:new Blob(['image'],{type:'image/png'})};}}}}
 };
+const gates=await import('../app/api/admin-form-gates/route.js');
 const badges=await import('../app/api/admin-task-counts/route.js');
 const settings=await import('../app/api/admin-tool-settings/route.js');
 const noble=await import('../app/api/noble-advisor/route.js');
@@ -139,4 +140,24 @@ test('member profiles merge submitted stats and never expose PIN hashes',async()
  assert.equal(compareValues('1.5M','900,000',true)>0,true);
  assert.equal(searchRow(row,'current member-a',['name','member_id']),true);assert.equal(searchRow(row,'missing member-a',['name','member_id']),false);
  assert.equal(profileSummary({}).gear_min,0);assert.equal(profileSummary({}).charm_min,0);
+});
+
+
+test('every form can close and reopen with valid refresh paths and JSON confirmations',async()=>{
+ for(const form_key of ['lead','joiner','prep','dragon','noble','requests']) {
+  for(const is_open of [false,true]) {
+   const response=await gates.PATCH(req({form_key,is_open,message:'Bookings paused'},'admin'));
+   assert.equal(response.status,200,form_key);
+   const result=await response.json();assert.equal(result.gate.is_open,is_open);
+   assert.equal(state.tables.form_gates.find(g=>g.form_key===form_key).is_open,is_open);
+   if(form_key==='noble') assert.equal((await noble.POST(req(booking,'member'))).status,is_open?200:403);
+  }
+ }
+ assert.ok(state.paths.includes('/forms/flamedragon-tyrant/noble-advisor'));
+ assert.ok(state.paths.includes('/forms/flamedragon-tyrant'));
+ assert.equal((await gates.PATCH(req({form_key:'noble',is_open:false}))).status,401);
+ assert.equal((await gates.PATCH(req(null,'admin'))).status,400);
+ state.fail=true;
+ const failed=await gates.PATCH(req({form_key:'noble',is_open:false},'admin'));
+ assert.equal(failed.status,500);assert.ok((await failed.json()).error);state.fail=false;
 });
