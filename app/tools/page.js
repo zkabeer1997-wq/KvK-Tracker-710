@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import ToolsDirectory from './ToolsDirectory';
 
@@ -7,6 +8,8 @@ export default async function ToolsPage({ searchParams: searchParamsPromise }) {
   const searchParams = await searchParamsPromise;
   const memberId = typeof searchParams?.member_id === 'string' ? searchParams.member_id : '';
   const category = typeof searchParams?.category === 'string' ? searchParams.category : '';
+  if(category==='Research Costs')redirect('/tools/research-costs');
+  if(['Building Costs','Construction Costs'].includes(category))redirect('/tools/construction-costs');
   const backHref = memberId ? `/player-record?member_id=${encodeURIComponent(memberId)}` : '/player-record';
   return <main className="armory tools-workshop">
     <div className="armory-atmos" aria-hidden="true"/><span className="armory-rack-l" aria-hidden="true"/><span className="armory-rack-r" aria-hidden="true"/>
