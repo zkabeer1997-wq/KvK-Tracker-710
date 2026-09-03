@@ -160,3 +160,9 @@ begin
   return v_id;
 end;
 $$;
+
+-- These are called only from server-side admin/API routes with the service
+-- role key; the public/anon/authenticated roles must never call them directly
+-- over the PostgREST RPC endpoint.
+revoke all on function public.gift_code_queue_for_enrollment(uuid) from public, anon, authenticated;
+revoke all on function public.gift_code_enroll_member(text, text, integer) from public, anon, authenticated;
