@@ -69,6 +69,14 @@ button[type="submit"]:not(.k-btn):disabled { opacity: 0.5; cursor: not-allowed; 
    overflowed their cards and overlapped each other. */
 .public-shell.single-form { width: min(1180px, 100%); grid-template-columns: minmax(0, 1fr); }
 
+/* .public-intro's sticky/min-height sizing only makes sense in the
+   two-column layout, where it pins inside its own narrow track while a
+   taller form column scrolls past it. In the single-form (stacked)
+   variant both sections share one column, so sticky positioning pinned
+   the intro over the top of the form as the page scrolled - it needs to
+   scroll away normally here instead. */
+.public-shell.single-form .public-intro { position: static; min-height: auto; }
+
 .public-intro, .public-form-card { border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--glow); }
 
 .public-intro { position: sticky; top: 28px; min-height: 560px; display: flex; flex-direction: column; justify-content: space-between; padding: 28px; overflow: hidden; color: #ffffff; background: linear-gradient(180deg, rgba(255, 179, 0, 0.1), transparent 42%), var(--glass-strong); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
