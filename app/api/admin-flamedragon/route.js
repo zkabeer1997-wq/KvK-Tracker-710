@@ -18,6 +18,7 @@ export async function GET(request) {
   }
   try {
     const supabase = createAdminSupabaseClient();
+    await supabase.rpc('archive_tyrant_cycle');
     const [formResult, profileResult] = await Promise.all([
       supabase.from('flamedragon_forms').select(ADMIN_COLUMNS).order('updated_at', { ascending: false }),
       supabase.from('power_profiles').select(POWER_COLUMNS),

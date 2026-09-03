@@ -7,7 +7,7 @@ import { searchRow, compareValues } from '../../lib/adminTable.mjs';
 import AdminShell from './AdminShell';
 import ConfirmDialog from './ConfirmDialog';
 import TableSkeleton from './TableSkeleton';
-import { Button, Input, Table } from '../ui';
+import { Button, Input, Select, Table } from '../ui';
 import MemberDetailsDrawer from './MemberDetailsDrawer';
 import { buildKvkMembersWorkbook, formatUnitLevel } from '../../lib/kvkMembersExport.mjs';
 import { useEscapeToClose } from '../../lib/useEscapeToClose';
@@ -64,6 +64,13 @@ const COLUMNS = [
   { key: 'updated_at', label: 'Updated' },
 ];
 
+function formatCycleLabel(cycle) {
+  const start = cycle.starts_at ? new Date(cycle.starts_at).toLocaleDateString() : '';
+  const end = cycle.ends_at ? new Date(cycle.ends_at).toLocaleDateString() : '';
+  const range = start && end ? `${start} – ${end}` : start;
+  return range ? `${cycle.title} (${range})` : cycle.title;
+}
+
 function availabilityTone(availability) {
   const text = String(availability || '').toLowerCase();
   if (text.includes('not available')) return 'unavailable';
@@ -89,8 +96,15 @@ export default function RosterWorkspace({
   exportFileNamePrefix,
   workbookSheetName,
   allowClearTestData = false,
+  historyEndpoint,
+  historyLabel = 'Previous cycle',
 }) {
   const [rows, setRows] = useState([]);
+  const [cycles, setCycles] = useState([]);
+  const [selectedCycleId, setSelectedCycleId] = useState('');
+  const [historyRows, setHistoryRows] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState('');
   const [selectedMemberId, setSelectedMemberId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -134,6 +148,48 @@ export default function RosterWorkspace({
     }
     load();
   }, [membersEndpoint]);
+
+  useEffect(() => {
+    if (!historyEndpoint) return;
+    let cancelled = false;
+    async function loadCycles() {
+      try {
+        const response = await fetch(historyEndpoint);
+        const result = await response.json();
+        if (!cancelled && response.ok) setCycles(result.cycles || []);
+      } catch {}
+    }
+    loadCycles();
+    return () => { cancelled = true; };
+  }, [historyEndpoint]);
+
+  async function handleCycleChange(eventId) {
+    setSelectedCycleId(eventId);
+    if (!eventId) {
+      setHistoryRows([]);
+      setHistoryError('');
+      return;
+    }
+    setHistoryLoading(true);
+    setHistoryError('');
+    try {
+      const response = await fetch(`${historyEndpoint}/${eventId}`);
+      const result = await response.json();
+      if (!response.ok) {
+        setHistoryError(result.error || 'Unable to load that cycle.');
+        setHistoryRows([]);
+      } else {
+        setHistoryRows(result.rows || []);
+      }
+    } catch {
+      setHistoryError('Unable to load that cycle.');
+      setHistoryRows([]);
+    }
+    setHistoryLoading(false);
+  }
+
+  const viewingHistory = Boolean(selectedCycleId);
+  const activeRows = viewingHistory ? historyRows : rows;
 
   useEffect(() => {
     let cancelled = false;
@@ -399,13 +455,13 @@ export default function RosterWorkspace({
   }
 
   const filteredSorted = useMemo(() => {
-    const result = rows.filter(row =>
+    const result = activeRows.filter(row =>
       (!allianceFilter || row.current_alliance===allianceFilter) && (!availabilityFilter || row.availability===availabilityFilter) &&
       (!heroFilter || row.heroes?.includes(heroFilter)) && (!tierFilter || [row.infantry_tier,row.cavalry_tier,row.archer_tier].includes(tierFilter)) &&
       searchRow(row,search,['name','member_id','heroes','current_alliance','availability','governor_gear','charms','infantry_tier','cavalry_tier','archer_tier'])
     );
     return result.sort((a,b)=>compareValues(a[sortKey],b[sortKey])*(sortDir==='asc'?1:-1));
-  }, [rows,search,sortKey,sortDir,allianceFilter,availabilityFilter,heroFilter,tierFilter]);
+  }, [activeRows,search,sortKey,sortDir,allianceFilter,availabilityFilter,heroFilter,tierFilter]);
 
   const membersById = useMemo(() => {
     return new Map(rows.map((row) => [String(row.member_id), row]));
@@ -461,15 +517,33 @@ export default function RosterWorkspace({
         { label: 'Unassigned', value: Math.max(rows.length - assignedCount, 0) },
         { label: 'Rallies', value: rallyCount },
       ]}
-      actions={allowClearTestData ? (
-        <Button
-          variant="quiet"
-          onClick={clearTestData}
-          disabled={deletingIds.includes('__test_data__')}
-        >
-          {deletingIds.includes('__test_data__') ? 'Clearing...' : 'Clear test data'}
-        </Button>
-      ) : null}
+      actions={(
+        <>
+          {historyEndpoint && cycles.length > 0 && (
+            <Select
+              value={selectedCycleId}
+              onChange={(event) => handleCycleChange(event.target.value)}
+              aria-label={historyLabel}
+            >
+              <option value="">Current</option>
+              {cycles.map((cycle) => (
+                <option key={cycle.id} value={cycle.id}>
+                  {historyLabel} — {formatCycleLabel(cycle)}
+                </option>
+              ))}
+            </Select>
+          )}
+          {allowClearTestData && (
+            <Button
+              variant="quiet"
+              onClick={clearTestData}
+              disabled={deletingIds.includes('__test_data__') || viewingHistory}
+            >
+              {deletingIds.includes('__test_data__') ? 'Clearing...' : 'Clear test data'}
+            </Button>
+          )}
+        </>
+      )}
     >
       <ConfirmDialog
         open={Boolean(confirmState)}
@@ -479,6 +553,12 @@ export default function RosterWorkspace({
         onCancel={() => setConfirmState(null)}
       />
       <p className="admin-page-lead">{pageLead}</p>
+      {viewingHistory && (
+        <div className="status" role="status">
+          Viewing archived roster from {cycles.find((c) => c.id === selectedCycleId)?.title || 'a previous cycle'} — read-only.
+        </div>
+      )}
+      {historyError && <div className="status error">{historyError}</div>}
       <div className="dashboard-stats" aria-label="Dashboard summary">
         <div>
           <span>Total members</span>
@@ -509,17 +589,17 @@ export default function RosterWorkspace({
           <strong>{lastUpdated ? new Date(lastUpdated).toLocaleDateString() : '-'}</strong>
         </div>
       </div>
-      <TableFilters query={search} onQuery={setSearch} placeholder="Name, player ID, hero, or equipment" shown={filteredSorted.length} total={rows.length} onReset={()=>{setSearch('');setAllianceFilter('');setAvailabilityFilter('');setHeroFilter('');setTierFilter('');setSortKey('name');setSortDir('asc');}} filters={[
-        {key:'alliance',label:'Alliance',value:allianceFilter,onChange:setAllianceFilter,options:[...new Set(rows.map(r=>r.current_alliance).filter(Boolean))].sort()},
-        {key:'availability',label:'Availability',value:availabilityFilter,onChange:setAvailabilityFilter,options:[...new Set(rows.map(r=>r.availability).filter(Boolean))].sort()},
+      <TableFilters query={search} onQuery={setSearch} placeholder="Name, player ID, hero, or equipment" shown={filteredSorted.length} total={activeRows.length} onReset={()=>{setSearch('');setAllianceFilter('');setAvailabilityFilter('');setHeroFilter('');setTierFilter('');setSortKey('name');setSortDir('asc');}} filters={[
+        {key:'alliance',label:'Alliance',value:allianceFilter,onChange:setAllianceFilter,options:[...new Set(activeRows.map(r=>r.current_alliance).filter(Boolean))].sort()},
+        {key:'availability',label:'Availability',value:availabilityFilter,onChange:setAvailabilityFilter,options:[...new Set(activeRows.map(r=>r.availability).filter(Boolean))].sort()},
         {key:'hero',label:'Hero',value:heroFilter,onChange:setHeroFilter,options:HEROES},
         {key:'tier',label:'Any troop tier',value:tierFilter,onChange:setTierFilter,options:TROOP_TIERS},
       ]}/>
       {actionStatus && <div className="status">{actionStatus}</div>}
       {actionError && <div className="status error">{actionError}</div>}
-      {loading && <TableSkeleton columns={COLUMNS.length} rows={7} />}
+      {(loading || historyLoading) && <TableSkeleton columns={COLUMNS.length} rows={7} />}
       {error && <div className="status error">{error}</div>}
-      {!loading && !error && (
+      {!loading && !historyLoading && !error && (
         <div className="admin-workspace kvk-members-workspace">
           <section className="roster-panel" aria-label="Member roster">
             <div className="panel-heading">
@@ -533,11 +613,13 @@ export default function RosterWorkspace({
               <Button variant="quiet" onClick={handleExportXlsx}>
                 Export to Excel
               </Button>
-              <Button onClick={() => setShowAddMember(true)}>
-                + Add Member
-              </Button>
+              {!viewingHistory && (
+                <Button onClick={() => setShowAddMember(true)}>
+                  + Add Member
+                </Button>
+              )}
             </div>
-            {showAddMember && (
+            {!viewingHistory && showAddMember && (
               <div className="admin-drawer-overlay" role="presentation" onClick={() => setShowAddMember(false)}>
                 <div className="admin-drawer" role="dialog" aria-modal="true" aria-labelledby="add-member-title" onClick={(e) => e.stopPropagation()}>
                   <div className="admin-drawer-header">
@@ -650,36 +732,42 @@ export default function RosterWorkspace({
                   const isRallyLead = leadMemberIds.has(String(row.member_id));
                   return (
                   <tr
-                    key={row.member_id}
-                    className={'admin-row-clickable' + (draggingMemberId === String(row.member_id) ? ' row-dragging' : '')}
-                    onClick={() => setSelectedMemberId(String(row.member_id))}
+                    key={row.member_id + (viewingHistory ? `-${row.id}` : '')}
+                    className={viewingHistory ? '' : 'admin-row-clickable' + (draggingMemberId === String(row.member_id) ? ' row-dragging' : '')}
+                    onClick={viewingHistory ? undefined : () => setSelectedMemberId(String(row.member_id))}
                   >
                     <td>
                       <div className="member-name-cell">
                         <span className="member-name-row">
-                          <span
-                            className={isRallyLead ? 'rally-drag-handle is-disabled' : 'rally-drag-handle'}
-                            onClick={(event) => event.stopPropagation()}
-                            draggable={!isRallyLead}
-                            onDragStart={(event) => (isRallyLead ? event.preventDefault() : handleDragStart(event, row.member_id))}
-                            onDragEnd={handleDragEnd}
-                            role="button"
-                            tabIndex={-1}
-                            aria-label={isRallyLead ? `${row.name} is a Rally Lead and can't be dragged as a joiner` : `Drag ${row.name} to a rally`}
-                            title={isRallyLead ? "Rally Leads can't be assigned as joiners" : 'Drag to assign to a rally'}
-                          >
-                            &#8942;&#8942;
-                          </span>
-                          <button type="button" className="member-details-trigger" aria-haspopup="dialog" onClick={(event) => { event.stopPropagation(); setSelectedMemberId(String(row.member_id)); }}>{row.name}</button>
+                          {!viewingHistory && (
+                            <span
+                              className={isRallyLead ? 'rally-drag-handle is-disabled' : 'rally-drag-handle'}
+                              onClick={(event) => event.stopPropagation()}
+                              draggable={!isRallyLead}
+                              onDragStart={(event) => (isRallyLead ? event.preventDefault() : handleDragStart(event, row.member_id))}
+                              onDragEnd={handleDragEnd}
+                              role="button"
+                              tabIndex={-1}
+                              aria-label={isRallyLead ? `${row.name} is a Rally Lead and can't be dragged as a joiner` : `Drag ${row.name} to a rally`}
+                              title={isRallyLead ? "Rally Leads can't be assigned as joiners" : 'Drag to assign to a rally'}
+                            >
+                              &#8942;&#8942;
+                            </span>
+                          )}
+                          {viewingHistory ? (
+                            <span className="member-details-trigger">{row.name}</span>
+                          ) : (
+                            <button type="button" className="member-details-trigger" aria-haspopup="dialog" onClick={(event) => { event.stopPropagation(); setSelectedMemberId(String(row.member_id)); }}>{row.name}</button>
+                          )}
                         </span>
-                        {rallyByMemberId.has(String(row.member_id)) && (
+                        {!viewingHistory && rallyByMemberId.has(String(row.member_id)) && (
                           <span className="rally-badge">{rallyByMemberId.get(String(row.member_id))}</span>
                         )}
-                        {isRallyLead && (
+                        {!viewingHistory && isRallyLead && (
                           <span className="rally-badge rally-lead-badge">Lead - {rallyLeadNameByMemberId.get(String(row.member_id))}</span>
                         )}
                       </div>
-                      {isRallyLead ? (
+                      {viewingHistory ? null : isRallyLead ? (
                         <p className="rally-assign-locked" title="Rally Leads can't be assigned as joiners">Rally Lead - not a joiner</p>
                       ) : (
                         <select
@@ -725,7 +813,7 @@ export default function RosterWorkspace({
           </section>
         </div>
       )}
-      {!loading && !error && (
+      {!loading && !historyLoading && !error && !viewingHistory && (
         <section className="rally-board" aria-label="Rally planner">
           <div className="rally-board-header">
             <div>

@@ -132,7 +132,15 @@ export default function AdminPrepMinistersPage({ noble = false }) {
   const [ttFilter, setTtFilter] = useState('');
   const [result, setResult] = useState(null);
   const [saveStatus, setSaveStatus] = useState('');
+  const [cycles, setCycles] = useState([]);
+  const [selectedCycleId, setSelectedCycleId] = useState('');
+  const [historyRows, setHistoryRows] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState('');
   const router = useRouter();
+  const historyEndpoint = '/api/admin-prep-backpack/history';
+  const viewingHistory = !noble && Boolean(selectedCycleId);
+  const activeRows = viewingHistory ? historyRows : rows;
 
   useEffect(() => {
     async function load() {
@@ -146,6 +154,45 @@ export default function AdminPrepMinistersPage({ noble = false }) {
     load().catch(() => { setError('Unable to load submissions.'); setLoading(false); });
   }, [api]);
 
+  useEffect(() => {
+    if (noble) return;
+    let cancelled = false;
+    async function loadCycles() {
+      try {
+        const response = await fetch(historyEndpoint);
+        const result = await response.json();
+        if (!cancelled && response.ok) setCycles(result.cycles || []);
+      } catch {}
+    }
+    loadCycles();
+    return () => { cancelled = true; };
+  }, [noble]);
+
+  async function handleCycleChange(eventId) {
+    setSelectedCycleId(eventId);
+    if (!eventId) {
+      setHistoryRows([]);
+      setHistoryError('');
+      return;
+    }
+    setHistoryLoading(true);
+    setHistoryError('');
+    try {
+      const response = await fetch(`${historyEndpoint}/${eventId}`);
+      const result = await response.json();
+      if (!response.ok) {
+        setHistoryError(result.error || 'Unable to load that cycle.');
+        setHistoryRows([]);
+      } else {
+        setHistoryRows(result.rows || []);
+      }
+    } catch {
+      setHistoryError('Unable to load that cycle.');
+      setHistoryRows([]);
+    }
+    setHistoryLoading(false);
+  }
+
   async function handleLogout() {
     await fetch('/api/admin-logout', { method: 'POST' });
     router.push('/admin/login');
@@ -153,7 +200,7 @@ export default function AdminPrepMinistersPage({ noble = false }) {
   }
 
   const visibleRows = useMemo(() => {
-    return rows.filter(row => {
+    return activeRows.filter(row => {
       if (consFilter && row.want_construction !== consFilter) return false;
       if (resFilter && row.want_research !== resFilter) return false;
       if (ttFilter && row.want_troop_training !== ttFilter) return false;
@@ -163,7 +210,7 @@ export default function AdminPrepMinistersPage({ noble = false }) {
       if (slotFilter && !(noble ? ['avail_day4'] : ['avail_day1','avail_day2','avail_day4','avail_day5']).some(key => (Array.isArray(row[key]) ? row[key] : String(row[key] || '').split(',').map(v=>v.trim())).includes(slotFilter))) return false;
       return searchRow(row, query, [...SEARCH_KEYS,'notes','construction_upgrades','t11_troops']);
     }).sort((a,b)=>compareValues(a[sortKey],b[sortKey],['troop_speedup_days','research_speedup_days','tg_used','ttg_used','tg_dust'].includes(sortKey))*(sortDir==='asc'?1:-1));
-  }, [rows, query, consFilter, resFilter, ttFilter, transferFilter, promotionFilter, slotFilter, minSpeedups, sortKey, sortDir, noble]);
+  }, [activeRows, query, consFilter, resFilter, ttFilter, transferFilter, promotionFilter, slotFilter, minSpeedups, sortKey, sortDir, noble]);
 
   function makeSchedule() { const data = schedule(rows.map(row=>({...row,...Object.fromEntries(ARRAY_KEYS.map(key=>[key,Array.isArray(row[key])?row[key]:String(row[key] || '').split(',').map(v=>v.trim()).filter(Boolean)]))}))); return noble ? {...data,days:data.days.filter(day=>day.day===4)} : data; }
   function handleGenerate() { setResult(makeSchedule()); }
@@ -224,11 +271,33 @@ export default function AdminPrepMinistersPage({ noble = false }) {
   return (
     <AdminShell title={noble ? "Noble Advisor Schedule" : "Prep Ministers"} subtitle={noble ? "Flamedragon Troop Training appointments" : "Manage prep minister requests"} onLogout={handleLogout}>
           <p className="admin-page-lead">{noble ? "Training bookings for Flamedragon. Schedule priorities match KvK Day 4: transfers, T11 promotion, then speedup days." : "Backpack amounts and minister bookings submitted through KvK Prep."}</p>
+          {!noble && cycles.length > 0 && (
+            <div style={{display:'flex',gap:12,flexWrap:'wrap',marginBottom:12,alignItems:'center'}}>
+              <Select
+                value={selectedCycleId}
+                onChange={(e) => handleCycleChange(e.target.value)}
+                aria-label="Previous Prep"
+              >
+                <option value="">Current</option>
+                {cycles.map((cycle) => (
+                  <option key={cycle.id} value={cycle.id}>
+                    Previous Prep — {cycle.title}{cycle.starts_at ? ` (${new Date(cycle.starts_at).toLocaleDateString()})` : ''}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          )}
+          {viewingHistory && (
+            <div className="status" role="status">
+              Viewing archived submissions from {cycles.find((c) => c.id === selectedCycleId)?.title || 'a previous cycle'} — read-only.
+            </div>
+          )}
+          {historyError && <div className="status error">{historyError}</div>}
           <div className="dashboard-stats" aria-label="Prep summary">
-            <div><span>Total submissions</span><strong>{rows.length}</strong></div>
+            <div><span>Total submissions</span><strong>{activeRows.length}</strong></div>
             <div><span>Showing</span><strong>{visibleRows.length}</strong></div>
           </div>
-          <TableFilters query={query} onQuery={setQuery} shown={visibleRows.length} total={rows.length} placeholder="Name, player ID, or notes" onReset={()=>{setQuery('');setConsFilter('');setResFilter('');setTtFilter('');setTransferFilter('');setPromotionFilter('');setSlotFilter('');setMinSpeedups('');setSortKey('in_game_name');setSortDir('asc');}} filters={[
+          <TableFilters query={query} onQuery={setQuery} shown={visibleRows.length} total={activeRows.length} placeholder="Name, player ID, or notes" onReset={()=>{setQuery('');setConsFilter('');setResFilter('');setTtFilter('');setTransferFilter('');setPromotionFilter('');setSlotFilter('');setMinSpeedups('');setSortKey('in_game_name');setSortDir('asc');}} filters={[
             ...(!noble ? [{key:'construction',label:'Construction',value:consFilter,onChange:setConsFilter,options:['Yes','No']},{key:'research',label:'Research',value:resFilter,onChange:setResFilter,options:['Yes','No']}] : []),
             {key:'training',label:'Troop Training',value:ttFilter,onChange:setTtFilter,options:['Yes','No']},
             {key:'transfer',label:'Transfer',value:transferFilter,onChange:setTransferFilter,options:['Yes','No']},
@@ -239,20 +308,22 @@ export default function AdminPrepMinistersPage({ noble = false }) {
             <label>Sort by<select value={sortKey} onChange={e=>setSortKey(e.target.value)}>{COLUMNS.map(col=><option key={col.key} value={col.key}>{col.label}</option>)}</select></label>
             <label>Order<select value={sortDir} onChange={e=>setSortDir(e.target.value)}><option value="asc">Ascending</option><option value="desc">Descending</option></select></label>
           </TableFilters>
-          <div style={{display:'flex',gap:12,flexWrap:'wrap',marginBottom:18,alignItems:'center'}}>
-            <Button variant="quiet" onClick={handleGenerate} disabled={loading || Boolean(error) || saveStatus==='saving' || saveStatus==='error'}>Generate full schedule</Button>
-            <Button variant="quiet" onClick={exportExcel} disabled={loading || Boolean(error) || saveStatus==='saving' || saveStatus==='error'}>Export schedule to Excel</Button>
-            <span>Uses all {rows.length} submissions, regardless of filters.</span>
-            {saveStatus && <span role="status">{saveStatus === 'saving' ? 'Saving…' : saveStatus === 'saved' ? 'Saved' : 'Save failed — correct the edited value before generating.'}</span>}
-          </div>
-          {loading && <TableSkeleton columns={COLUMNS.length} rows={7} />}
+          {!viewingHistory && (
+            <div style={{display:'flex',gap:12,flexWrap:'wrap',marginBottom:18,alignItems:'center'}}>
+              <Button variant="quiet" onClick={handleGenerate} disabled={loading || Boolean(error) || saveStatus==='saving' || saveStatus==='error'}>Generate full schedule</Button>
+              <Button variant="quiet" onClick={exportExcel} disabled={loading || Boolean(error) || saveStatus==='saving' || saveStatus==='error'}>Export schedule to Excel</Button>
+              <span>Uses all {rows.length} submissions, regardless of filters.</span>
+              {saveStatus && <span role="status">{saveStatus === 'saving' ? 'Saving…' : saveStatus === 'saved' ? 'Saved' : 'Save failed — correct the edited value before generating.'}</span>}
+            </div>
+          )}
+          {(loading || historyLoading) && <TableSkeleton columns={COLUMNS.length} rows={7} />}
           {error && <div className="status error">{error}</div>}
-          {!loading && !error && (
+          {!loading && !historyLoading && !error && (
             <Table>
               <thead><tr>{COLUMNS.map((col) => (<th key={col.key} aria-sort={sortKey===col.key ? (sortDir==='asc'?'ascending':'descending') : 'none'}><button type="button" className="admin-sort-btn" onClick={()=>{setSortKey(col.key);setSortDir(sortKey===col.key && sortDir==='asc'?'desc':'asc');}}>{col.label}{sortKey===col.key ? (sortDir==='asc'?' ↑':' ↓') : ''}</button></th>))}</tr></thead>
               <tbody>
                 {visibleRows.map((row) => (
-                  <tr key={row.id}>{COLUMNS.map((col) => (<td key={col.key}>{col.key === 'created_at' ? cellValue(row, col.key) : (<input className="admin-cell-input" value={cellValue(row, col.key)} onChange={(e) => updateCell(row.id, col.key, e.target.value)} />)}</td>))}</tr>
+                  <tr key={row.id}>{COLUMNS.map((col) => (<td key={col.key}>{col.key === 'created_at' ? cellValue(row, col.key) : (<input className="admin-cell-input" value={cellValue(row, col.key)} readOnly={viewingHistory} onChange={viewingHistory ? undefined : (e) => updateCell(row.id, col.key, e.target.value)} />)}</td>))}</tr>
                 ))}
               </tbody>
             </Table>

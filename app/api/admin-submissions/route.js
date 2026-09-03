@@ -49,6 +49,7 @@ return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 }
 try {
 const supabase = createAdminSupabaseClient();
+await supabase.rpc('archive_kvk_cycle');
 const { data, error } = await supabase
 .from('submissions')
 .select(ADMIN_COLUMNS)

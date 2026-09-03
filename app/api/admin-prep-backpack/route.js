@@ -8,6 +8,7 @@ export async function GET(request) {
   }
   try {
     const supabase = createAdminSupabaseClient();
+    await supabase.rpc('archive_prep_cycle');
     const { data, error } = await supabase
       .from('prep_backpack_submissions')
       .select('*')

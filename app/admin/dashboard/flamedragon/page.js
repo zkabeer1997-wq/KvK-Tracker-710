@@ -13,6 +13,8 @@ export default function AdminFlamedragonPage() {
       rallyStorageKey="flamedragon-admin-rallies-v1"
       exportFileNamePrefix="k710-flamedragon-tyrant"
       workbookSheetName="Flamedragon Tyrant"
+      historyEndpoint="/api/admin-flamedragon/history"
+      historyLabel="Previous Tyrant"
     />
   );
 }

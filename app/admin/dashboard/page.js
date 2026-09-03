@@ -13,6 +13,8 @@ export default function AdminDashboardPage() {
       exportFileNamePrefix="k710-kvk-members"
       workbookSheetName="KvK Members"
       allowClearTestData
+      historyEndpoint="/api/admin-submissions/history"
+      historyLabel="Previous KvK"
     />
   );
 }
