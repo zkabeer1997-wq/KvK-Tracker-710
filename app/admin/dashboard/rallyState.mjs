@@ -71,11 +71,15 @@ function normalizeLeadHeroAssignments(value) {
 }
 
 function normalizeRally(rally) {
+const leadMemberId = rally.leadMemberId ? String(rally.leadMemberId) : '';
+const memberIds = Array.isArray(rally.memberIds) ? rally.memberIds.map(String) : [];
 return {
 id: rally.id,
 name: rally.name,
-memberIds: Array.isArray(rally.memberIds) ? rally.memberIds.map(String) : [],
-leadMemberId: rally.leadMemberId ? String(rally.leadMemberId) : '',
+// A Rally Lead is never also a joiner in their own rally - strip any
+// stale overlap (e.g. from data saved before this rule existed) on load.
+memberIds: leadMemberId ? memberIds.filter((id) => id !== leadMemberId) : memberIds,
+leadMemberId,
 troopWeights: {
 ...DEFAULT_TROOP_WEIGHTS,
 ...(rally.troopWeights || {}),

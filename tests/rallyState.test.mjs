@@ -93,7 +93,12 @@ const leadGuardRallies = [rally('a', { leadMemberId: '303' }), rally('b')];
 assert.deepEqual(
   assignMemberToRally(leadGuardRallies, 'b', '303'),
   leadGuardRallies,
-  'assigning a rally lead as a joiner is a no-op',
+  'assigning a rally lead as a joiner of another rally is a no-op',
+);
+assert.deepEqual(
+  assignMemberToRally(leadGuardRallies, 'a', '303'),
+  leadGuardRallies,
+  'assigning a rally lead as a joiner of their own rally is a no-op',
 );
 assert.deepEqual(
   getRallyLeadMemberIds([rally('a', { leadMemberId: '303' }), rally('b', { leadMemberId: '' })]),
@@ -365,16 +370,27 @@ const overCapStored = parseStoredRallies(JSON.stringify([
 ]));
 assert.equal(overCapStored[0].leadHeroes.Saul, MAX_LEAD_HEROES);
 
+// Legacy data saved before the lead/joiner rule existed can list the lead
+// as a joiner too - normalization self-heals that on every load.
+const staleLeadOverlap = parseStoredRallies(JSON.stringify([
+  { id: 'a', name: 'Rally 1', memberIds: ['303', '404'], leadMemberId: '303' },
+]));
+assert.deepEqual(
+  staleLeadOverlap[0].memberIds,
+  ['404'],
+  'a rally lead is stripped from their own rally\'s joiner list even in stale/legacy saved data',
+);
+
 // --- serializeRalliesForSave / formatRallyRows round trip -------------------
 
 const inMemory = [
   rally('a', {
     name: 'Bear Squad',
-    memberIds: ['101', '202'],
+    memberIds: ['202', '303'],
     leadMemberId: '101',
     troopWeights: { infantry: 70, cavalry: 20, archer: 10 },
     leadHeroes: { Saul: 2, Thrud: 1 },
-    leadHeroAssignments: { 101: 'Saul' },
+    leadHeroAssignments: { 202: 'Saul' },
   }),
 ];
 
@@ -383,14 +399,14 @@ assert.deepEqual(saved, [{
   id: 'a',
   name: 'Bear Squad',
   position: 0,
-  member_ids: ['101', '202'],
+  member_ids: ['202', '303'],
   lead_member_id: '101',
   // The DB stores weights, lead-hero counts, and hero assignments together
   // in one `formation` column.
   formation: {
     infantry: 70, cavalry: 20, archer: 10,
     leadHeroes: { Saul: 2, Thrud: 1 },
-    leadHeroAssignments: { 101: 'Saul' },
+    leadHeroAssignments: { 202: 'Saul' },
   },
 }]);
 
@@ -398,11 +414,11 @@ assert.deepEqual(
   formatRallyRows(saved),
   [rally('a', {
     name: 'Bear Squad',
-    memberIds: ['101', '202'],
+    memberIds: ['202', '303'],
     leadMemberId: '101',
     troopWeights: { infantry: 70, cavalry: 20, archer: 10 },
     leadHeroes: { Saul: 2, Thrud: 1 },
-    leadHeroAssignments: { 101: 'Saul' },
+    leadHeroAssignments: { 202: 'Saul' },
   })],
   'save/load round trips losslessly',
 );
