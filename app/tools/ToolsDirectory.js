@@ -7,12 +7,18 @@ const TOOLS = {
     { key: 'charm-pack-optimizer', event: 'Governor Charms', title: 'Charm Pack Optimizer', description: 'Set all 18 charms individually, calculate every upgrade material, and build the cheapest week-by-week pack plan.', status: 'New', icon: '/images/charm-pack-forge.svg' },
     { key: 'wavebound-charms', event: 'Wavebound Voyage', title: 'Charms Sailing Optimizer', description: 'Calculate Tidal Treasure merges for a target Charm level, including Exquisite and Majestic outcomes.', status: 'Available', icon: '/images/wavebound-charm-sail.svg' },
   ],
-  'Governor Gear': [],
-  'Hero Gear': [],
+  'Governor Gear': [
+    { key: 'governor-gear-planner', event: 'Six-piece loadout', title: 'Governor Gear Upgrade Planner', description: 'Plan all six slots from Green through Red T6 and calculate Satin, Gilded Threads, Artisan’s Vision, and inventory shortfalls.', status: 'New', glyph: 'Governor Gear' },
+  ],
+  'Hero Gear': [
+    { key: 'hero-gear-planner', event: 'Enhancement & Mastery', title: 'Hero Gear Upgrade Planner', description: 'Calculate exact published XP checkpoints, Forgehammers, Mythic Gear, Mithril, and red-gear Mastery gates.', status: 'New', glyph: 'Hero Gear' },
+  ],
   Pets: [
     { key: 'pet-pack-optimizer', event: 'Pet Advancement', title: 'Pet Pack Optimizer', description: 'Enter your material target and inventory, then get the cheapest repeatable week-by-week pack and chest redemption plan.', status: 'New', icon: '/images/pet-pack-compass.svg' },
   ],
-  Masters: [],
+  Masters: [
+    { key: 'master-focus-planner', event: 'Master Academy', title: 'Master Focus Planner', description: 'Choose your account goal and get a focused investment order across the six current Masters.', status: 'New', glyph: 'Masters' },
+  ],
   'Special Event Shops': [
     { key: 'flamedragon-shop', event: 'Flamedragon Tyrant', title: 'Dragon’s Caravan Optimizer', description: 'Build a reward cart, prioritize the best-value shop items, and calculate the cheapest Dragon Essence pack combination.', status: 'New', icon: '/images/flamedragon-caravan.svg' },
     { key: 'adventure-stall', event: 'Adventure Stall', title: 'Adventure Stall Optimizer', description: 'Choose your event rewards and calculate the lowest-cost daily pack plan after using the Shells already in your inventory.', status: 'New', icon: '/images/adventure-stall.svg' },
@@ -58,7 +64,7 @@ function ToolBox({ tool, query }) {
       <span className={`tool-box-badge ${STATUS_TONE[tool.status] || ''}`}>{tool.status}</span>
       <span className="tool-box-icon" aria-hidden="true">
         <span className="tool-box-icon-glow" />
-        <Image className="tool-box-icon-art" src={tool.icon} alt="" width={72} height={72} />
+        {tool.icon ? <Image className="tool-box-icon-art" src={tool.icon} alt="" width={72} height={72} /> : <span className="tool-box-icon-art tool-box-icon-glyph"><CategoryGlyph category={tool.glyph} /></span>}
       </span>
       <span className="k-mark tool-box-event">{tool.event}</span>
       <strong className="k-display tool-box-title">{tool.title}</strong>
@@ -183,6 +189,8 @@ export default function ToolsDirectory({ memberId, category }) {
 
         .tool-box-icon{position:relative;width:88px;height:88px;display:grid;place-items:center;margin-top:6px;isolation:isolate}
         .tool-box-icon-art{position:relative;z-index:2;object-fit:contain;filter:drop-shadow(0 10px 10px rgba(0,0,0,.55));transition:transform .2s var(--ease-cine,ease)}
+        .tool-box-icon-glyph{width:72px;height:72px;display:grid;place-items:center;color:var(--gold-hot)}
+        .tool-box-icon-glyph .tools-menu-glyph{width:44px;height:44px}
         .tool-box-icon-glow{position:absolute;z-index:1;inset:6px;border-radius:50%;background:radial-gradient(circle,rgba(65,164,255,.2),rgba(201,164,78,.09) 46%,transparent 72%);filter:blur(8px);opacity:.72}
         .tool-box:hover .tool-box-icon-art{transform:translateY(-3px) scale(1.06)}
 
