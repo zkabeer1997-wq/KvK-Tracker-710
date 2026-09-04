@@ -13,7 +13,6 @@ create table if not exists public.power_profiles (
  archer_tier text,
  archer_tg text,
  heroes text[] not null default '{}',
- pin_hash text not null,
  updated_at timestamptz not null default now()
 );
 
@@ -25,6 +24,11 @@ alter table public.power_profiles
   add column if not exists archer_tier text,
   add column if not exists archer_tg text,
   add column if not exists heroes text[] not null default '{}';
+
+-- Player Profile saves are now authorized by the member session cookie
+-- (set by /api/member-login or /api/member-register), not by a second,
+-- independent PIN hash tracked only on this table - drop the unused column.
+alter table public.power_profiles drop column if exists pin_hash;
 
 alter table public.power_profiles enable row level security;
 

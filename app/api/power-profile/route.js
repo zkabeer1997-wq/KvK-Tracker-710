@@ -1,6 +1,6 @@
-import { createHash } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
+import { readMemberSession } from '../../../lib/memberAuth';
 import { publicPowerProfile, sanitizePowerProfileInput } from '../../../lib/powerProfiles.mjs';
 
 const PUBLIC_COLUMNS = [
@@ -8,10 +8,6 @@ const PUBLIC_COLUMNS = [
 'infantry_tier', 'infantry_tg', 'cavalry_tier', 'cavalry_tg', 'archer_tier', 'archer_tg',
 'heroes', 'updated_at',
 ].join(',');
-
-function pinHash(pin) {
-return createHash('sha256').update('kvk-power-profile-v1:' + pin).digest('hex');
-}
 
 function tableMissingResponse() {
 return NextResponse.json({
@@ -49,26 +45,29 @@ return NextResponse.json({ error: error.message }, { status: 500 });
 }
 
 export async function POST(request) {
+const session = await readMemberSession(request);
+if (!session) {
+return NextResponse.json({ error: 'Please sign in again.' }, { status: 401 });
+}
 let profile;
 try {
 profile = sanitizePowerProfileInput(await request.json());
 } catch (error) {
 return NextResponse.json({ error: error.message }, { status: 400 });
 }
+if (profile.member_id !== session.memberId) {
+return NextResponse.json({ error: 'Sign in with this Member ID to update its Player Profile.' }, { status: 403 });
+}
 try {
 const supabase = createAdminSupabaseClient();
 const { data: existing, error: selectError } = await supabase
 .from('power_profiles')
-.select('member_id,pin_hash')
+.select('member_id')
 .eq('member_id', profile.member_id)
 .maybeSingle();
 if (selectError) {
 if (isMissingTableError(selectError)) return tableMissingResponse();
 return NextResponse.json({ error: selectError.message }, { status: 500 });
-}
-const nextHash = pinHash(profile.pin);
-if (existing && existing.pin_hash !== nextHash) {
-return NextResponse.json({ error: 'Incorrect PIN for this Member ID. Please try again.' }, { status: 403 });
 }
 const payload = {
 name: profile.name,
@@ -86,7 +85,6 @@ cavalry_tg: profile.cavalry_tg || null,
 archer_tier: profile.archer_tier || null,
 archer_tg: profile.archer_tg || null,
 heroes: profile.heroes,
-pin_hash: nextHash,
 updated_at: new Date().toISOString(),
 };
 const { data, error } = await supabase

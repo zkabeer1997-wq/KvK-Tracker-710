@@ -39,7 +39,6 @@ cavalry_tg: '',
 archer_tier: '',
 archer_tg: '',
 heroes: [],
-pin: '',
 });
 const [governorGear, setGovernorGear] = useState(blankGovernorGearSelections());
 const [charms, setCharms] = useState(blankCharmSelections());
@@ -285,10 +284,6 @@ Player profile on file - Governor Gear: {onFile.governor_gear || '-'} / Charms: 
   </div>
 </div>
 
-<section className="pin-panel">
-<label>Enter your PIN<input type="password" value={form.pin} onChange={(e) => updateField('pin', e.target.value)} placeholder="Your PIN" /></label>
-<p className="hint">First Player Profile submission sets your PIN for this page. Enter the same PIN next time to update it.</p>
-</section>
 {status && <div className={isError ? 'status error' : 'status'}>{status}</div>}
 <button type="submit" disabled={loading}>{loading ? 'Saving...' : 'Save Player Profile'}</button>
 </form>
