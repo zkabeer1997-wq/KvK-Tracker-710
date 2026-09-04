@@ -165,6 +165,13 @@ button[type="submit"]:not(.k-btn):disabled { opacity: 0.5; cursor: not-allowed; 
 .gear-ocr-panel p { margin: 3px 0 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
 .gear-ocr-button { width: auto !important; margin: 0 !important; padding: 10px 14px !important; white-space: nowrap; font-size: 13px !important; }
 .gear-ocr-button:disabled { cursor: wait; opacity: .7; }
+.gear-ocr-example { grid-column: 1 / -1; border-top: 1px solid rgba(196, 139, 54, .18); padding-top: 10px; }
+.gear-ocr-example summary { width: fit-content; color: var(--ember); font-size: 12px; font-weight: 800; cursor: pointer; }
+.gear-ocr-example summary:hover { color: var(--ember-bright); }
+.gear-ocr-example-content { display: grid; grid-template-columns: minmax(0, 280px) minmax(0, 1fr); align-items: start; gap: 14px; padding-top: 12px; }
+.gear-ocr-example-content img { display: block; width: 100%; height: auto; max-height: 420px; object-fit: contain; object-position: top; border: 1px solid rgba(196, 139, 54, .28); border-radius: 10px; background: rgba(0, 0, 0, .18); }
+.gear-ocr-example-content strong { display: block; margin-top: 2px; }
+.gear-ocr-example-content .gear-ocr-privacy-note { margin-top: 10px; color: #7ecf91; }
 .gear-ocr-status { grid-column: 1 / -1; margin: 0 !important; padding-top: 8px; border-top: 1px solid rgba(196, 139, 54, .18); }
 .gear-ocr-panel.success .gear-ocr-status { color: #7ecf91; }
 .gear-ocr-panel.review .gear-ocr-status { color: #e8b868; }
@@ -391,7 +398,7 @@ button[type="submit"]:not(.k-btn):disabled { opacity: 0.5; cursor: not-allowed; 
 .rally-member button { flex: 0 0 auto; width: 24px; height: 24px; border: none; border-radius: 999px; background: rgba(255, 107, 107, 0.18); color: #ff8f8f; font-weight: 700; line-height: 1; cursor: pointer; }
 
 @media (max-width: 960px) { .public-page { padding: 16px; align-items: flex-start; } .public-shell { grid-template-columns: minmax(0, 1fr); } .home-hub { grid-template-columns: minmax(0, 1fr); } .public-intro { position: static; min-height: auto; gap: 34px; } .unit-card-grid, .identity-grid, .availability-grid, .pin-panel, .power-field-grid, .governor-gear-grid, .charm-grid { grid-template-columns: minmax(0, 1fr); } .power-field-grid > label:last-child { grid-column: auto; } .admin-workspace { grid-template-columns: minmax(0, 1fr); } .admin-actions { flex-direction: column; align-items: stretch; } .rally-dropzone { width: 280px; flex-basis: 280px; } .dashboard-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .admin-hero, .rally-board-header { flex-direction: column; } }
-@media (max-width: 600px) { .gear-ocr-panel { grid-template-columns: 1fr; } .gear-ocr-button { width: 100% !important; } }
+@media (max-width: 600px) { .gear-ocr-panel { grid-template-columns: 1fr; } .gear-ocr-button { width: 100% !important; } .gear-ocr-example-content { grid-template-columns: 1fr; } .gear-ocr-example-content img { max-height: 520px; } }
 
 .radio-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; }
 
@@ -895,4 +902,3 @@ tr.row-dragging { opacity: 0.5; }
 .member-details-drawer .admin-drawer-header h2 { overflow-wrap: anywhere; }
 .member-details-drawer .admin-drawer-close { flex-shrink: 0; }
 .member-details-drawer .admin-drawer-field strong { white-space: pre-wrap; line-height: 1.65; }
-
