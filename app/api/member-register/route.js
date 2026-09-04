@@ -1,6 +1,6 @@
 import { randomInt } from 'node:crypto';
 import { NextResponse } from 'next/server';
-import { createSupabaseAdminClient } from '../../../lib/supabaseAdmin';
+import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
 import { createMemberToken, MEMBER_COOKIE_NAME, MEMBER_TOKEN_TTL_MS } from '../../../lib/memberAuth';
 import { enrollMemberForGiftCodes } from '../../../lib/giftCodes.mjs';
 
@@ -35,7 +35,7 @@ export async function POST(request) {
   }
 
   try {
-    const supabase = createSupabaseAdminClient();
+    const supabase = createAdminSupabaseClient();
 
     // Never overwrite or claim an existing Member ID through the public
     // first-time flow. Existing members must authenticate with their PIN or

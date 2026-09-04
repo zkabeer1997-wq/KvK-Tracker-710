@@ -54,7 +54,7 @@ export async function PATCH(request) {
         message: body.message ? String(body.message) : '',
         updated_at: new Date().toISOString(),
       }, { onConflict: 'form_key' })
-      .select('*')
+      .select('form_key, is_open, message')
       .single();
 
     if (error) return NextResponse.json({ error: 'Unable to save form status. Please try again.' }, { status: 500 });

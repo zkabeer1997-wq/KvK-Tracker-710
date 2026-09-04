@@ -1,7 +1,7 @@
 import { randomInt } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { readMemberSession } from '../../../lib/memberAuth';
-import { createSupabaseAdminClient } from '../../../lib/supabaseAdmin';
+import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
 
 function json(body, init = {}) {
   const response = NextResponse.json(body, init);
@@ -30,7 +30,7 @@ export async function POST(request) {
   // Generate server-side with unbiased cryptographic randomness. The plaintext
   // value is returned once; PostgreSQL persists only its bcrypt hash.
   const personalCode = String(randomInt(0, 1_000_000)).padStart(6, '0');
-  const { data, error } = await createSupabaseAdminClient().rpc('reset_kingshot_personal_code', {
+  const { data, error } = await createAdminSupabaseClient().rpc('reset_kingshot_personal_code', {
     p_actor_player_id: actor.playerId,
     p_target_player_id: targetPlayerId,
     p_personal_code: personalCode,

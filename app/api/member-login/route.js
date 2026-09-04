@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createSupabaseAdminClient } from '../../../lib/supabaseAdmin';
+import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
 import { createMemberToken, MEMBER_COOKIE_NAME, MEMBER_TOKEN_TTL_MS } from '../../../lib/memberAuth';
 
 export async function POST(request) {
@@ -23,7 +23,7 @@ export async function POST(request) {
   }
 
   try {
-    const supabase = createSupabaseAdminClient();
+    const supabase = createAdminSupabaseClient();
 
     // Fail closed before PIN verification. This protects the member gate even if
     // the backing verification function is ever changed or missing-member data

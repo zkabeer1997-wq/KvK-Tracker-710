@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createSupabaseAdminClient } from '../../../../lib/supabaseAdmin';
+import { createAdminSupabaseClient } from '../../../../lib/adminSupabase';
 import {
   deriveKingdomId,
   isLoginSuperadmin,
@@ -58,7 +58,7 @@ export async function POST(request) {
   }
 
   try {
-    const db = createSupabaseAdminClient();
+    const db = createAdminSupabaseClient();
     if (await isPersonalCodeRateLimited(request, flow.playerId)) {
       const response = json({
         error: 'Too many incorrect verification attempts. Please try again later.',

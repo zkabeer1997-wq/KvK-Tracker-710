@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { readMemberSession } from '../../../lib/memberAuth';
-import { createSupabaseAdminClient } from '../../../lib/supabaseAdmin';
+import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
 
 const ROLES = new Set(['member', 'admin', 'superadmin']);
 
@@ -19,7 +19,7 @@ export async function GET(request) {
   const actor = await requireSuperadmin(request);
   if (!actor) return json({ error: 'Superadmin access required.' }, { status: 403 });
 
-  const { data, error } = await createSupabaseAdminClient()
+  const { data, error } = await createAdminSupabaseClient()
     .from('kingshot_users')
     .select('player_id, nickname, avatar_url, kingdom_id, alliance_abbr, alliance_name, access_role, personal_code_hash, last_login_at')
     .order('nickname', { ascending: true });
@@ -51,7 +51,7 @@ export async function PATCH(request) {
     return json({ error: 'You cannot remove your own superadmin access.' }, { status: 400 });
   }
 
-  const { data, error } = await createSupabaseAdminClient().rpc('set_kingshot_user_role', {
+  const { data, error } = await createAdminSupabaseClient().rpc('set_kingshot_user_role', {
     p_actor_player_id: actor.playerId,
     p_target_player_id: targetPlayerId,
     p_access_role: accessRole,

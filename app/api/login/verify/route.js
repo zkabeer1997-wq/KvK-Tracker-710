@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createSupabaseAdminClient } from '../../../../lib/supabaseAdmin';
+import { createAdminSupabaseClient } from '../../../../lib/adminSupabase';
 import {
   deriveKingdomId,
   isLoginSuperadmin,
@@ -77,7 +77,7 @@ export async function POST(request) {
     // These designated accounts regain their required owner access whenever
     // they successfully authenticate, even if a role was changed manually.
     if (isLoginSuperadmin(flow.playerId)) storedUser.access_role = 'superadmin';
-    const { data: user, error: saveError } = await createSupabaseAdminClient()
+    const { data: user, error: saveError } = await createAdminSupabaseClient()
       .from('kingshot_users')
       .upsert(storedUser, { onConflict: 'player_id', defaultToNull: false })
       .select(publicColumns())
