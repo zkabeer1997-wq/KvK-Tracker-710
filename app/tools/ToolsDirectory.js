@@ -7,7 +7,9 @@ const TOOLS = {
     { key: 'charm-pack-optimizer', event: 'Governor Charms', title: 'Charm Pack Optimizer', description: 'Set all 18 charms individually, calculate every upgrade material, and build the cheapest week-by-week pack plan.', status: 'New', icon: '/images/charm-pack-forge.svg' },
     { key: 'wavebound-charms', event: 'Wavebound Voyage', title: 'Charms Sailing Optimizer', description: 'Calculate Tidal Treasure merges for a target Charm level, including Exquisite and Majestic outcomes.', status: 'Available', icon: '/images/wavebound-charm-sail.svg' },
   ],
-  'Governor Gear': [],
+  'Governor Gear': [
+    { key: 'governor-gear-optimizer', event: 'Governor Gear', title: 'Governor Gear Optimizer', description: 'Set current and target tiers for all 6 Governor Gear pieces, track Defense/Attack set bonuses, and see the total materials required.', status: 'New', icon: '/images/governor-gear-plate.svg' },
+  ],
   'Hero Gear': [],
   Pets: [
     { key: 'pet-pack-optimizer', event: 'Pet Advancement', title: 'Pet Pack Optimizer', description: 'Enter your material target and inventory, then get the cheapest repeatable week-by-week pack and chest redemption plan.', status: 'New', icon: '/images/pet-pack-compass.svg' },
