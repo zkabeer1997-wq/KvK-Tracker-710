@@ -41,6 +41,24 @@ const nextConfig = {
       },
     ];
   },
+  images: {
+    // Gallery images are stored in Supabase Storage and served from
+    // `https://<project-ref>.supabase.co/storage/v1/object/public/...`.
+    // The project ref differs between production and the staging preview
+    // project (see scripts/verify-collaborator-preview-env.mjs), so this
+    // matches any Supabase project rather than hardcoding one ref.
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+    ],
+  },
 };
 
-module.exports = nextConfig;
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
+module.exports = withBundleAnalyzer(nextConfig);

@@ -1,5 +1,3 @@
-'use client';
-
 const TONE_BY_STATUS = {
   pending: 'neutral',
   special: 'gold',

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import HomeEditableText from '../components/HomeEditableText';
 import { getHomeContent, checkIsAdmin } from '../lib/homeContent';
 import HomeForgeIntro from '../components/kingdom/world/HomeForgeIntro';
-import RealmShield3D from '../components/kingdom/world/RealmShield3D';
+import RealmShieldLoader from '../components/kingdom/world/RealmShieldLoader';
 import GalleryCarousel from '../components/gallery/GalleryCarousel';
 import { getGalleryImages } from '../lib/gallery';
 
@@ -188,7 +188,7 @@ export default async function HomePage() {
           </div>
         </div>
 
-        <RealmShield3D />
+        <RealmShieldLoader />
 
       </section>
 
