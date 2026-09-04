@@ -25,6 +25,7 @@ Apply this migration before deploying the code:
 ```text
 supabase/migrations/20260904170000_kingshot_accounts_sessions_and_roles.sql
 supabase/migrations/20260904190000_personal_login_codes.sql
+supabase/migrations/20260904200000_bootstrap_personal_owner.sql
 ```
 
 It creates three server-only tables:
@@ -53,7 +54,12 @@ Personal codes are optional for verified accounts. A superadmin can create or
 reset one from `/admin/dashboard/access`; the replacement is generated on the
 server and revealed only in that response. Supabase stores only a bcrypt hash.
 The initial code for player `108051086` is provisioned by the personal-code
-migration without overwriting any later reset.
+migrations without overwriting any later reset. The database migration creates
+the account if it is missing, and the server repeats that idempotent check when
+each Node.js instance starts and when that player starts a login. After a valid
+personal-code login, the application refreshes the MightPulse search/profile
+payload and persists it through the same normalized account mapping used by the
+normal Kingshot login.
 
 ## Required environment variables
 

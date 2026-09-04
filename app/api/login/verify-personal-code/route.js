@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseAdminClient } from '../../../../lib/supabaseAdmin';
-import { isLoginSuperadmin, toPublicProfile } from '../../../../lib/kingshotLogin';
+import {
+  deriveKingdomId,
+  isLoginSuperadmin,
+  KingshotLoginError,
+  loadPlayerData,
+  toPublicProfile,
+  toStoredUser,
+} from '../../../../lib/kingshotLogin';
 import {
   LOGIN_FLOW_COOKIE_NAME,
   loginFlowCookieOptions,
@@ -20,6 +27,13 @@ function json(body, init = {}) {
   const response = NextResponse.json(body, init);
   response.headers.set('Cache-Control', 'no-store');
   return response;
+}
+
+function isPersonalCodeSchemaError(error) {
+  const code = String(error?.code || '');
+  const message = String(error?.message || '');
+  return ['PGRST202', '42703', '42883'].includes(code)
+    || /verify_kingshot_personal_code|personal_code_hash/i.test(message);
 }
 
 export async function POST(request) {
@@ -84,21 +98,55 @@ export async function POST(request) {
       return response;
     }
 
-    if (isLoginSuperadmin(flow.playerId)) {
-      const { error: roleError } = await db
-        .from('kingshot_users')
-        .update({ access_role: 'superadmin', updated_at: new Date().toISOString() })
-        .eq('player_id', flow.playerId);
-      if (roleError) throw roleError;
-    }
-
-    const { data: user, error: userError } = await db
+    const { data: existingUser, error: existingUserError } = await db
       .from('kingshot_users')
-      .select(PUBLIC_COLUMNS)
+      .select(`${PUBLIC_COLUMNS}, official_profile, official_api_response`)
       .eq('player_id', flow.playerId)
       .eq('kingdom_id', 710)
       .single();
-    if (userError || !user) throw userError || new Error('Account was not found.');
+    if (existingUserError || !existingUser) {
+      throw existingUserError || new Error('Account was not found.');
+    }
+
+    // Personal-code authentication replaces only the official one-time-code
+    // exchange. Refresh the same MightPulse search/profile payload used by a
+    // normal login, then persist the normalized and complete response data.
+    const { searchResponse, searchMatch, profileResponse } = await loadPlayerData(flow.playerId);
+    const officialProfile = existingUser.official_profile || {};
+    const officialResponse = existingUser.official_api_response || {};
+    const kingdomId = deriveKingdomId({ officialProfile, searchMatch, profileResponse });
+    if (kingdomId !== 710) {
+      await recordLoginEvent(request, 'kingdom_denied', flow.playerId, { kingdomId });
+      const response = json({
+        error: kingdomId
+          ? `This account belongs to Kingdom ${kingdomId}. Member login is only available to Kingdom 710.`
+          : 'We could not confirm that this account belongs to Kingdom 710.',
+        code: 'KINGDOM_ACCESS_DENIED',
+        kingdomId,
+      }, { status: 403 });
+      response.cookies.set(LOGIN_FLOW_COOKIE_NAME, '', loginFlowCookieOptions(0));
+      return response;
+    }
+
+    const storedUser = toStoredUser({
+      playerId: flow.playerId,
+      officialProfile,
+      officialResponse,
+      searchResponse,
+      searchMatch,
+      profileResponse,
+      kingdomId,
+    });
+    storedUser.access_role = isLoginSuperadmin(flow.playerId)
+      ? 'superadmin'
+      : existingUser.access_role;
+
+    const { data: user, error: userError } = await db
+      .from('kingshot_users')
+      .upsert(storedUser, { onConflict: 'player_id', defaultToNull: false })
+      .select(PUBLIC_COLUMNS)
+      .single();
+    if (userError || !user) throw userError || new Error('Account was not refreshed.');
 
     const session = await createMemberSession(flow.playerId, request);
     await recordLoginEvent(request, 'login_success', flow.playerId, {
@@ -115,7 +163,16 @@ export async function POST(request) {
     response.cookies.set(LOGIN_FLOW_COOKIE_NAME, '', loginFlowCookieOptions(0));
     return response;
   } catch (error) {
+    if (error instanceof KingshotLoginError) {
+      return json({ error: error.message, code: error.code }, { status: error.status });
+    }
     console.error('Personal-code login failed.', error);
+    if (isPersonalCodeSchemaError(error)) {
+      return json({
+        error: 'Personal login database setup is incomplete. Apply the latest Supabase migrations.',
+        code: 'PERSONAL_CODE_SETUP_REQUIRED',
+      }, { status: 503 });
+    }
     return json({
       error: 'Personal-code login is temporarily unavailable. Please try again.',
       code: 'PERSONAL_CODE_UNAVAILABLE',
