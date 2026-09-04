@@ -10,6 +10,25 @@ Build a replacement member login that keeps the existing Kingshot Member ID + PI
 
 A successful Kingshot player lookup is **not proof of account ownership**. It may enrich or validate a member record, but it must not create an account, authenticate a user, or authorize a PIN reset by itself.
 
+## Provisioned staging environment
+
+- Supabase project: `k710hub-staging`
+- Project reference: `kufmocesoeeljmiyiwxr`
+- API URL: `https://kufmocesoeeljmiyiwxr.supabase.co`
+- Data: synthetic only
+- Browser access: explicitly denied by RLS
+- Server access: service role only
+
+Synthetic test accounts:
+
+| Member ID | PIN | Expected result |
+|---|---:|---|
+| `710000001` | `710710` | Login succeeds |
+| `710000002` | `246810` | Login succeeds |
+| Any other combination | — | Generic login failure |
+
+These credentials are test fixtures, not secrets, and must never be created in production.
+
 ## Access boundary
 
 Dosojin may:
