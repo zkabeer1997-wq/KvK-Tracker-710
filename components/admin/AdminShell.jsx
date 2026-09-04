@@ -29,6 +29,7 @@ const NAV_SECTIONS = [
     label: 'Member and Transfer Management',
     items: [
       { href: '/admin/dashboard/member-pins', label: 'Member Profiles', match: '/admin/dashboard/member-pins' },
+      { href: '/admin/dashboard/access', label: 'User Access', match: '/admin/dashboard/access', superadminOnly: true },
       { href: '/admin/dashboard/gift-codes', label: 'Gift Codes', match: '/admin/dashboard/gift-codes' },
       { href: '/admin/dashboard/interest', label: 'Transfer Requests', badge: 'transfers', match: '/admin/dashboard/interest' },
       { href: '/admin/dashboard/website-requests', label: 'Website Requests', badge: 'website', match: '/admin/dashboard/website-requests' },
@@ -78,6 +79,17 @@ function isNavActive(pathname, match) {
 export default function AdminShell({ title, subtitle, actions, onLogout, counters = [], children }) {
   const pathname = usePathname();
   const [taskCounts, setTaskCounts] = useState({});
+  const [accountRole, setAccountRole] = useState('');
+  useEffect(() => {
+    let active = true;
+    fetch('/api/session', { cache: 'no-store' })
+      .then((response) => response.json())
+      .then((result) => {
+        if (active && result?.state === 'authenticated') setAccountRole(result.profile?.role || '');
+      })
+      .catch(() => {});
+    return () => { active = false; };
+  }, []);
   useEffect(() => {
     const controller = new AbortController();
     async function refresh() {
@@ -225,7 +237,7 @@ export default function AdminShell({ title, subtitle, actions, onLogout, counter
                 </button>
                 {(isOpen || sidebarCollapsed) && (
                   <div className="admin-nav-section-items" role="group" aria-label={section.label}>
-                    {section.items.map((item) => {
+                    {section.items.filter((item) => !item.superadminOnly || accountRole === 'superadmin').map((item) => {
                       const isActive = isNavActive(pathname, item.match);
                       return (
                         <Link

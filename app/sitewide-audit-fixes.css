@@ -80,6 +80,11 @@ html,body,.site-shell,.site-route{max-width:100%;overflow-x:clip}
 .home-v2-mountain-front{transform:translate3d(var(--site-pointer-x-7,0px),var(--site-scroll-12,0px),0) scaleX(1.08)}
 .home-v2-citadel{transform:translate3d(var(--site-pointer-x-10,0px),var(--site-scroll-16,0px),0)}
 .realm-shield-canvas{transform:translate3d(var(--site-pointer-x-16,0px),calc(var(--site-scroll-20,0px) + var(--site-pointer-y-8,0px)),0)}
+.realm-shield-static{position:absolute;inset:8%;display:grid;place-items:center;filter:drop-shadow(0 28px 45px rgba(0,0,0,.58)) drop-shadow(0 0 32px rgba(221,126,48,.2));animation:realm-shield-float 4.8s ease-in-out infinite;transform-style:preserve-3d}
+.realm-shield-static:before{content:"";grid-area:1/1;display:block;width:min(68%,360px);aspect-ratio:.76;background:radial-gradient(circle at 50% 46%,rgb(229 189 121) 0 6%,rgb(95 53 29) 7% 18%,rgb(198 151 85) 19% 21%,rgb(71 41 29) 22% 58%,rgb(23 25 29) 59% 100%);clip-path:polygon(50% 0,94% 18%,88% 66%,75% 84%,50% 100%,25% 84%,12% 66%,6% 18%)}
+.realm-shield-static span{grid-area:1/1;position:relative;z-index:1;font:800 clamp(38px,5vw,78px)/1 var(--font-display);letter-spacing:-.06em;color:rgb(229 189 121);text-shadow:0 2px 0 rgba(45,24,12,.9),0 0 28px rgba(232,136,52,.34);animation:realm-shield-pulse 2.4s ease-in-out infinite}
+@keyframes realm-shield-float{0%,100%{transform:translate3d(0,-7px,0) rotateY(-2deg)}50%{transform:translate3d(0,8px,0) rotateY(2deg)}}
+@keyframes realm-shield-pulse{0%,100%{opacity:.82;filter:brightness(.92)}50%{opacity:1;filter:brightness(1.18)}}
 .home-v2-signal{transform:translate3d(0,var(--site-scroll-035,0px),0)}
 .home-v2-story-scene:after{transform:translate3d(0,var(--site-story-055,0px),0)}
 .home-v2-story-sun{transform:translate3d(0,var(--site-story-025,0px),0)}
@@ -248,4 +253,5 @@ html,body,.site-shell,.site-route{max-width:100%;overflow-x:clip}
 
 @media(prefers-reduced-motion:reduce){
   .site-atmosphere-glow,.site-atmosphere-ridge,.home-v2-sun,.home-v2-mountain,.home-v2-citadel,.realm-shield-canvas,.home-v2-signal,.home-v2-story-scene:after,.home-v2-story-sun,.about-standard{transform:none!important}
+  .realm-shield-static,.realm-shield-static span{animation:none!important}
 }

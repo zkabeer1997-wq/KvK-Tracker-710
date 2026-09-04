@@ -54,7 +54,7 @@ const guides=await import('../app/api/guides/route.js');
 const detail=await import('../app/api/guides/[slug]/route.js');
 const images=await import('../app/api/guide-images/[file]/route.js');
 const profiles=await import('../app/api/admin-member-pins/route.js');
-process.env.ADMIN_PASSWORD='workflow-test-only';process.env.MEMBER_SESSION_SECRET='workflow-members-only';
+process.env.ADMIN_PASSWORD='workflow-test-only';process.env.MEMBER_SESSION_SECRET='workflow-members-only';process.env.K710_ENABLE_LEGACY_ADMIN='true';process.env.K710_ENABLE_LEGACY_MEMBER_SESSION='true';
 const adminToken=await mintAdminToken(),memberToken=await createMemberToken('member-a');
 const req=(body={},role='anonymous')=>({json:async()=>body,cookies:{get:key=>key==='tff_admin_session'&&role==='admin'?{value:adminToken}:key==='k710_member_session'&&role==='member'?{value:memberToken}:undefined}});
 const params=slug=>({params:Promise.resolve({slug})});

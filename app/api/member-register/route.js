@@ -11,6 +11,12 @@ function noStoreJson(body, init = {}) {
 }
 
 export async function POST(request) {
+  if (process.env.K710_ENABLE_LEGACY_MEMBER_SESSION !== 'true') {
+    return noStoreJson({
+      error: 'PIN registration has been replaced by Kingshot verification.',
+    }, { status: 410 });
+  }
+
   let body;
   try {
     body = await request.json();

@@ -4,10 +4,9 @@ Kingdom 710's Kingshot portal and operations hub — Next.js 16 (App Router) +
 Supabase.
 
 Public surface: the Gate, kingdom guides, and the transfer registry.
-Member surface (Member ID + PIN): player record, war ledger, KvK prep, and the
-economy optimizers under `/tools`.
-Admin surface (shared password): roster, rally builder, transfer review, member
-PINs, and inline content editing.
+Member access uses a Player ID plus the one-time code delivered inside Kingshot.
+Only verified Kingdom 710 accounts receive a persistent website session.
+Admins use the same account session; superadmins can assign or remove roles.
 
 ## Setup
 
@@ -17,28 +16,28 @@ PINs, and inline content editing.
 
 ## Environment
 
-**Required.** The app 500s on most routes without all four.
+**Required.** The app 500s on most data-backed routes without these values.
 
 | Variable | Used by | Notes |
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | every Supabase client | |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `lib/supabaseClient.js` | Ships in the client bundle — treat as public |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `lib/supabaseClient.js` | Ships in the client bundle; treat as public |
 | `SUPABASE_SERVICE_ROLE_KEY` | all server routes | Server only. Never expose |
-| `ADMIN_PASSWORD` | `lib/adminAuth.js` | Admin auth **fails closed** if unset — nobody can log in |
+| `MEMBER_SESSION_SECRET` | login/session routes | Stable private random value, at least 32 bytes |
 
 **Optional.**
 
 | Variable | Used by | Notes |
 |---|---|---|
-| `MEMBER_SESSION_SECRET` | `lib/memberAuth.js` | Set this. See the warning below |
+| `KINGSHOT_API_BASE_URL` | `lib/kingshotLogin.js` | Controlled test override for the Kingshot storefront API |
+| `KINGSHOT_PLAYER_API_URL` | `lib/kingshotLogin.js` | Controlled test override for MightPulse player details |
+| `KINGSHOT_PLAYER_SEARCH_URL` | `lib/kingshotLogin.js` | Controlled test override for MightPulse player search |
 | `K710_LIBRETRANSLATE_URLS` | `/api/translate-ui` | Comma-separated mirrors, overrides the defaults |
 | `QA_BASE`, `QA_CHROMIUM` | `scripts/qa-routes.js` | Local QA only |
 
-> **Set `MEMBER_SESSION_SECRET` explicitly.** Without it, `lib/memberAuth.js`
-> falls back to `SUPABASE_SERVICE_ROLE_KEY`, then to `ADMIN_PASSWORD`. That
-> couples member sessions to secrets they have no business sharing: rotating
-> the service role key silently signs every member out, and the admin password
-> ends up as signing material for member tokens.
+> Keep `K710_ENABLE_LEGACY_ADMIN` and `K710_ENABLE_LEGACY_MEMBER_SESSION`
+> unset outside isolated tests. The shared-password and PIN login pages are
+> retired and do not authorize normal application traffic.
 
 ## Scripts
 
@@ -65,12 +64,14 @@ QA_BASE=http://localhost:3111 npm run qa
 ```
 
 Asserts route status, heading structure, production field counts on every form,
-server-side admin gating, the PIN gate, and horizontal overflow at six widths.
+server-side role gating, the member gate, and horizontal overflow at six widths.
 
 ## Database
 
-SQL lives in `supabase/` and is applied by hand through the Supabase SQL editor
-— there is no `supabase/migrations/` or CLI setup.
+SQL lives in `supabase/`. Ordered schema changes are stored under
+`supabase/migrations/` and can also be applied through the Supabase SQL editor.
+Apply `20260904170000_kingshot_accounts_sessions_and_roles.sql` before deploying
+the direct login code.
 
 `supabase/core_tables.sql` carries `submissions`, `content_blocks`, the
 `public_submissions` view, and the `verify_page_pin` RPC. It also documents two
@@ -78,9 +79,9 @@ open items: leftover `anon` write grants on the two oldest tables (currently
 inert, because RLS has no permissive policy), and the fact that the full member
 roster is readable with the anon key. Read it before changing either.
 
-The pattern for every table added since: enable RLS, `revoke all` from `anon`
-and `authenticated`, grant only to `service_role`, and reach it exclusively
-through server-side routes.
+The pattern for every protected table: enable RLS, `revoke all` from `PUBLIC`,
+`anon`, and `authenticated`, grant only to `service_role`, and reach it
+exclusively through same-origin server routes.
 
 ## Documentation
 

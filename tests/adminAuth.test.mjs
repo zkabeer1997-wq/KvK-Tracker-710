@@ -16,6 +16,7 @@ function requestWithCookie(value) {
 }
 
 process.env.ADMIN_PASSWORD = 'shared-rally-secret';
+process.env.K710_ENABLE_LEGACY_ADMIN = 'true';
 
 const token = await mintAdminToken();
 

@@ -50,6 +50,7 @@ const { GET: allianceEventsGet } = await import('../app/api/alliance-events/rout
 const { proxy, config: proxyConfig } = await import('../proxy.js');
 const { GET: calendarGet } = await import('../app/api/events/bear-hunt.ics/route.js');
 process.env.ADMIN_PASSWORD = 'bear-test-only';
+process.env.K710_ENABLE_LEGACY_ADMIN = 'true';
 const token = await mintAdminToken();
 const request = (body, admin = true) => ({ cookies: { get: () => admin ? { value: token } : undefined }, json: async () => body });
 const params = { params: Promise.resolve({ tag: 'RED' }) };

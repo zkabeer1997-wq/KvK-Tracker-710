@@ -1,15 +1,28 @@
-// Shared device-capability detection for the Gate experience. Used by both
-// the full cinematic at /gate (GateExperience.jsx) and the decorative
-// homepage backdrop (GateBackdrop.jsx) so the two don't drift into two
-// slightly-different heuristics for "can this device handle the scene."
+// Shared device-capability detection for every Three.js scene. Three.js r163+
+// no longer supports WebGL 1, so accepting a WebGL 1 context here would allow
+// React Three Fiber to mount before its renderer fails asynchronously.
 
 export function detectWebGL() {
-  if (typeof window === 'undefined') return false;
+  if (
+    typeof window === 'undefined' ||
+    typeof document === 'undefined' ||
+    !window.WebGL2RenderingContext
+  ) {
+    return false;
+  }
+
   try {
-    const c = document.createElement('canvas');
-    return Boolean(
-      window.WebGLRenderingContext && (c.getContext('webgl') || c.getContext('experimental-webgl')),
-    );
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('webgl2', {
+      alpha: true,
+      antialias: true,
+      powerPreference: 'high-performance',
+      failIfMajorPerformanceCaveat: false,
+    });
+    // Do not call WEBGL_lose_context here. That extension simulates a real
+    // context loss and can poison the Three.js canvas mounted immediately
+    // after this check. The detached probe canvas is garbage-collected.
+    return Boolean(context);
   } catch {
     return false;
   }

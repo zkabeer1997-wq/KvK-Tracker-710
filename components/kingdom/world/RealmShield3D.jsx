@@ -2,8 +2,9 @@
 
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Float } from '@react-three/drei';
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
+import { detectWebGL } from './gateCapabilities';
 
 function ShieldMesh() {
   const group = useRef();
@@ -49,17 +50,27 @@ function ShieldMesh() {
 }
 
 export default function RealmShield3D() {
+  const [canRender, setCanRender] = useState(false);
+
+  useEffect(() => {
+    setCanRender(detectWebGL());
+  }, []);
+
   return (
     <div className="realm-shield-canvas" aria-hidden="true">
-      <Canvas dpr={[1, 1.5]} camera={{ position: [0, 0.1, 5.3], fov: 32 }} gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}>
-        <ambientLight intensity={0.65} />
-        <directionalLight position={[4, 5, 5]} intensity={2.2} color="#ffd59a" />
-        <pointLight position={[-2.5, -1.2, 2.5]} intensity={18} distance={8} color="#d65c1f" />
-        <pointLight position={[2.4, 1.4, 1.6]} intensity={10} distance={7} color="#f2b35d" />
-        <Float speed={1.1} rotationIntensity={0.07} floatIntensity={0.18}>
-          <ShieldMesh />
-        </Float>
-      </Canvas>
+      {canRender ? (
+        <Canvas dpr={[1, 1.5]} camera={{ position: [0, 0.1, 5.3], fov: 32 }} gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}>
+          <ambientLight intensity={0.65} />
+          <directionalLight position={[4, 5, 5]} intensity={2.2} color="#ffd59a" />
+          <pointLight position={[-2.5, -1.2, 2.5]} intensity={18} distance={8} color="#d65c1f" />
+          <pointLight position={[2.4, 1.4, 1.6]} intensity={10} distance={7} color="#f2b35d" />
+          <Float speed={1.1} rotationIntensity={0.07} floatIntensity={0.18}>
+            <ShieldMesh />
+          </Float>
+        </Canvas>
+      ) : (
+        <div className="realm-shield-static"><span>710</span></div>
+      )}
     </div>
   );
 }

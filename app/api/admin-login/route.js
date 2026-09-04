@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server';
 import { ADMIN_COOKIE_NAME, TOKEN_TTL_MS, mintAdminToken } from '../../../lib/adminAuth';
 
 export async function POST(request) {
+  if (process.env.K710_ENABLE_LEGACY_ADMIN !== 'true') {
+    return NextResponse.json({
+      error: 'Password login has been replaced by Kingshot member login.',
+    }, { status: 410 });
+  }
+
   const body = await request.json();
   const password = body.password;
   const expectedPassword = process.env.ADMIN_PASSWORD;

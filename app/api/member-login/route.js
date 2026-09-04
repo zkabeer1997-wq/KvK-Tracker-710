@@ -3,6 +3,12 @@ import { createSupabaseAdminClient } from '../../../lib/supabaseAdmin';
 import { createMemberToken, MEMBER_COOKIE_NAME, MEMBER_TOKEN_TTL_MS } from '../../../lib/memberAuth';
 
 export async function POST(request) {
+  if (process.env.K710_ENABLE_LEGACY_MEMBER_SESSION !== 'true') {
+    return NextResponse.json({
+      error: 'PIN login has been replaced by Kingshot verification.',
+    }, { status: 410 });
+  }
+
   let body;
   try {
     body = await request.json();

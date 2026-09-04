@@ -30,6 +30,7 @@ state.client = { from: () => chain };
 const { POST } = await import('../app/api/admin-events/route.js');
 const { PUT } = await import('../app/api/admin-events/[id]/route.js');
 process.env.ADMIN_PASSWORD = 'event-schedule-test-only';
+process.env.K710_ENABLE_LEGACY_ADMIN = 'true';
 const token = await mintAdminToken();
 const request = (body, admin = true) => ({ cookies: { get: () => admin ? { value: token } : undefined }, json: async () => body });
 const params = { params: Promise.resolve({ id: 'event-id' }) };

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { isAdminRequest } from './lib/adminAuth';
+import { hasAdminRole } from './lib/adminAuth';
 import { readMemberSession } from './lib/memberAuth';
 
 // An explicit allowlist, not a denylist: the matcher below covers every
@@ -53,8 +53,11 @@ export async function proxy(request) {
   const { pathname } = request.nextUrl;
 
   if (matchesPrefix(pathname, ADMIN_PREFIXES)) {
-    if (!(await isAdminRequest(request))) {
-      const loginUrl = new URL('/admin/login', request.url);
+    const session = await readMemberSession(request);
+    if (!hasAdminRole(session?.role)) {
+      const loginUrl = new URL('/player-record', request.url);
+      loginUrl.searchParams.set('next', pathname + request.nextUrl.search);
+      if (session) loginUrl.searchParams.set('access', 'admin');
       return NextResponse.redirect(loginUrl);
     }
     return NextResponse.next();

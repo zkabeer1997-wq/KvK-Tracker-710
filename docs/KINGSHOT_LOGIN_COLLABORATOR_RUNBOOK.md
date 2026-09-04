@@ -1,183 +1,72 @@
-# Kingshot login system — collaborator runbook
+# Kingshot member login runbook
 
-Owner: @zkabeer1997-wq  
-Implementation branch: `dosojin/kingshot-login-system`  
-Collaborator: @Dosojin
+## What is implemented
 
-## Objective
+The old Member ID + PIN gate and shared admin-password page have been replaced by the two-step Kingshot account flow:
 
-Build a replacement member login that keeps the existing Kingshot Member ID + PIN experience, optionally verifies public player metadata through a Kingshot adapter, and never exposes production Supabase credentials or member data during development.
+1. The player enters their numeric Player ID.
+2. The server prepares the same signed request used by the Kingshot storefront.
+3. The player confirms that the game is open and requests a one-time code.
+4. The code is exchanged server-side for the Kingshot role response.
+5. MightPulse supplies the kingdom and complete public player profile.
+6. Only a verified `kid = 710` account receives a website session.
 
-A successful Kingshot player lookup is **not proof of account ownership**. It may enrich or validate a member record, but it must not create an account, authenticate a user, or authorize a PIN reset by itself.
+The storefront token and one-time code are never stored. Pending signing credentials are encrypted into a 15-minute `HttpOnly` cookie. Successful sessions use an opaque random cookie whose SHA-256 hash is stored in Supabase, so sessions survive refreshes/new tabs and can be revoked on logout.
 
-## Provisioned staging environment
+## Database setup
 
-- Supabase project: `k710hub-staging`
-- Project reference: `kufmocesoeeljmiyiwxr`
-- API URL: `https://kufmocesoeeljmiyiwxr.supabase.co`
-- Data: synthetic only
-- Browser access: explicitly denied by RLS
-- Server access: service role only
-- Vercel safety gate: builds fail unless this branch uses the staging project
-
-Synthetic test accounts:
-
-| Member ID | PIN | Expected result |
-|---|---:|---|
-| `710000001` | `710710` | Login succeeds |
-| `710000002` | `246810` | Login succeeds |
-| Any other combination | — | Generic login failure |
-
-These credentials are test fixtures, not secrets, and must never be created in production.
-
-## Access boundary
-
-Dosojin may:
-
-- create commits on this branch;
-- open a pull request to `main`;
-- use the Vercel Preview deployment created from the branch;
-- use only the isolated Supabase development environment and synthetic test records;
-- add SQL migrations under `supabase/migrations/`.
-
-Dosojin must not receive or use:
-
-- production `SUPABASE_SERVICE_ROLE_KEY` or a Supabase secret key;
-- production database passwords or connection strings;
-- production `ADMIN_PASSWORD` or `MEMBER_SESSION_SECRET`;
-- exports or copies of real member IDs, PIN hashes, transfer records, or uploaded files;
-- permission to merge to `main` or promote a deployment to production.
-
-## Owner setup
-
-The owner completes these steps outside the code branch:
-
-1. Create or select an isolated Supabase development branch/project with no production data.
-2. Add **Preview-only** Vercel variables using development values:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-   - `MEMBER_SESSION_SECRET`
-   - `ADMIN_PASSWORD`
-   - `KINGSHOT_API_MODE=mock`
-   - `K710_ENVIRONMENT=preview`
-3. Keep all production variables scoped to Production only.
-4. Do not grant the collaborator access to Vercel environment-variable settings.
-5. Protect `main` and require owner approval.
-
-Generate unique preview secrets. Never reuse production values.
-
-## Local setup
-
-```bash
-git fetch origin
-git switch dosojin/kingshot-login-system
-npm install
-cp .env.example .env.local
-npm test
-npm run dev
-```
-
-Populate `.env.local` with development-only values. Never commit `.env.local`.
-
-## Required design
-
-### Authentication
-
-- Member ID and PIN are accepted only by a same-origin server endpoint.
-- PIN verification remains server-side.
-- PINs are stored only as adaptive password hashes; never plaintext or reversible encryption.
-- Login failures return one generic response for unknown IDs and wrong PINs.
-- Session cookies are `HttpOnly`, `Secure` in deployed environments, `SameSite=Lax`, and expire server-side.
-- PIN changes require the current PIN.
-- A Kingshot lookup must never permit PIN reset or account recovery.
-
-### Kingshot adapter
-
-Implement a provider boundary instead of calling a third-party endpoint throughout the app:
+Apply this migration before deploying the code:
 
 ```text
-verifyPlayer(memberId) -> {
-  found,
-  playerId,
-  playerName,
-  kingdom,
-  source,
-  checkedAt
-}
+supabase/migrations/20260904170000_kingshot_accounts_sessions_and_roles.sql
 ```
 
-Provide:
+It creates three server-only tables:
 
-- a deterministic mock provider for local/tests;
-- timeouts and fail-closed behavior;
-- response schema validation;
-- no logging of full response bodies;
-- no live provider enabled by default;
-- graceful login behavior when metadata verification is temporarily unavailable, according to the product decision recorded in the PR.
+- `kingshot_users`: one row per verified account, normalized menu/profile fields, the complete Kingshot role response, and the complete MightPulse search/profile responses.
+- `kingshot_sessions`: revocable 30-day login sessions. Only a token hash is stored.
+- `kingshot_login_events`: redacted code-request, failure, kingdom-denial, login, and logout events.
 
-Do not reverse-engineer a private mobile-game protocol or bypass Century Games controls.
+RLS is enabled on every table. `PUBLIC`, `anon`, and `authenticated` receive no table access; same-origin server routes use `service_role`.
 
-### Rate limiting and audit
+## Roles
 
-At minimum:
+- `member`: member-only pages and tools.
+- `admin`: the existing admin dashboard and admin APIs.
+- `superadmin`: all admin access plus `/admin/dashboard/access`, where roles can be assigned or removed.
 
-- rate limit by member ID and IP;
-- progressive cooldown after repeated failures;
-- generic client errors;
-- redact PINs, cookies, keys, and authorization headers from logs;
-- record security events without recording submitted PINs;
-- revoke existing sessions after PIN change.
+Player ID `108051086` becomes `superadmin` only when its `kingshot_users` row is first created. Later logins never overwrite a role decision. A database function enforces that only a superadmin can change roles and that a superadmin cannot remove their own superadmin role. They can change any other account, including another superadmin.
 
-### Database changes
+## Required environment variables
 
-- Add each schema change as a new migration in `supabase/migrations/`.
-- Enable RLS on every exposed table.
-- Revoke access from `PUBLIC`, `anon`, and `authenticated` unless explicitly required.
-- Grant privileged functions only to the server role.
-- Avoid `SECURITY DEFINER`; if unavoidable, use a non-exposed schema, fixed `search_path`, explicit identity checks, and explicit execute grants.
-- Never edit or delete an already-applied migration.
+```text
+NEXT_PUBLIC_SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+MEMBER_SESSION_SECRET=
+```
 
-## Required tests
+Use a stable, private `MEMBER_SESSION_SECRET` of at least 32 random bytes. Changing it invalidates pending login flows and their private fingerprints. Keep the service-role key server-only.
 
-The PR is not ready until it demonstrates:
+Optional endpoint overrides for controlled testing:
 
-- correct PIN succeeds;
-- wrong PIN and unknown member return indistinguishable responses;
-- malformed and oversized input is rejected;
-- brute-force limits work;
-- expired/tampered sessions fail;
-- PIN change requires the existing PIN and revokes sessions;
-- Kingshot mock success, not-found, invalid schema, timeout, and outage;
-- Kingshot lookup alone cannot authenticate or reset a PIN;
-- browser code contains no service/secret key;
-- preview deployment is connected only to development Supabase;
-- existing member-only routes still recognize the new session.
+```text
+KINGSHOT_API_BASE_URL=
+KINGSHOT_PLAYER_API_URL=
+KINGSHOT_PLAYER_SEARCH_URL=
+```
 
-Use synthetic fixtures only, for example member ID `710000001`. Never copy production rows into tests.
+`K710_ENABLE_LEGACY_ADMIN` and `K710_ENABLE_LEGACY_MEMBER_SESSION` must remain unset in deployed environments. They exist only for isolated legacy test fixtures.
 
-## Pull-request sequence
+## Deployment checks
 
-1. Push incremental commits to this branch.
-2. Open a draft PR to `main`.
-3. Confirm the Vercel Preview URL uses the development database.
-4. Attach test output and a migration summary.
-5. Request review from @zkabeer1997-wq.
-6. Owner reviews the Kingshot provider, security behavior, migrations, and preview.
-7. Owner applies/merges database changes and deploys production only after approval.
+- Apply the migration before the application deployment.
+- Confirm `MEMBER_SESSION_SECRET` is stable across instances and deployments.
+- Confirm `/api/session` returns `signed_out` with no cookie and `authenticated` after a successful Kingdom 710 login.
+- Verify a non-710 account receives the on-page access message and no `k710_member_session` cookie.
+- Verify refresh and a second tab retain the account.
+- Verify logout revokes the Supabase session and clears the cookie.
+- Verify a member cannot access `/admin/dashboard` or any `/api/admin-*` endpoint.
+- Verify an admin can access the existing dashboard but not role management.
+- Verify a superadmin cannot demote their own account.
 
-## Merge blockers
-
-Do not merge if:
-
-- any Preview variable points to production;
-- real member data appears in fixtures, logs, screenshots, or PR text;
-- a privileged Supabase key appears in client code;
-- Kingshot lookup is treated as ownership proof;
-- live Kingshot behavior depends on an undocumented endpoint without owner approval;
-- migrations or rollback instructions are missing;
-- security and regression tests fail.
-
-## Existing production findings to account for
-
-Before launch, separately remediate the current Supabase security-advisor findings for the `public.public_submissions` security-definer view and publicly executable security-definer functions. Do not broaden those permissions while implementing login.
+Authentication uses the Kingshot storefront integration supplied in `D:\Kingshot\Account_Login`. Review Century Games' terms and endpoint changes before production rollout.

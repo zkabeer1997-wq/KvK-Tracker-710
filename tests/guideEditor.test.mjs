@@ -40,6 +40,7 @@ const { PUT } = await import('../app/api/admin-guides/[slug]/route.js');
 const { POST: categoryPost } = await import('../app/api/admin-guide-categories/route.js');
 const { POST: photoPost } = await import('../app/api/admin-guide-images/route.js');
 process.env.ADMIN_PASSWORD = 'guide-editor-test-only';
+process.env.K710_ENABLE_LEGACY_ADMIN = 'true';
 const token = await mintAdminToken();
 function request(body, authenticated = true) {
   return { cookies: { get: () => authenticated ? { value: token } : undefined }, json: async () => body, formData: async () => body };

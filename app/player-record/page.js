@@ -3,7 +3,8 @@ import EditableSection from '../../components/EditableSection';
 import PlayerRecordGate from './PlayerRecordGate';
 
 export const metadata = {
-title: 'K710 KvK Availability',
+title: 'K710 Member Login',
+description: 'Secure Kingdom 710 member login using a one-time Kingshot verification code.',
 alternates: { canonical: '/player-record' },
 };
 
@@ -20,5 +21,6 @@ const banner = (hasBanner || isAdmin) ? (
 <EditableSection page="player-record-banner" initialBlocks={blocks} isAdmin={isAdmin} as="div" className="gatehouse-notice" />
 ) : null;
 const next = typeof searchParams?.next === 'string' ? searchParams.next : '';
-return <PlayerRecordGate banner={banner} next={next} />;
+const adminAccessRequested = searchParams?.access === 'admin';
+return <PlayerRecordGate banner={banner} next={next} adminAccessRequested={adminAccessRequested} />;
 }
