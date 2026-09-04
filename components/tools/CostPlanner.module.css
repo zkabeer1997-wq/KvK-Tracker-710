@@ -8,6 +8,7 @@
 .resultColumn{min-width:0;padding:20px;align-self:start;position:sticky;top:16px}
 .resultTitle{padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid rgba(201,164,78,.2)}
 .resultTitle h2{margin:7px 0 0;letter-spacing:.05em}
+.prereqNotice{padding:13px 16px;background:rgba(201,164,78,.1);border:1px solid rgba(201,164,78,.4);border-left:3px solid var(--cp-gold);border-radius:8px;color:#f0d9a0;font-size:12px;line-height:1.6;margin:18px 0 0}
 .finder{grid-template-columns:minmax(110px,1fr) minmax(0,2fr)}
 .finder>button{grid-column:1/-1;justify-self:end}
 .planner select{appearance:auto;color-scheme:dark;cursor:pointer;padding-right:24px}

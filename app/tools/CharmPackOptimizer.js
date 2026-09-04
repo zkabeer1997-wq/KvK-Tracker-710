@@ -24,7 +24,7 @@ export default function CharmPackOptimizer({configuration}){
   const required=useMemo(()=>rows.reduce((a,row)=>({g:a.g+row.g,d:a.d+row.d}),{g:0,d:0}),[rows]);
   const setLevel=(id,key,value)=>{setCharms(items=>items.map(item=>item.id===id?{...item,[key]:key==='current'?value:Math.max(item.current,value),...(key==='current'&&item.target<value?{target:value}:{})}:item));setPlan(null)};
   const editPack=(i,key,value)=>{setPacks(items=>items.map((p,n)=>n===i?{...p,[key]:Math.max(0,Number(value)||0)}:p));setPlan(null)};
-  const calculate=()=>{if(packs.some(p=>p.g%20!==0||Math.abs(p.d-p.g*1.1)>.001)){setMessage('Pack materials must retain the 10:11 Guide-to-Design ratio used by these packs.');setPlan(null);return}for(let week=1;week<=maxWeeks;week++){const found=planForWeeks(packs,week,required.g,required.d,ownedG,ownedD);if(found){setPlan(found);setMessage('');return}}setPlan(null);setMessage(`The selected target cannot be completed within ${maxWeeks} weeks.`)};
+  const calculate=()=>{if(packs.some(p=>p.g%20!==0||Math.abs(p.d-p.g*1.1)>.001)){setMessage('Pack materials must retain the 10:11 Guide-to-Design ratio used by these packs.');setPlan(null);return}for(let week=1;week<=maxWeeks;week++){const found=planForWeeks(packs,week,required.g,required.d,ownedG,ownedD);if(found){setPlan(found);setMessage('');return}}setPlan(null);setMessage(`The selected target cannot be completed within ${maxWeeks} week${maxWeeks===1?'':'s'}.`)};
   const reset=()=>{setCharms(DEFAULT_CHARMS);setPacks(DEFAULT_PACKS);setOwnedG(0);setOwnedD(166);setMaxWeeks(52);setPlan(null);setMessage('')};
   const schedule=plan?scheduleFor(plan,packs):[];
 
