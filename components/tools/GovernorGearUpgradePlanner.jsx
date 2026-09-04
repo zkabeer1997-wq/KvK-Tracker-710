@@ -33,7 +33,7 @@ export default function GovernorGearUpgradePlanner() {
     <div className={styles.planner}>
       <div className={styles.topline}>
         <div><span className="k-mark">Governor Gear</span><strong>All 6 pieces · {GOVERNOR_GEAR_OPTIONS.length} tracked gear tiers</strong></div>
-        <span role="status">Reference data pending verification</span>
+        <span role="status">Costs calibrated to a verified reference point</span>
       </div>
       <div className={styles.layout}>
         <fieldset className={styles.inputs}>
@@ -102,7 +102,7 @@ export default function GovernorGearUpgradePlanner() {
           )}
         </aside>
       </div>
-      <footer className={styles.source}>Gear tier progression: verified against K710Hub&apos;s Governor Profile scanner. Material amounts and power gain are illustrative placeholders pending a verified Kingshot cost table — confirm exact quantities in-game before spending.</footer>
+      <footer className={styles.source}>Gear tier progression: verified against K710Hub&apos;s Governor Profile scanner. Satin/Gilded Thread/Artisan&apos;s Vision costs are calibrated to a confirmed reference point (Gold T3 3★ → Red 0★: 90,000/900/180 → 108,000/1,080/220 Satin/Gilded Thread/Artisan&apos;s Vision, a verified 1.2x step-over-step growth rate) via current Kingshot community references; Artisan&apos;s Vision unlocking at Blue 2★ is likewise confirmed. Power gain is still an estimate — confirm exact quantities in-game before spending.</footer>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { MASTERS, MASTER_MAX_LEVEL, calculateMasterUpgrade } from '../../lib/gearMastersCalc.mjs';
+import { MASTERS, MASTER_MAX_LEVEL, MASTER_BREAKTHROUGH_INTERVAL, calculateMasterUpgrade } from '../../lib/gearMastersCalc.mjs';
 import styles from './CostPlanner.module.css';
 
 const fmt = (n) => Number(n || 0).toLocaleString();
@@ -28,8 +28,8 @@ export default function MasterUpgradePlanner() {
   return (
     <div className={styles.planner}>
       <div className={styles.topline}>
-        <div><span className="k-mark">Masters</span><strong>{MASTERS.length} masters tracked</strong></div>
-        <span role="status">Reference data pending verification</span>
+        <div><span className="k-mark">Masters</span><strong>{MASTERS.length} masters · {MASTER_MAX_LEVEL} Affinity levels</strong></div>
+        <span role="status">Roster and breakthrough gates verified · costs estimated</span>
       </div>
       <div className={styles.layout}>
         <fieldset className={styles.inputs}>
@@ -38,7 +38,7 @@ export default function MasterUpgradePlanner() {
             <div className={styles.fields}>
               <label>Master
                 <select value={master} onChange={(e) => setMaster(e.target.value)}>
-                  {MASTERS.map((m) => <option key={m.key} value={m.key}>{m.name}</option>)}
+                  {MASTERS.map((m) => <option key={m.key} value={m.key}>{m.name} — {m.role}</option>)}
                 </select>
               </label>
               <label>Current level
@@ -52,7 +52,7 @@ export default function MasterUpgradePlanner() {
                 </select>
               </label>
             </div>
-            <p className={styles.hint}>Master&apos;s Manuscripts unlock at level 10, Emblems at level 30. Affinity is required at every level.</p>
+            <p className={styles.hint}>Affinity (relationship level) runs 1–{MASTER_MAX_LEVEL}. Every {MASTER_BREAKTHROUGH_INTERVAL} levels is a breakthrough gate that costs Master Emblems on top of the usual Manuscripts.</p>
           </section>
           <div className={styles.actions}>
             <button type="button" className={styles.primary} onClick={calculate}>Calculate upgrade plan</button>
@@ -65,17 +65,16 @@ export default function MasterUpgradePlanner() {
             <section className={styles.results} aria-label="Calculation results" aria-live="polite">
               <div className={styles.metrics}>
                 <div><span>Levels to gain</span><strong>{result.stepCount}</strong><small>{masterName}</small></div>
-                <div><span>Power gained</span><strong>{fmt(result.totals.power)}</strong><small>+{result.totals.squadBuff}% squad buff</small></div>
+                <div><span>Breakthrough gates</span><strong>{result.steps.filter((s) => s.breakthrough).length}</strong><small>+{result.totals.squadBuff}% squad buff</small></div>
               </div>
               <div className={styles.tableWrap}>
                 <table>
-                  <caption>Materials needed for the full plan</caption>
+                  <caption>Resources needed for the full plan</caption>
                   <thead><tr><th>Resource</th><th>Required</th></tr></thead>
                   <tbody>
-                    <tr><th>Master XP</th><td>{fmt(result.totals.xp)}</td></tr>
                     <tr><th>Affinity</th><td>{fmt(result.totals.affinity)}</td></tr>
                     <tr><th>Master&apos;s Manuscripts</th><td>{fmt(result.totals.manuscripts)}</td></tr>
-                    <tr><th>Emblems</th><td>{fmt(result.totals.emblems)}</td></tr>
+                    <tr><th>Master Emblems</th><td>{fmt(result.totals.emblems)}</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -83,10 +82,10 @@ export default function MasterUpgradePlanner() {
                 <summary>Level-by-level breakdown ({result.steps.length} steps)</summary>
                 <div className={styles.tableWrap}>
                   <table>
-                    <thead><tr><th>Level</th><th>XP</th><th>Affinity</th><th>Manuscripts</th><th>Emblems</th><th>Squad buff</th></tr></thead>
+                    <thead><tr><th>Level</th><th>Affinity</th><th>Manuscripts</th><th>Emblems</th><th>Squad buff</th></tr></thead>
                     <tbody>
                       {result.steps.map((s) => (
-                        <tr key={s.level}><th>{s.level} → {s.nextLevel}</th><td>{fmt(s.xp)}</td><td>{fmt(s.affinity)}</td><td>{fmt(s.manuscripts)}</td><td>{s.emblems || '—'}</td><td>+{s.squadBuff}%</td></tr>
+                        <tr key={s.level}><th>{s.level} → {s.nextLevel}{s.breakthrough ? ' · Breakthrough' : ''}</th><td>{fmt(s.affinity)}</td><td>{fmt(s.manuscripts)}</td><td>{s.emblems || '—'}</td><td>+{s.squadBuff}%</td></tr>
                       ))}
                     </tbody>
                   </table>
@@ -98,7 +97,7 @@ export default function MasterUpgradePlanner() {
           )}
         </aside>
       </div>
-      <footer className={styles.source}>Master roster: confirmed via current Kingshot community references. Level costs, power and squad buff figures are illustrative placeholders pending a verified Kingshot cost table — confirm exact quantities in-game before spending.</footer>
+      <footer className={styles.source}>Master roster, classes and the every-{MASTER_BREAKTHROUGH_INTERVAL}-level Emblem breakthrough gate are confirmed via current Kingshot community references. Exact Affinity/Manuscript/Emblem amounts per level are still estimated pending a directly-accessible cost table — confirm exact quantities in-game before spending.</footer>
     </div>
   );
 }

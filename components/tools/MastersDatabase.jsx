@@ -13,7 +13,7 @@ export default function MastersDatabase() {
     <div className={styles.planner}>
       <div className={styles.topline}>
         <div><span className="k-mark">Masters</span><strong>{MASTERS.length} masters in the database</strong></div>
-        <span role="status">Class/skill data pending verification</span>
+        <span role="status">Class and skill focus verified</span>
       </div>
       <div className={styles.layout}>
         <fieldset className={styles.inputs}>
@@ -22,9 +22,9 @@ export default function MastersDatabase() {
             <div className={styles.tableWrap}>
               <table>
                 <caption>Browse the full roster</caption>
-                <thead><tr><th>Master</th><th>Class / role</th></tr></thead>
+                <thead><tr><th>Master</th><th>Class / role</th><th>Skill focus</th></tr></thead>
                 <tbody>
-                  {MASTERS.map((m) => <tr key={m.key}><th>{m.name}</th><td>{m.role}</td></tr>)}
+                  {MASTERS.map((m) => <tr key={m.key}><th>{m.name}</th><td>{m.role}</td><td>{m.summary}</td></tr>)}
                 </tbody>
               </table>
             </div>
@@ -54,16 +54,15 @@ export default function MastersDatabase() {
                 <thead><tr><th>Field</th><th>{masterA?.name}</th><th>{masterB?.name}</th></tr></thead>
                 <tbody>
                   <tr><th>Class / role</th><td>{masterA?.role}</td><td>{masterB?.role}</td></tr>
-                  <tr><th>Squad buff</th><td>Pending verification</td><td>Pending verification</td></tr>
-                  <tr><th>Signature skill</th><td>Pending verification</td><td>Pending verification</td></tr>
+                  <tr><th>Skill focus</th><td>{masterA?.summary}</td><td>{masterB?.summary}</td></tr>
                 </tbody>
               </table>
             </div>
-            <p className={styles.warning}>Master classes, skills and buffs have not yet been verified against the current Kingshot build. Use the <a href="/tools/masters-upgrade">Master Upgrade Planner</a> for level costs, and check in-game or a current Kingshot guide for skill details until this database is filled in.</p>
+            <p className={styles.warning}>Exact per-skill numbers (buff percentages, unlock levels) are not yet verified against the current Kingshot build. Use the <a href="/tools/masters-upgrade">Master Upgrade Planner</a> for level costs, and check in-game or a current Kingshot guide for precise skill values.</p>
           </section>
         </aside>
       </div>
-      <footer className={styles.source}>Master roster: confirmed via current Kingshot community references (kingshot.net, kingshotguide.org). Class, skill and buff details are placeholders pending verified data.</footer>
+      <footer className={styles.source}>Master roster, class/role and skill-focus summaries: confirmed via current Kingshot community references (kingshotmastery.com, kingshotguide.com). Exact skill percentages and unlock levels are not yet verified.</footer>
     </div>
   );
 }
