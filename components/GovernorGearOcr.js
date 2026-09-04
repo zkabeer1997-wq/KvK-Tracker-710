@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useRef, useState } from 'react';
 import { detectCharmsFromFile } from '../lib/charmVisionClient';
 
@@ -105,6 +106,23 @@ export default function GovernorGearOcr({ onApply }) {
       >
         {state === 'loading' ? 'Scanning…' : state === 'error' ? 'Try another screenshot' : 'Upload screenshot'}
       </button>
+      <details className="gear-ocr-example">
+        <summary>See exactly what to upload</summary>
+        <div className="gear-ocr-example-content">
+          <Image
+            src="/images/player-profile-ocr-example-private.webp"
+            alt="Example of the full Governor Profile screen to upload, showing all six gear pieces and their charm icons. Member details are hidden."
+            width={853}
+            height={1844}
+            sizes="(max-width: 600px) 82vw, 280px"
+          />
+          <div>
+            <strong>Use the Governor Profile screen</strong>
+            <p>Keep all six gear pieces, their tier labels, and every charm visible. Do not crop or cover the gear area.</p>
+            <p className="gear-ocr-privacy-note">Your screenshot is used only to read gear and charm levels.</p>
+          </div>
+        </div>
+      </details>
       {message && (
         <p className="gear-ocr-status" role="status" aria-live="polite">
           {message}
