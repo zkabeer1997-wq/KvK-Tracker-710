@@ -12,8 +12,7 @@ const TOOLS = {
     { key: 'governor-gear-compare', event: 'Governor Gear', title: 'Governor Gear Set Comparer', description: 'Compare two full 6-slot loadouts side by side to see which slots are ahead or behind.', status: 'New', icon: '/images/governor-gear-compare.svg' },
   ],
   'Hero Gear': [
-    { key: 'hero-gear-upgrade', event: 'Hero Gear', title: 'Hero Gear Upgrade Calculator', description: 'Pick a hero, current and target gear level, and see the estimated materials and stat gain.', status: 'New', icon: '/images/hero-gear-upgrade.svg' },
-    { key: 'hero-gear-builder', event: 'Hero Gear', title: 'Hero Gear Set Builder', description: 'Set every piece of a hero’s gear and see the total score and weakest piece.', status: 'New', icon: '/images/hero-gear-builder.svg' },
+    { key: 'hero-gear-upgrade', event: 'Hero Gear', title: 'Hero Gear Upgrade Calculator', description: 'Set current and target tiers for all 12 hero gear pieces (Helmet, Boots, Chest, Arm across your Infantry, Archer and Cavalry heroes) and see the total materials needed.', status: 'New', icon: '/images/hero-gear-upgrade.svg' },
   ],
   Pets: [
     { key: 'pet-pack-optimizer', event: 'Pet Advancement', title: 'Pet Pack Optimizer', description: 'Enter your material target and inventory, then get the cheapest repeatable week-by-week pack and chest redemption plan.', status: 'New', icon: '/images/pet-pack-compass.svg' },

@@ -1,21 +1,28 @@
 'use client';
 import { useState } from 'react';
-import { GOVERNOR_GEAR_OPTIONS, GOVERNOR_GEAR_SLOT_LABELS, calculateGovernorGearUpgrade } from '../../lib/gearMastersCalc.mjs';
+import { GOVERNOR_GEAR_OPTIONS, GOVERNOR_GEAR_SLOT_LABELS, calculateGovernorGearUpgradeAll } from '../../lib/gearMastersCalc.mjs';
 import styles from './CostPlanner.module.css';
 
 const fmt = (n) => Number(n || 0).toLocaleString();
 
+function blankSelections() {
+  return Object.fromEntries(GOVERNOR_GEAR_SLOT_LABELS.map((s) => [s.key, { current: GOVERNOR_GEAR_OPTIONS[0], target: GOVERNOR_GEAR_OPTIONS[0] }]));
+}
+
 export default function GovernorGearUpgradePlanner() {
-  const [slot, setSlot] = useState(GOVERNOR_GEAR_SLOT_LABELS[0].key);
-  const [current, setCurrent] = useState(GOVERNOR_GEAR_OPTIONS[0]);
-  const [target, setTarget] = useState(GOVERNOR_GEAR_OPTIONS[5]);
+  const [selections, setSelections] = useState(blankSelections());
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+
+  function update(key, field, value) {
+    setResult(null);
+    setSelections((prev) => ({ ...prev, [key]: { ...prev[key], [field]: value } }));
+  }
 
   function calculate() {
     setError('');
     try {
-      setResult(calculateGovernorGearUpgrade(current, target));
+      setResult(calculateGovernorGearUpgradeAll(selections));
     } catch (e) {
       setResult(null);
       setError(e.message);
@@ -25,31 +32,32 @@ export default function GovernorGearUpgradePlanner() {
   return (
     <div className={styles.planner}>
       <div className={styles.topline}>
-        <div><span className="k-mark">Governor Gear</span><strong>{GOVERNOR_GEAR_OPTIONS.length} tracked gear tiers</strong></div>
+        <div><span className="k-mark">Governor Gear</span><strong>All 6 pieces · {GOVERNOR_GEAR_OPTIONS.length} tracked gear tiers</strong></div>
         <span role="status">Reference data pending verification</span>
       </div>
       <div className={styles.layout}>
         <fieldset className={styles.inputs}>
           <section className={styles.panel}>
-            <div className={styles.sectionHead}><div><span className={styles.eyebrow}>01 · Upgrade plan</span><h2>Which gear piece?</h2></div></div>
-            <div className={styles.fields}>
-              <label>Gear slot
-                <select value={slot} onChange={(e) => setSlot(e.target.value)}>
-                  {GOVERNOR_GEAR_SLOT_LABELS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-                </select>
-              </label>
-              <label>Current tier
-                <select value={current} onChange={(e) => { setResult(null); setCurrent(e.target.value); }}>
-                  {GOVERNOR_GEAR_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </label>
-              <label>Target tier
-                <select value={target} onChange={(e) => { setResult(null); setTarget(e.target.value); }}>
-                  {GOVERNOR_GEAR_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </label>
+            <div className={styles.sectionHead}><div><span className={styles.eyebrow}>01 · Upgrade plan</span><h2>Set every gear piece</h2></div></div>
+            <div className={styles.selections}>
+              {GOVERNOR_GEAR_SLOT_LABELS.map((s) => (
+                <div className={styles.selection} key={s.key}>
+                  <div><strong>{s.label}</strong></div>
+                  <label>Current
+                    <select value={selections[s.key].current} onChange={(e) => update(s.key, 'current', e.target.value)}>
+                      {GOVERNOR_GEAR_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </label>
+                  <span className={styles.arrow}>→</span>
+                  <label>Target
+                    <select value={selections[s.key].target} onChange={(e) => update(s.key, 'target', e.target.value)}>
+                      {GOVERNOR_GEAR_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </label>
+                </div>
+              ))}
             </div>
-            <p className={styles.hint}>Pick the slot you are planning (used for your own reference only — costs depend solely on the tier gap) then choose the current and target tier from the full Green → Red T6 progression.</p>
+            <p className={styles.hint}>Leave a piece&apos;s current and target tier the same to skip it. Set a higher target for any of the 6 slots to include it in the plan.</p>
           </section>
           <div className={styles.actions}>
             <button type="button" className={styles.primary} onClick={calculate}>Calculate upgrade plan</button>
@@ -61,7 +69,7 @@ export default function GovernorGearUpgradePlanner() {
           {result ? (
             <section className={styles.results} aria-label="Calculation results" aria-live="polite">
               <div className={styles.metrics}>
-                <div><span>Upgrade steps</span><strong>{result.stepCount}</strong><small>{GOVERNOR_GEAR_SLOT_LABELS.find((s) => s.key === slot)?.label}</small></div>
+                <div><span>Upgrade steps</span><strong>{result.stepCount}</strong><small>Across {result.bySlot.length} of 6 pieces</small></div>
                 <div><span>Power gained</span><strong>{fmt(result.totals.power)}</strong><small>Estimated</small></div>
               </div>
               <div className={styles.tableWrap}>
@@ -75,14 +83,14 @@ export default function GovernorGearUpgradePlanner() {
                   </tbody>
                 </table>
               </div>
-              <details className={styles.details}>
-                <summary>Tier-by-tier breakdown ({result.steps.length} steps)</summary>
+              <details className={styles.details} open>
+                <summary>Piece-by-piece breakdown ({result.bySlot.length} pieces)</summary>
                 <div className={styles.tableWrap}>
                   <table>
-                    <thead><tr><th>Upgrade</th><th>Satin</th><th>Gilded Thread</th><th>Artisan&apos;s Vision</th><th>Power</th></tr></thead>
+                    <thead><tr><th>Piece</th><th>Satin</th><th>Gilded Thread</th><th>Artisan&apos;s Vision</th><th>Power</th></tr></thead>
                     <tbody>
-                      {result.steps.map((s, i) => (
-                        <tr key={i}><th>{s.from} → {s.to}</th><td>{fmt(s.satin)}</td><td>{fmt(s.gildedThread)}</td><td>{fmt(s.artisansVision)}</td><td>{fmt(s.power)}</td></tr>
+                      {result.bySlot.map((s) => (
+                        <tr key={s.key}><th>{s.label}<small>{s.current} → {s.target}</small></th><td>{fmt(s.totals.satin)}</td><td>{fmt(s.totals.gildedThread)}</td><td>{fmt(s.totals.artisansVision)}</td><td>{fmt(s.totals.power)}</td></tr>
                       ))}
                     </tbody>
                   </table>
@@ -90,7 +98,7 @@ export default function GovernorGearUpgradePlanner() {
               </details>
             </section>
           ) : (
-            <div className={styles.empty}><h2>Your upgrade plan appears here</h2><p>Choose a current and target tier, then calculate to see materials and power gain.</p></div>
+            <div className={styles.empty}><h2>Your upgrade plan appears here</h2><p>Set a current and target tier for one or more of the 6 gear pieces, then calculate.</p></div>
           )}
         </aside>
       </div>

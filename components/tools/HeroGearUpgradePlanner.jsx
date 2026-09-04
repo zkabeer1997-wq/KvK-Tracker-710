@@ -1,23 +1,39 @@
 'use client';
 import { useState } from 'react';
-import { HEROES } from '../../lib/playerCombatOptions.mjs';
-import { HERO_GEAR_MAX_LEVEL, calculateHeroGearUpgrade } from '../../lib/gearMastersCalc.mjs';
+import { GOVERNOR_GEAR_OPTIONS, HERO_GEAR_PIECE_SLOTS, calculateHeroGearUpgradeAll } from '../../lib/gearMastersCalc.mjs';
 import styles from './CostPlanner.module.css';
 
 const fmt = (n) => Number(n || 0).toLocaleString();
-const LEVELS = Array.from({ length: HERO_GEAR_MAX_LEVEL }, (_, i) => i + 1);
+
+function blankSelections() {
+  return Object.fromEntries(HERO_GEAR_PIECE_SLOTS.map((s) => [s.key, { current: GOVERNOR_GEAR_OPTIONS[0], target: GOVERNOR_GEAR_OPTIONS[0] }]));
+}
+
+function groupByHero(slots) {
+  const groups = [];
+  slots.forEach((slot) => {
+    let group = groups.find((g) => g.heroKey === slot.heroKey);
+    if (!group) { group = { heroKey: slot.heroKey, heroLabel: slot.heroLabel, pieces: [] }; groups.push(group); }
+    group.pieces.push(slot);
+  });
+  return groups;
+}
 
 export default function HeroGearUpgradePlanner() {
-  const [hero, setHero] = useState(HEROES[0]);
-  const [current, setCurrent] = useState(1);
-  const [target, setTarget] = useState(10);
+  const [selections, setSelections] = useState(blankSelections());
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  const groups = groupByHero(HERO_GEAR_PIECE_SLOTS);
+
+  function update(key, field, value) {
+    setResult(null);
+    setSelections((prev) => ({ ...prev, [key]: { ...prev[key], [field]: value } }));
+  }
 
   function calculate() {
     setError('');
     try {
-      setResult(calculateHeroGearUpgrade(current, target));
+      setResult(calculateHeroGearUpgradeAll(selections));
     } catch (e) {
       setResult(null);
       setError(e.message);
@@ -27,44 +43,47 @@ export default function HeroGearUpgradePlanner() {
   return (
     <div className={styles.planner}>
       <div className={styles.topline}>
-        <div><span className="k-mark">Hero Gear</span><strong>{HEROES.length} heroes tracked</strong></div>
+        <div><span className="k-mark">Hero Gear</span><strong>All 12 pieces · 3 heroes × 4 pieces</strong></div>
         <span role="status">Reference data pending verification</span>
       </div>
       <div className={styles.layout}>
         <fieldset className={styles.inputs}>
-          <section className={styles.panel}>
-            <div className={styles.sectionHead}><div><span className={styles.eyebrow}>01 · Upgrade plan</span><h2>Which hero gear?</h2></div></div>
-            <div className={styles.fields}>
-              <label>Hero
-                <select value={hero} onChange={(e) => setHero(e.target.value)}>
-                  {HEROES.map((h) => <option key={h} value={h}>{h}</option>)}
-                </select>
-              </label>
-              <label>Current level
-                <select value={current} onChange={(e) => { setResult(null); setCurrent(Number(e.target.value)); }}>
-                  {LEVELS.map((l) => <option key={l} value={l}>Level {l}</option>)}
-                </select>
-              </label>
-              <label>Target level
-                <select value={target} onChange={(e) => { setResult(null); setTarget(Number(e.target.value)); }}>
-                  {LEVELS.map((l) => <option key={l} value={l}>Level {l}</option>)}
-                </select>
-              </label>
-            </div>
-            <p className={styles.hint}>Mithril unlocks at level 10, Forgehammers at level 20, and Mythic Gear pieces are needed every other level from 30 onward.</p>
-          </section>
+          {groups.map((group) => (
+            <section className={styles.panel} key={group.heroKey}>
+              <div className={styles.sectionHead}><div><span className={styles.eyebrow}>{group.heroLabel}</span><h2>Helmet, Boots, Chest &amp; Arm</h2></div></div>
+              <div className={styles.selections}>
+                {group.pieces.map((s) => (
+                  <div className={styles.selection} key={s.key}>
+                    <div><strong>{s.pieceLabel}</strong><small>{s.stat}</small></div>
+                    <label>Current
+                      <select value={selections[s.key].current} onChange={(e) => update(s.key, 'current', e.target.value)}>
+                        {GOVERNOR_GEAR_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </label>
+                    <span className={styles.arrow}>→</span>
+                    <label>Target
+                      <select value={selections[s.key].target} onChange={(e) => update(s.key, 'target', e.target.value)}>
+                        {GOVERNOR_GEAR_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
+          <p className={styles.hint}>Leave a piece&apos;s current and target tier the same to skip it. Helmet and Boots feed Lethality; Chest and Arm feed Health.</p>
           <div className={styles.actions}>
             <button type="button" className={styles.primary} onClick={calculate}>Calculate upgrade plan</button>
           </div>
         </fieldset>
         <aside className={styles.resultColumn}>
-          <div className={styles.resultTitle}><span className="k-mark">Calculated result</span><h2>{hero}&apos;s upgrade plan</h2></div>
+          <div className={styles.resultTitle}><span className="k-mark">Calculated result</span><h2>Upgrade plan</h2></div>
           {error && <p role="alert" className={styles.warning}>{error}</p>}
           {result ? (
             <section className={styles.results} aria-label="Calculation results" aria-live="polite">
               <div className={styles.metrics}>
-                <div><span>Levels to gain</span><strong>{result.stepCount}</strong><small>{hero}</small></div>
-                <div><span>Stat gain</span><strong>+{fmt(result.totals.statGain)}%</strong><small>Estimated</small></div>
+                <div><span>Upgrade steps</span><strong>{result.stepCount}</strong><small>Across {result.byPiece.length} of 12 pieces</small></div>
+                <div><span>Mythic Gear pieces</span><strong>{fmt(result.totals.mythicGear)}</strong><small>Estimated</small></div>
               </div>
               <div className={styles.tableWrap}>
                 <table>
@@ -78,14 +97,14 @@ export default function HeroGearUpgradePlanner() {
                   </tbody>
                 </table>
               </div>
-              <details className={styles.details}>
-                <summary>Level-by-level breakdown ({result.steps.length} steps)</summary>
+              <details className={styles.details} open>
+                <summary>Piece-by-piece breakdown ({result.byPiece.length} pieces)</summary>
                 <div className={styles.tableWrap}>
                   <table>
-                    <thead><tr><th>Level</th><th>XP</th><th>Mithril</th><th>Forgehammers</th><th>Mythic</th></tr></thead>
+                    <thead><tr><th>Piece</th><th>XP</th><th>Mithril</th><th>Forgehammers</th><th>Mythic</th></tr></thead>
                     <tbody>
-                      {result.steps.map((s) => (
-                        <tr key={s.level}><th>{s.level} → {s.nextLevel}</th><td>{fmt(s.xp)}</td><td>{fmt(s.mithril)}</td><td>{fmt(s.forgehammers)}</td><td>{s.mythicGear || '—'}</td></tr>
+                      {result.byPiece.map((s) => (
+                        <tr key={s.key}><th>{s.label}<small>{s.current} → {s.target}</small></th><td>{fmt(s.totals.xp)}</td><td>{fmt(s.totals.mithril)}</td><td>{fmt(s.totals.forgehammers)}</td><td>{s.totals.mythicGear || '—'}</td></tr>
                       ))}
                     </tbody>
                   </table>
@@ -93,11 +112,11 @@ export default function HeroGearUpgradePlanner() {
               </details>
             </section>
           ) : (
-            <div className={styles.empty}><h2>Your upgrade plan appears here</h2><p>Choose a hero, current and target level, then calculate.</p></div>
+            <div className={styles.empty}><h2>Your upgrade plan appears here</h2><p>Set a current and target tier for one or more of the 12 hero gear pieces, then calculate.</p></div>
           )}
         </aside>
       </div>
-      <footer className={styles.source}>Hero list: K710Hub&apos;s player-record combat options. Level costs and stat gains are illustrative placeholders pending a verified Kingshot cost table — confirm exact quantities in-game before spending.</footer>
+      <footer className={styles.source}>Hero gear structure: 3 heroes (Infantry, Archer, Cavalry) x 4 pieces (Helmet, Boots, Chest, Arm), confirmed by the site owner. Material amounts are illustrative placeholders pending a verified Kingshot cost table — confirm exact quantities in-game before spending.</footer>
     </div>
   );
 }
