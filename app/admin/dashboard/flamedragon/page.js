@@ -14,7 +14,7 @@ export default function AdminFlamedragonPage() {
       exportFileNamePrefix="k710-flamedragon-tyrant"
       workbookSheetName="Flamedragon Tyrant"
       historyEndpoint="/api/admin-flamedragon/history"
-      historyLabel="Previous KvK"
+      historyLabel="Previous Tyrant"
     />
   );
 }

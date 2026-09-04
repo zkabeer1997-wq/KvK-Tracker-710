@@ -9,7 +9,7 @@ import { Button, Field, Input, Select, Textarea, Table } from '../../../../compo
 
 import { nextEventOccurrence, recurrenceLabel, validateEventSchedule } from '../../../../lib/eventRecurrence.mjs';
 
-const KINDS = ['kvk', 'championship', 'swordland', 'custom'];
+const KINDS = ['kvk', 'championship', 'swordland', 'custom', 'prep', 'tyrant'];
 const EMPTY_FORM = {
   slug: '', title: '', kind: 'custom', description: '', body_md: '',
   starts_at: '', ends_at: '', published: false,

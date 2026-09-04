@@ -11,7 +11,7 @@ export async function GET(request) {
     const { data: cycles, error } = await supabase
       .from('event_cycle_archives')
       .select('id,event_id,occurrence_starts_at,occurrence_ends_at')
-      .eq('kind', 'kvk')
+      .eq('kind', 'tyrant')
       .order('occurrence_starts_at', { ascending: false });
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

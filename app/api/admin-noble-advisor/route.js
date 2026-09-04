@@ -8,7 +8,7 @@ const headers = { 'Cache-Control':'no-store' };
 export async function GET(request) {
  if (!(await isAdminRequest(request))) return NextResponse.json({error:'Unauthorized'},{status:401,headers});
  const supabase = createAdminSupabaseClient();
- await archiveCompletedCycles(supabase, 'kvk');
+ await archiveCompletedCycles(supabase, 'tyrant');
  const {data,error}=await supabase.from('noble_advisor_submissions').select('*').order('created_at');
  return NextResponse.json(error?{error:'Unable to load bookings.'}:{rows:data || []},{status:error?500:200,headers});
 }

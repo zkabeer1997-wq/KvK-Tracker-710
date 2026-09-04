@@ -275,12 +275,12 @@ export default function AdminPrepMinistersPage({ noble = false }) {
               <Select
                 value={selectedCycleId}
                 onChange={(e) => handleCycleChange(e.target.value)}
-                aria-label="Previous KvK"
+                aria-label={noble ? 'Previous Tyrant' : 'Previous Prep'}
               >
                 <option value="">Current</option>
                 {cycles.map((cycle) => (
                   <option key={cycle.id} value={cycle.id}>
-                    Previous KvK — {cycle.title}{cycle.starts_at ? ` (${new Date(cycle.starts_at).toLocaleDateString()})` : ''}
+                    {noble ? 'Previous Tyrant' : 'Previous Prep'} — {cycle.title}{cycle.starts_at ? ` (${new Date(cycle.starts_at).toLocaleDateString()})` : ''}
                   </option>
                 ))}
               </Select>
