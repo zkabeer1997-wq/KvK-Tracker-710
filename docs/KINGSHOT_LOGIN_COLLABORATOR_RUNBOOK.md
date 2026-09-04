@@ -11,6 +11,11 @@ The old Member ID + PIN gate and shared admin-password page have been replaced b
 5. MightPulse supplies the kingdom and complete public player profile.
 6. Only a verified `kid = 710` account receives a website session.
 
+If the official service cannot send the one-time code, the sealed flow changes
+to `awaiting_personal_code`. A previously verified account can then use its
+6-digit personal fallback code. Five failures end that flow, and aggregate
+per-account/per-source failures are rate-limited for an hour.
+
 The storefront token and one-time code are never stored. Pending signing credentials are encrypted into a 15-minute `HttpOnly` cookie. Successful sessions use an opaque random cookie whose SHA-256 hash is stored in Supabase, so sessions survive refreshes/new tabs and can be revoked on logout.
 
 ## Database setup
@@ -19,6 +24,7 @@ Apply this migration before deploying the code:
 
 ```text
 supabase/migrations/20260904170000_kingshot_accounts_sessions_and_roles.sql
+supabase/migrations/20260904190000_personal_login_codes.sql
 ```
 
 It creates three server-only tables:
@@ -35,7 +41,19 @@ RLS is enabled on every table. `PUBLIC`, `anon`, and `authenticated` receive no 
 - `admin`: the existing admin dashboard and admin APIs.
 - `superadmin`: all admin access plus `/admin/dashboard/access`, where roles can be assigned or removed.
 
-Player ID `108051086` becomes `superadmin` only when its `kingshot_users` row is first created. Later logins never overwrite a role decision. A database function enforces that only a superadmin can change roles and that a superadmin cannot remove their own superadmin role. They can change any other account, including another superadmin.
+Player IDs `108051086` and `106599852` are designated superadmins and regain
+that role whenever they authenticate. A database function enforces that only a
+superadmin can change roles and that a superadmin cannot remove their own
+superadmin role. They can change any other account, including another
+superadmin.
+
+## Personal fallback codes
+
+Personal codes are optional for verified accounts. A superadmin can create or
+reset one from `/admin/dashboard/access`; the replacement is generated on the
+server and revealed only in that response. Supabase stores only a bcrypt hash.
+The initial code for player `108051086` is provisioned by the personal-code
+migration without overwriting any later reset.
 
 ## Required environment variables
 
@@ -68,5 +86,9 @@ KINGSHOT_PLAYER_SEARCH_URL=
 - Verify a member cannot access `/admin/dashboard` or any `/api/admin-*` endpoint.
 - Verify an admin can access the existing dashboard but not role management.
 - Verify a superadmin cannot demote their own account.
+- Force the official send-code endpoint to fail and verify the personal-code
+  form appears, rejects an incorrect code, and accepts a configured code.
+- Reset a personal code from User Access, copy the one-time reveal, and confirm
+  the previous code immediately stops working.
 
 Authentication uses the Kingshot storefront integration supplied in `D:\Kingshot\Account_Login`. Review Century Games' terms and endpoint changes before production rollout.

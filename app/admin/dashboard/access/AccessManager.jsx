@@ -26,6 +26,10 @@ export default function AccessManager({ actorPlayerId }) {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState('');
+  const [resettingCode, setResettingCode] = useState('');
+  const [confirmingCode, setConfirmingCode] = useState('');
+  const [revealedCodes, setRevealedCodes] = useState({});
+  const [copiedCode, setCopiedCode] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -80,6 +84,50 @@ export default function AccessManager({ actorPlayerId }) {
     }
   }
 
+  async function resetPersonalCode(user) {
+    if (confirmingCode !== user.player_id) {
+      setConfirmingCode(user.player_id);
+      setMessage('Select “Confirm reset” to replace this user’s personal code.');
+      setError('');
+      return;
+    }
+
+    setConfirmingCode('');
+    setResettingCode(user.player_id);
+    setMessage('');
+    setError('');
+    try {
+      const response = await fetch('/api/admin-personal-codes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerId: user.player_id }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'The personal code could not be reset.');
+      setRevealedCodes((current) => ({ ...current, [user.player_id]: result.personalCode }));
+      setUsers((current) => current.map((item) => (
+        item.player_id === user.player_id
+          ? { ...item, personal_code_configured: true }
+          : item
+      )));
+      setMessage(`New personal code created for ${user.nickname}. Copy it now; it will not be shown again.`);
+    } catch (resetError) {
+      setError(resetError.message);
+    } finally {
+      setResettingCode('');
+    }
+  }
+
+  async function copyPersonalCode(playerId) {
+    try {
+      await navigator.clipboard.writeText(revealedCodes[playerId]);
+      setCopiedCode(playerId);
+      window.setTimeout(() => setCopiedCode((current) => (current === playerId ? '' : current)), 1600);
+    } catch {
+      setError('Could not copy automatically. Select the code and copy it manually.');
+    }
+  }
+
   async function logout() {
     await fetch('/api/logout', { method: 'POST' }).catch(() => {});
     router.push('/');
@@ -120,7 +168,7 @@ export default function AccessManager({ actorPlayerId }) {
         ) : (
           <div className={styles.list}>
             <div className={styles.listHead} aria-hidden="true">
-              <span>Account</span><span>Kingdom</span><span>Access</span><span />
+              <span>Account</span><span>Kingdom</span><span>Access</span><span>Actions & personal code</span>
             </div>
             {visibleUsers.map((user) => {
               const isSelf = user.player_id === actorPlayerId;
@@ -147,14 +195,40 @@ export default function AccessManager({ actorPlayerId }) {
                       <option value="superadmin">Superadmin</option>
                     </select>
                   </label>
-                  <button
-                    type="button"
-                    disabled={isSelf || !changed || saving === user.player_id}
-                    onClick={() => saveRole(user)}
-                    title={isSelf ? 'You cannot remove your own superadmin role' : undefined}
-                  >
-                    {isSelf ? 'Your account' : saving === user.player_id ? 'Saving…' : 'Apply'}
-                  </button>
+                  <div className={styles.actions}>
+                    <button
+                      type="button"
+                      disabled={isSelf || !changed || saving === user.player_id}
+                      onClick={() => saveRole(user)}
+                      title={isSelf ? 'You cannot remove your own superadmin role' : undefined}
+                    >
+                      {isSelf ? 'Your account' : saving === user.player_id ? 'Saving…' : 'Apply role'}
+                    </button>
+                    {revealedCodes[user.player_id] ? (
+                      <div className={styles.codeReveal}>
+                        <span>Shown once</span>
+                        <code>{revealedCodes[user.player_id]}</code>
+                        <button type="button" onClick={() => copyPersonalCode(user.player_id)}>
+                          {copiedCode === user.player_id ? 'Copied' : 'Copy'}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className={styles.codeButton}
+                        disabled={resettingCode === user.player_id}
+                        onClick={() => resetPersonalCode(user)}
+                      >
+                        {resettingCode === user.player_id
+                          ? 'Resetting…'
+                          : confirmingCode === user.player_id
+                            ? 'Confirm reset'
+                            : user.personal_code_configured
+                              ? 'Reset personal code'
+                              : 'Create personal code'}
+                      </button>
+                    )}
+                  </div>
                 </article>
               );
             })}

@@ -21,10 +21,14 @@ export async function GET(request) {
 
   const { data, error } = await createSupabaseAdminClient()
     .from('kingshot_users')
-    .select('player_id, nickname, avatar_url, kingdom_id, alliance_abbr, alliance_name, access_role, last_login_at')
+    .select('player_id, nickname, avatar_url, kingdom_id, alliance_abbr, alliance_name, access_role, personal_code_hash, last_login_at')
     .order('nickname', { ascending: true });
   if (error) return json({ error: 'User access could not be loaded.' }, { status: 500 });
-  return json({ users: data || [], actorPlayerId: actor.playerId });
+  const users = (data || []).map(({ personal_code_hash: personalCodeHash, ...user }) => ({
+    ...user,
+    personal_code_configured: /^\$2[aby]\$\d{2}\$/.test(String(personalCodeHash || '')),
+  }));
+  return json({ users, actorPlayerId: actor.playerId });
 }
 
 export async function PATCH(request) {

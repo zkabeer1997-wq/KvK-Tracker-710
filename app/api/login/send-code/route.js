@@ -14,6 +14,26 @@ function json(body, init = {}) {
   return response;
 }
 
+function personalCodeFallback(flow, message, code, status = 400) {
+  const nextFlow = {
+    ...flow,
+    state: 'awaiting_personal_code',
+    failedPersonalCodeAttempts: 0,
+  };
+  const response = json({
+    error: message,
+    code,
+    personalCodeAllowed: true,
+    state: nextFlow.state,
+  }, { status });
+  response.cookies.set(
+    LOGIN_FLOW_COOKIE_NAME,
+    sealLoginFlow(nextFlow),
+    loginFlowCookieOptions(),
+  );
+  return response;
+}
+
 export async function POST(request) {
   const flow = readLoginFlow(request);
   if (!flow) {
@@ -22,10 +42,12 @@ export async function POST(request) {
 
   try {
     if (await isCodeRequestRateLimited(request, flow.playerId)) {
-      return json({
-        error: 'Too many verification codes were requested. Please try again later.',
-        code: 'CODE_LIMIT',
-      }, { status: 429 });
+      return personalCodeFallback(
+        flow,
+        'Too many verification codes were requested. Use your personal code or try again later.',
+        'CODE_LIMIT',
+        429,
+      );
     }
 
     await recordLoginEvent(request, 'code_requested', flow.playerId);
@@ -39,8 +61,13 @@ export async function POST(request) {
     return response;
   } catch (error) {
     if (error instanceof KingshotLoginError) {
-      return json({ error: error.message, code: error.code }, { status: error.status });
+      return personalCodeFallback(flow, error.message, error.code, error.status);
     }
-    return json({ error: 'The verification code could not be requested.' }, { status: 502 });
+    return personalCodeFallback(
+      flow,
+      'The verification code could not be requested. Use your personal code or try again later.',
+      'CODE_REQUEST_FAILED',
+      502,
+    );
   }
 }

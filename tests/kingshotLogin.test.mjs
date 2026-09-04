@@ -3,6 +3,8 @@ import { test } from 'node:test';
 import {
   createLoginFlow,
   deriveKingdomId,
+  isLoginSuperadmin,
+  sendVerificationCode,
   toPublicProfile,
   toStoredUser,
 } from '../lib/kingshotLogin.js';
@@ -23,6 +25,31 @@ test('login flow accepts only numeric Player IDs and seals pending credentials',
   assert.doesNotMatch(sealed, /108051086|signingKey|authKey/);
   assert.equal(openLoginFlow(sealed).playerId, flow.playerId);
   assert.equal(openLoginFlow(`${sealed}tampered`), null);
+
+  const personalCodeFlow = sealLoginFlow({ ...flow, state: 'awaiting_personal_code' });
+  assert.equal(openLoginFlow(personalCodeFlow).state, 'awaiting_personal_code');
+});
+
+test('designated owner accounts receive superadmin access on login', () => {
+  assert.equal(isLoginSuperadmin('108051086'), true);
+  assert.equal(isLoginSuperadmin('106599852'), true);
+  assert.equal(isLoginSuperadmin('100000000'), false);
+});
+
+test('the official Chinese send-limit response is classified for personal-code fallback', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({
+    code: 0,
+    msg: '验证码发送次数已达上限，请稍后再试',
+  }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  try {
+    await assert.rejects(
+      sendVerificationCode(createLoginFlow('108051086')),
+      (error) => error?.code === 'CODE_LIMIT' && error?.status === 429,
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 test('kingdom resolution prefers the detailed profile and supports official fallback', () => {

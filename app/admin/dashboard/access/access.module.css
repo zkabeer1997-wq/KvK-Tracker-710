@@ -8,7 +8,7 @@
 .search input { padding: 0 12px; }
 .roleSelect select { padding: 0 10px; }
 .search input:focus, .roleSelect select:focus { border-color: #c8a65d; box-shadow: 0 0 0 2px rgba(200,166,93,.12); }
-.listHead, .row { display: grid; grid-template-columns: minmax(230px,1.5fr) minmax(80px,.45fr) minmax(170px,.65fr) 100px; gap: 18px; align-items: center; }
+.listHead, .row { display: grid; grid-template-columns: minmax(210px,1.35fr) minmax(72px,.4fr) minmax(150px,.6fr) minmax(170px,.8fr); gap: 18px; align-items: center; }
 .listHead { min-height: 38px; padding: 0 22px; border-bottom: 1px solid rgba(174,139,75,.1); color: #646b73; font: 700 8px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
 .row { min-height: 78px; padding: 12px 22px; border-bottom: 1px solid rgba(174,139,75,.09); }
 .row:last-child { border-bottom: 0; }
@@ -20,14 +20,20 @@
 .identity > div > span { display: block; margin-top: 5px; color: #777e85; font: 500 9px/1.3 var(--font-mono); }
 .kingdom { color: #a9afb3; font: 600 11px/1 var(--font-mono); }
 .roleSelect > span { display: none; }
-.row > button { min-height: 39px; border: 1px solid #a8894c; border-radius: 2px; background: transparent; color: #d3b66f; font: 750 9px/1 var(--font-body); letter-spacing: .07em; text-transform: uppercase; cursor: pointer; }
-.row > button:hover:not(:disabled) { background: #b69450; color: #14171c; }
-.row > button:focus-visible { outline: 2px solid #d9bf78; outline-offset: 2px; }
-.row > button:disabled { cursor: default; opacity: .38; }
+.actions { display: grid; gap: 7px; }
+.actions > button, .codeReveal button { min-height: 36px; border: 1px solid #a8894c; border-radius: 2px; background: transparent; color: #d3b66f; font: 750 8px/1.2 var(--font-body); letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
+.actions > button:hover:not(:disabled), .codeReveal button:hover:not(:disabled) { background: #b69450; color: #14171c; }
+.actions button:focus-visible { outline: 2px solid #d9bf78; outline-offset: 2px; }
+.actions button:disabled { cursor: default; opacity: .38; }
+.codeButton { border-color: rgba(174,139,75,.3) !important; color: #9e9380 !important; }
+.codeReveal { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 5px 8px; padding: 8px; border: 1px solid rgba(114,150,125,.32); background: rgba(73,115,85,.08); }
+.codeReveal span { grid-column: 1 / -1; color: #819b88; font: 700 7px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
+.codeReveal code { color: #c9dccd; font: 750 14px/1 var(--font-mono); letter-spacing: .12em; }
+.codeReveal button { min-height: 28px; padding: 0 9px; }
 .success, .error { margin: 18px 22px 0; padding: 11px 13px; border-left: 2px solid #72967d; background: rgba(73,115,85,.1); color: #a9ccb2; font-size: 12px; }
 .error { border-color: #b76551; background: rgba(145,63,45,.1); color: #deb0a4; }
 .loading { display: grid; gap: 10px; padding: 22px; }
 .loading span { height: 66px; background: rgba(255,255,255,.025); }
 .empty { margin: 0; padding: 40px 22px; color: #777e85; text-align: center; }
-@media(max-width:760px){.header{grid-template-columns:1fr}.listHead{display:none}.row{grid-template-columns:minmax(0,1fr) 90px;gap:14px}.kingdom{grid-column:2;grid-row:1;text-align:right}.roleSelect{grid-column:1}.roleSelect>span{display:block}.row>button{grid-column:2;align-self:end}.success,.error{margin-inline:14px}}
-@media(max-width:480px){.header{padding:22px 16px}.row{grid-template-columns:1fr;padding:16px}.kingdom{grid-column:1;grid-row:auto;text-align:left}.roleSelect,.row>button{grid-column:1}.row>button{width:100%}}
+@media(max-width:760px){.header{grid-template-columns:1fr}.listHead{display:none}.row{grid-template-columns:minmax(0,1fr) 110px;gap:14px}.kingdom{grid-column:2;grid-row:1;text-align:right}.roleSelect{grid-column:1}.roleSelect>span{display:block}.actions{grid-column:2;align-self:end}.success,.error{margin-inline:14px}}
+@media(max-width:480px){.header{padding:22px 16px}.row{grid-template-columns:1fr;padding:16px}.kingdom{grid-column:1;grid-row:auto;text-align:left}.roleSelect,.actions{grid-column:1}.actions{width:100%}}

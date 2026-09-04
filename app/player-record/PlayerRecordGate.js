@@ -73,6 +73,7 @@ export default function PlayerRecordGate({ banner, next, adminAccessRequested = 
           return;
         }
         if (session.state === 'awaiting_code') setView('code');
+        else if (session.state === 'awaiting_personal_code') setView('personalCode');
         else if (session.state === 'awaiting_game_confirmation') setView('game');
         else setView('player');
       })
@@ -108,6 +109,7 @@ export default function PlayerRecordGate({ banner, next, adminAccessRequested = 
       setView('code');
     } catch (error) {
       setStatus(error.message);
+      if (error.personalCodeAllowed) setView('personalCode');
     } finally {
       setBusy(false);
     }
@@ -137,6 +139,33 @@ export default function PlayerRecordGate({ banner, next, adminAccessRequested = 
         setStatus(error.message);
         if (error.retryAllowed === false) setView('player');
       }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function submitPersonalCode(event) {
+    event.preventDefault();
+    clearStatus();
+    setBusy(true);
+    try {
+      const data = await api('/api/login/verify-personal-code', {
+        method: 'POST',
+        body: { code },
+      });
+      setCode('');
+      setProfile(data.profile);
+      window.dispatchEvent(new Event('k710-auth-changed'));
+      if (safeNext && (!safeNext.startsWith('/admin') || isAdminRole(data.profile?.role))) {
+        router.push(safeNext);
+        router.refresh();
+      } else {
+        setView('profile');
+      }
+    } catch (error) {
+      setCode('');
+      setStatus(error.message);
+      if (error.retryAllowed === false) setView('player');
     } finally {
       setBusy(false);
     }
@@ -187,8 +216,12 @@ export default function PlayerRecordGate({ banner, next, adminAccessRequested = 
           <div className={styles.assurance}>
             <span className={styles.assuranceMark} aria-hidden="true">◆</span>
             <div>
-              <strong>Official in-game verification</strong>
-              <span>Your code is checked by Kingshot and is never stored.</span>
+              <strong>{view === 'personalCode' ? 'Secure fallback verification' : 'Official in-game verification'}</strong>
+              <span>
+                {view === 'personalCode'
+                  ? 'Your personal code is stored only as a protected one-way hash.'
+                  : 'Your code is checked by Kingshot and is never stored.'}
+              </span>
             </div>
           </div>
         </section>
@@ -202,7 +235,7 @@ export default function PlayerRecordGate({ banner, next, adminAccessRequested = 
             </div>
           )}
 
-          {(view === 'player' || view === 'game' || view === 'code') && (
+          {(view === 'player' || view === 'game' || view === 'code' || view === 'personalCode') && (
             <>
               <div className={styles.stepRow}>
                 <span>Step {step} / 02</span>
@@ -276,6 +309,39 @@ export default function PlayerRecordGate({ banner, next, adminAccessRequested = 
                   />
                   <button className={styles.primary} type="submit" disabled={busy}>
                     <span>{busy ? 'Verifying…' : 'Log in'}</span><b aria-hidden="true">→</b>
+                  </button>
+                  <button className={styles.textButton} type="button" onClick={startOver} disabled={busy}>
+                    Use a different Player ID
+                  </button>
+                </form>
+              )}
+
+              {view === 'personalCode' && (
+                <form onSubmit={submitPersonalCode} className={styles.form}>
+                  <header>
+                    <h2>Use your personal code</h2>
+                    <p>
+                      The game could not receive a verification code. Enter the private
+                      6-digit code a superadmin assigned to your account.
+                    </p>
+                  </header>
+                  <label htmlFor="kingshot-personal-code">Personal code</label>
+                  <input
+                    id="kingshot-personal-code"
+                    className={styles.codeInput}
+                    value={code}
+                    onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                    inputMode="numeric"
+                    autoComplete="current-password"
+                    placeholder="000000"
+                    minLength={6}
+                    maxLength={6}
+                    pattern="[0-9]{6}"
+                    required
+                    autoFocus
+                  />
+                  <button className={styles.primary} type="submit" disabled={busy}>
+                    <span>{busy ? 'Verifying…' : 'Log in with personal code'}</span><b aria-hidden="true">→</b>
                   </button>
                   <button className={styles.textButton} type="button" onClick={startOver} disabled={busy}>
                     Use a different Player ID
