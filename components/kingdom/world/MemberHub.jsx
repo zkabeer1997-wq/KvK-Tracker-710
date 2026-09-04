@@ -38,6 +38,13 @@ const destinations = [
     description: 'Bear Hunt windows, KvK, Championship, and Swordland, in your local time.',
     href: (id) => `/events?member_id=${id}`,
   },
+  {
+    key: 'account',
+    kicker: 'Account security',
+    title: 'Account & PIN',
+    description: 'Change your 6-digit sign-in PIN securely.',
+    href: () => '/member/account',
+  },
 ];
 
 function KingdomCrest() {
@@ -113,6 +120,19 @@ function StationSigil({ type }) {
           <circle className="sigil-mark" cx="35" cy="52" r="4.5" fill="currentColor" stroke="none" />
           <circle className="sigil-mark" cx="52" cy="52" r="4.5" fill="currentColor" stroke="none" />
           <circle className="sigil-mark" cx="35" cy="65" r="4.5" fill="currentColor" stroke="none" />
+        </g>
+      </svg>
+    );
+  }
+
+  if (type === 'account') {
+    return (
+      <svg className="station-sigil station-sigil-account" viewBox="0 0 96 96" aria-hidden="true">
+        <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="22" y="42" width="52" height="38" rx="6" strokeWidth="5" />
+          <path d="M33 42 V31 C33 13 63 13 63 31 V42" strokeWidth="5" />
+          <circle cx="48" cy="59" r="5" strokeWidth="4" />
+          <path d="M48 64 V70" strokeWidth="4" />
         </g>
       </svg>
     );
@@ -215,6 +235,8 @@ export default function MemberHub({ memberId }) {
         .member-station-events .member-relic-face{background:linear-gradient(90deg,#242c30,#4c6266 48%,#1f2729)}
         .member-station-events .member-sigil-medallion{color:#b9d2c9}
         .member-station-events:hover :global(.sigil-mark),.member-station-events:focus-visible :global(.sigil-mark){filter:drop-shadow(0 0 4px rgba(185,210,201,.55))}
+        .member-station-account .member-relic-face{background:linear-gradient(90deg,#202c2a,#41665f 48%,#1b2725)}
+        .member-station-account .member-sigil-medallion{color:#b9d8cb}
         :global(.sigil-hammer),:global(.sigil-seal),:global(.sigil-crown),:global(.sigil-page),:global(.sigil-mark){transition:transform var(--t-ui) var(--ease-cine),filter var(--t-ui) ease,color var(--t-ui) ease}
         .member-plaque{margin-top:10px}
         @media(max-width:1000px){.member-chambers-inner{padding-top:112px}.member-relic-wrap{height:210px}.member-hall{row-gap:22px}.member-chambers-head{margin-bottom:20px}}
