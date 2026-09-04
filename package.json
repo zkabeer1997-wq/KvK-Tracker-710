@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "node scripts/extract-ui-strings.js && next dev",
-    "build": "node scripts/extract-ui-strings.js && next build",
+    "build": "node scripts/verify-collaborator-preview-env.mjs && node scripts/extract-ui-strings.js && next build",
     "start": "next start",
     "test": "node --test 'tests/**/*.test.mjs'",
     "lint": "eslint .",
@@ -12,7 +12,8 @@
     "qa:visual": "node scripts/qa-visual-diff.js",
     "qa:visual:baseline": "node scripts/qa-visual-diff.js --baseline",
     "analyze": "ANALYZE=true npm run build",
-    "lint:css": "stylelint 'app/**/*.css' 'components/**/*.css' --allow-empty-input"
+    "lint:css": "stylelint 'app/**/*.css' 'components/**/*.css' --allow-empty-input",
+    "verify:collaborator-env": "node scripts/verify-collaborator-preview-env.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "6.1.0",
