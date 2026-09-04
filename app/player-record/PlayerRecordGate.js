@@ -249,7 +249,7 @@ export default function PlayerRecordGate({ banner, next }) {
             <p className="gatehouse-hint k-narrative">
               {firstTime
                 ? 'Use the Member ID from Kingshot. The site will generate a secure 6-digit PIN and show it once.'
-                : 'Use the PIN you originally set. Forgot it? An admin can reset it from the Member PINs panel.'}
+                : 'Use your current PIN. After signing in, open Account & PIN to change it yourself. If you forgot it, an admin can reset it.'}
             </p>
           </form>
         )}
