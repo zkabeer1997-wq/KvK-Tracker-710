@@ -18,6 +18,7 @@ A successful Kingshot player lookup is **not proof of account ownership**. It ma
 - Data: synthetic only
 - Browser access: explicitly denied by RLS
 - Server access: service role only
+- Vercel safety gate: builds fail unless this branch uses the staging project
 
 Synthetic test accounts:
 
