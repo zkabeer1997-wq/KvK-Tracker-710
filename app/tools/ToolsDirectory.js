@@ -7,12 +7,21 @@ const TOOLS = {
     { key: 'charm-pack-optimizer', event: 'Governor Charms', title: 'Charm Pack Optimizer', description: 'Set all 18 charms individually, calculate every upgrade material, and build the cheapest week-by-week pack plan.', status: 'New', icon: '/images/charm-pack-forge.svg' },
     { key: 'wavebound-charms', event: 'Wavebound Voyage', title: 'Charms Sailing Optimizer', description: 'Calculate Tidal Treasure merges for a target Charm level, including Exquisite and Majestic outcomes.', status: 'Available', icon: '/images/wavebound-charm-sail.svg' },
   ],
-  'Governor Gear': [],
-  'Hero Gear': [],
+  'Governor Gear': [
+    { key: 'governor-gear-upgrade', event: 'Governor Gear', title: 'Governor Gear Upgrade Planner', description: 'Pick a gear slot, current and target tier, and see the estimated materials and power gain.', status: 'New', icon: '/images/governor-gear-upgrade.svg' },
+    { key: 'governor-gear-compare', event: 'Governor Gear', title: 'Governor Gear Set Comparer', description: 'Compare two full 6-slot loadouts side by side to see which slots are ahead or behind.', status: 'New', icon: '/images/governor-gear-compare.svg' },
+  ],
+  'Hero Gear': [
+    { key: 'hero-gear-upgrade', event: 'Hero Gear', title: 'Hero Gear Upgrade Calculator', description: 'Pick a hero, current and target gear level, and see the estimated materials and stat gain.', status: 'New', icon: '/images/hero-gear-upgrade.svg' },
+    { key: 'hero-gear-builder', event: 'Hero Gear', title: 'Hero Gear Set Builder', description: 'Set every piece of a hero’s gear and see the total score and weakest piece.', status: 'New', icon: '/images/hero-gear-builder.svg' },
+  ],
   Pets: [
     { key: 'pet-pack-optimizer', event: 'Pet Advancement', title: 'Pet Pack Optimizer', description: 'Enter your material target and inventory, then get the cheapest repeatable week-by-week pack and chest redemption plan.', status: 'New', icon: '/images/pet-pack-compass.svg' },
   ],
-  Masters: [],
+  Masters: [
+    { key: 'masters-upgrade', event: 'Masters', title: 'Master Upgrade Planner', description: 'Pick a Master, current and target level, and see the estimated materials, power and squad buff gain.', status: 'New', icon: '/images/masters-upgrade.svg' },
+    { key: 'masters-database', event: 'Masters', title: 'Masters Database & Compare', description: 'Browse the full Masters roster and compare two Masters side by side.', status: 'New', icon: '/images/masters-database.svg' },
+  ],
   'Special Event Shops': [
     { key: 'flamedragon-shop', event: 'Flamedragon Tyrant', title: 'Dragon’s Caravan Optimizer', description: 'Build a reward cart, prioritize the best-value shop items, and calculate the cheapest Dragon Essence pack combination.', status: 'New', icon: '/images/flamedragon-caravan.svg' },
     { key: 'adventure-stall', event: 'Adventure Stall', title: 'Adventure Stall Optimizer', description: 'Choose your event rewards and calculate the lowest-cost daily pack plan after using the Shells already in your inventory.', status: 'New', icon: '/images/adventure-stall.svg' },
