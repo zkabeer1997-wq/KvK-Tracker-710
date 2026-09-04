@@ -10,8 +10,11 @@ export async function POST(request) {
     const body = await request.json();
     const order = Array.isArray(body.order) ? body.order : [];
     const supabase = createAdminSupabaseClient();
-    for (let i = 0; i < order.length; i += 1) {
-      await supabase.from('content_blocks').update({ position: i }).eq('id', order[i]);
+    if (order.length > 0) {
+      const { error } = await supabase
+        .from('content_blocks')
+        .upsert(order.map((id, position) => ({ id, position })), { onConflict: 'id' });
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     }
     return NextResponse.json({ ok: true });
   } catch (error) {

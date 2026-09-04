@@ -4,8 +4,9 @@ import {
   getAdminGiftOverview,
   discoverWikiCodes,
   enrollMemberForGiftCodes,
+  queueActiveCodesForAllEnrollments,
 } from '../../../lib/giftCodes.mjs';
-import { createSupabaseAdminClient } from '../../../lib/supabaseAdmin';
+import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
 
 function noStoreJson(body, init = {}) {
   const response = NextResponse.json(body, init);
@@ -23,7 +24,7 @@ export async function GET(request) {
     const q = url.searchParams.get('q')?.trim();
     let history = [];
     if (q) {
-      const client = createSupabaseAdminClient();
+      const client = createAdminSupabaseClient();
       const { data } = await client
         .from('gift_code_redemptions')
         .select('id, player_id, code, status, attempts, last_response, completed_at, created_at')
@@ -52,7 +53,7 @@ export async function POST(request) {
   }
 
   const action = String(body?.action || '').trim();
-  const client = createSupabaseAdminClient();
+  const client = createAdminSupabaseClient();
 
   try {
     if (action === 'check_wiki') {
@@ -79,13 +80,7 @@ export async function POST(request) {
         { onConflict: 'code' }
       );
       if (error) throw error;
-      const { data: enrollments } = await client
-        .from('gift_code_enrollments')
-        .select('id')
-        .eq('enabled', true);
-      for (const e of enrollments || []) {
-        await client.rpc('gift_code_queue_for_enrollment', { p_enrollment_id: e.id });
-      }
+      await queueActiveCodesForAllEnrollments(client);
       return noStoreJson({ ok: true, code });
     }
 

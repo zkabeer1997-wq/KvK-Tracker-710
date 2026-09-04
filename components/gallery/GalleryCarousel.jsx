@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
@@ -50,7 +51,14 @@ export default function GalleryCarousel({ images, embedded = false }) {
             aria-hidden={index !== active}
             style={{ '--gallery-image': `url("${image.image_url.replace(/["\\]/g, '')}")` }}
           >
-            <img src={image.image_url} alt={index === active ? image.alt_text : ''} loading={index === 0 ? 'eager' : 'lazy'} />
+            <Image
+              src={image.image_url}
+              alt={index === active ? image.alt_text : ''}
+              fill
+              sizes="(max-width: 980px) 100vw, 55vw"
+              priority={index === 0}
+              loading={index === 0 ? undefined : 'lazy'}
+            />
             {!embedded && (image.title || image.caption) && (
               <figcaption>
                 {image.title && <strong>{image.title}</strong>}

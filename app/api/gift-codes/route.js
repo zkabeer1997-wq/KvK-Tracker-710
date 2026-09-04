@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { readMemberSession } from '../../../lib/memberAuth';
 import { getMemberGiftStatus, enrollMemberForGiftCodes, confirmMemberRedemption, MEMBER_CONFIRM_RESULTS } from '../../../lib/giftCodes.mjs';
-import { createSupabaseAdminClient } from '../../../lib/supabaseAdmin';
+import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
 
 function noStoreJson(body, init = {}) {
   const response = NextResponse.json(body, init);
@@ -40,7 +40,7 @@ export async function PATCH(request) {
     }
 
     const enabled = Boolean(body?.enabled);
-    const client = createSupabaseAdminClient();
+    const client = createAdminSupabaseClient();
 
     if (enabled) {
       await enrollMemberForGiftCodes(memberId, memberId, 710);

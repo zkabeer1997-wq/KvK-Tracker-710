@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createSupabaseAdminClient } from '../../../../lib/supabaseAdmin';
+import { createAdminSupabaseClient } from '../../../../lib/adminSupabase';
 import { readMemberSession } from '../../../../lib/memberAuth';
 
 function validToolKey(tool) {
@@ -15,7 +15,7 @@ export async function GET(request, { params: paramsPromise }) {
   if (!validToolKey(tool)) return NextResponse.json({ error: 'Invalid tool.' }, { status: 400 });
 
   try {
-    const supabase = createSupabaseAdminClient();
+    const supabase = createAdminSupabaseClient();
     const { data, error } = await supabase
       .from('member_tool_state')
       .select('state, updated_at')
@@ -55,7 +55,7 @@ export async function PUT(request, { params: paramsPromise }) {
   }
 
   try {
-    const supabase = createSupabaseAdminClient();
+    const supabase = createAdminSupabaseClient();
     const { error } = await supabase.from('member_tool_state').upsert({
       member_id: session.memberId,
       tool_key: tool,

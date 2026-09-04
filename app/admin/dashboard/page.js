@@ -1,5 +1,3 @@
-'use client';
-
 import RosterWorkspace from '../../../components/admin/RosterWorkspace';
 
 export default function AdminDashboardPage() {
