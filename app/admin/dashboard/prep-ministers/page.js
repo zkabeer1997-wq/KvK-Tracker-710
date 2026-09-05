@@ -8,6 +8,7 @@ import TableFilters from '../../../../components/admin/TableFilters';
 import { searchRow, compareValues, numericValue } from '../../../../lib/adminTable.mjs';
 import { TIME_SLOTS } from '../../../../lib/nobleAdvisor.mjs';
 import { schedule, OPEN_SPOT } from '../prepScheduler.mjs';
+import { filterRowsUpdatedOnOrAfter } from '../../../../lib/adminTimeWindow.mjs';
 
 const ALL_COLUMNS = [
   { key: 'in_game_name', label: 'In-game name' },
@@ -28,13 +29,16 @@ const ALL_COLUMNS = [
   { key: 'avail_day2', label: 'Day 2 Times (Research)' },
   { key: 'avail_day4', label: 'Day 4 Times (Troop Training)' },
   { key: 'avail_day5', label: 'Day 5 Times (Overflow)' },
-  { key: 'created_at', label: 'Submitted' },
+  { key: 'updated_at', label: 'Updated' },
 ];
 
 const SEARCH_KEYS = ['in_game_name', 'member_id'];
 
 function cellValue(row, key) {
-  if (key === 'created_at') return row.created_at ? new Date(row.created_at).toLocaleString() : '';
+  if (key === 'updated_at') {
+    const value = row.updated_at || row.created_at;
+    return value ? new Date(value).toLocaleString() : '';
+  }
   const v = row[key];
   if (Array.isArray(v)) return v.join(', ');
   return v == null ? '' : String(v);
@@ -116,13 +120,14 @@ function buildXlsx(sheets) {
 
 export default function AdminPrepMinistersPage({ noble = false }) {
   const api = noble ? '/api/admin-noble-advisor' : '/api/admin-prep-backpack';
-  const COLUMNS = noble ? ALL_COLUMNS.filter(col => ['in_game_name','member_id','want_troop_training','is_transfer','promoting_t11','troop_speedup_days','avail_day4','created_at'].includes(col.key)) : ALL_COLUMNS;
+  const COLUMNS = noble ? ALL_COLUMNS.filter(col => ['in_game_name','member_id','want_troop_training','is_transfer','promoting_t11','troop_speedup_days','avail_day4','updated_at'].includes(col.key)) : ALL_COLUMNS;
   const [transferFilter,setTransferFilter] = useState('');
   const [promotionFilter,setPromotionFilter] = useState('');
   const [slotFilter,setSlotFilter] = useState('');
   const [minSpeedups,setMinSpeedups] = useState('');
-  const [sortKey,setSortKey] = useState('in_game_name');
-  const [sortDir,setSortDir] = useState('asc');
+  const [sortKey,setSortKey] = useState('updated_at');
+  const [sortDir,setSortDir] = useState('desc');
+  const [scheduleCutoff, setScheduleCutoff] = useState('');
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -165,7 +170,11 @@ export default function AdminPrepMinistersPage({ noble = false }) {
     }).sort((a,b)=>compareValues(a[sortKey],b[sortKey],['troop_speedup_days','research_speedup_days','tg_used','ttg_used','tg_dust'].includes(sortKey))*(sortDir==='asc'?1:-1));
   }, [rows, query, consFilter, resFilter, ttFilter, transferFilter, promotionFilter, slotFilter, minSpeedups, sortKey, sortDir, noble]);
 
-  function makeSchedule() { const data = schedule(rows.map(row=>({...row,...Object.fromEntries(ARRAY_KEYS.map(key=>[key,Array.isArray(row[key])?row[key]:String(row[key] || '').split(',').map(v=>v.trim()).filter(Boolean)]))}))); return noble ? {...data,days:data.days.filter(day=>day.day===4)} : data; }
+  const scheduleRows = useMemo(
+    () => filterRowsUpdatedOnOrAfter(rows, scheduleCutoff),
+    [rows, scheduleCutoff],
+  );
+  function makeSchedule() { const data = schedule(scheduleRows.map(row=>({...row,...Object.fromEntries(ARRAY_KEYS.map(key=>[key,Array.isArray(row[key])?row[key]:String(row[key] || '').split(',').map(v=>v.trim()).filter(Boolean)]))}))); return noble ? {...data,days:data.days.filter(day=>day.day===4)} : data; }
   function handleGenerate() { setResult(makeSchedule()); }
 
   const saveTimers = useRef({});
@@ -194,7 +203,7 @@ export default function AdminPrepMinistersPage({ noble = false }) {
     }
   }
   function updateCell(rowId, key, value) {
-    setRows(prev=>prev.map(row=>row.id===rowId?{...row,[key]:value}:row));
+    setRows(prev=>prev.map(row=>row.id===rowId?{...row,[key]:value,updated_at:new Date().toISOString()}:row));
     setResult(null);
     const timerKey = rowId + ':' + key;
     const version = (saveVersions.current[timerKey] || 0) + 1;
@@ -228,7 +237,7 @@ export default function AdminPrepMinistersPage({ noble = false }) {
             <div><span>Total submissions</span><strong>{rows.length}</strong></div>
             <div><span>Showing</span><strong>{visibleRows.length}</strong></div>
           </div>
-          <TableFilters query={query} onQuery={setQuery} shown={visibleRows.length} total={rows.length} placeholder="Name, player ID, or notes" onReset={()=>{setQuery('');setConsFilter('');setResFilter('');setTtFilter('');setTransferFilter('');setPromotionFilter('');setSlotFilter('');setMinSpeedups('');setSortKey('in_game_name');setSortDir('asc');}} filters={[
+          <TableFilters query={query} onQuery={setQuery} shown={visibleRows.length} total={rows.length} placeholder="Name, player ID, or notes" onReset={()=>{setQuery('');setConsFilter('');setResFilter('');setTtFilter('');setTransferFilter('');setPromotionFilter('');setSlotFilter('');setMinSpeedups('');setSortKey('updated_at');setSortDir('desc');}} filters={[
             ...(!noble ? [{key:'construction',label:'Construction',value:consFilter,onChange:setConsFilter,options:['Yes','No']},{key:'research',label:'Research',value:resFilter,onChange:setResFilter,options:['Yes','No']}] : []),
             {key:'training',label:'Troop Training',value:ttFilter,onChange:setTtFilter,options:['Yes','No']},
             {key:'transfer',label:'Transfer',value:transferFilter,onChange:setTransferFilter,options:['Yes','No']},
@@ -239,10 +248,24 @@ export default function AdminPrepMinistersPage({ noble = false }) {
             <label>Sort by<select value={sortKey} onChange={e=>setSortKey(e.target.value)}>{COLUMNS.map(col=><option key={col.key} value={col.key}>{col.label}</option>)}</select></label>
             <label>Order<select value={sortDir} onChange={e=>setSortDir(e.target.value)}><option value="asc">Ascending</option><option value="desc">Descending</option></select></label>
           </TableFilters>
+          <div className="admin-time-cutoff schedule-time-cutoff">
+            <label htmlFor={noble ? 'noble-schedule-cutoff' : 'prep-schedule-cutoff'}>Use submissions updated from</label>
+            <input
+              id={noble ? 'noble-schedule-cutoff' : 'prep-schedule-cutoff'}
+              type="datetime-local"
+              value={scheduleCutoff}
+              onChange={(event) => { setScheduleCutoff(event.target.value); setResult(null); }}
+            />
+            {scheduleCutoff && <button type="button" onClick={() => { setScheduleCutoff(''); setResult(null); }}>Use all submissions</button>}
+            <p>
+              Schedule generation will use {scheduleRows.length} of {rows.length} submissions.
+              {scheduleCutoff ? ' Older submissions remain in the table.' : ''}
+            </p>
+          </div>
           <div style={{display:'flex',gap:12,flexWrap:'wrap',marginBottom:18,alignItems:'center'}}>
             <Button variant="quiet" onClick={handleGenerate} disabled={loading || Boolean(error) || saveStatus==='saving' || saveStatus==='error'}>Generate full schedule</Button>
             <Button variant="quiet" onClick={exportExcel} disabled={loading || Boolean(error) || saveStatus==='saving' || saveStatus==='error'}>Export schedule to Excel</Button>
-            <span>Uses all {rows.length} submissions, regardless of filters.</span>
+            <span>Uses the update time frame above, regardless of table filters.</span>
             {saveStatus && <span role="status">{saveStatus === 'saving' ? 'Saving…' : saveStatus === 'saved' ? 'Saved' : 'Save failed — correct the edited value before generating.'}</span>}
           </div>
           {loading && <TableSkeleton columns={COLUMNS.length} rows={7} />}
@@ -252,7 +275,7 @@ export default function AdminPrepMinistersPage({ noble = false }) {
               <thead><tr>{COLUMNS.map((col) => (<th key={col.key} aria-sort={sortKey===col.key ? (sortDir==='asc'?'ascending':'descending') : 'none'}><button type="button" className="admin-sort-btn" onClick={()=>{setSortKey(col.key);setSortDir(sortKey===col.key && sortDir==='asc'?'desc':'asc');}}>{col.label}{sortKey===col.key ? (sortDir==='asc'?' ↑':' ↓') : ''}</button></th>))}</tr></thead>
               <tbody>
                 {visibleRows.map((row) => (
-                  <tr key={row.id}>{COLUMNS.map((col) => (<td key={col.key}>{col.key === 'created_at' ? cellValue(row, col.key) : (<input className="admin-cell-input" value={cellValue(row, col.key)} onChange={(e) => updateCell(row.id, col.key, e.target.value)} />)}</td>))}</tr>
+                  <tr key={row.id}>{COLUMNS.map((col) => (<td key={col.key}>{col.key === 'updated_at' ? cellValue(row, col.key) : (<input className="admin-cell-input" value={cellValue(row, col.key)} onChange={(e) => updateCell(row.id, col.key, e.target.value)} />)}</td>))}</tr>
                 ))}
               </tbody>
             </Table>

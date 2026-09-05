@@ -11,6 +11,7 @@ import { Button, Input, Table } from '../ui';
 import MemberDetailsDrawer from './MemberDetailsDrawer';
 import { buildKvkMembersWorkbook, formatUnitLevel } from '../../lib/kvkMembersExport.mjs';
 import { useEscapeToClose } from '../../lib/useEscapeToClose';
+import { filterRowsUpdatedOnOrAfter } from '../../lib/adminTimeWindow.mjs';
 import {
   HEROES,
   KVK_ALLIANCES,
@@ -102,8 +103,9 @@ export default function RosterWorkspace({
   const [availabilityFilter,setAvailabilityFilter]=useState('');
   const [heroFilter,setHeroFilter]=useState('');
   const [tierFilter,setTierFilter]=useState('');
-  const [sortKey, setSortKey] = useState('name');
-  const [sortDir, setSortDir] = useState('asc');
+  const [sortKey, setSortKey] = useState('updated_at');
+  const [sortDir, setSortDir] = useState('desc');
+  const [assignmentCutoff, setAssignmentCutoff] = useState('');
   const [rallies, setRallies] = useState([]);
   const [ralliesHydrated, setRalliesHydrated] = useState(false);
   const [newMember, setNewMember] = useState({ ...EMPTY_MEMBER });
@@ -317,7 +319,8 @@ export default function RosterWorkspace({
   }
 
   function handleAutoAssign(rallyId) {
-    const result = autoAssignRallyMembers(rallies, rallyId, rows);
+    const eligibleRows = filterRowsUpdatedOnOrAfter(rows, assignmentCutoff);
+    const result = autoAssignRallyMembers(rallies, rallyId, eligibleRows);
     if (!result.summary) return;
     setRallies(result.rallies);
     setAutoAssignSummaries((current) => ({ ...current, [rallyId]: result.summary }));
@@ -509,7 +512,7 @@ export default function RosterWorkspace({
           <strong>{lastUpdated ? new Date(lastUpdated).toLocaleDateString() : '-'}</strong>
         </div>
       </div>
-      <TableFilters query={search} onQuery={setSearch} placeholder="Name, player ID, hero, or equipment" shown={filteredSorted.length} total={rows.length} onReset={()=>{setSearch('');setAllianceFilter('');setAvailabilityFilter('');setHeroFilter('');setTierFilter('');setSortKey('name');setSortDir('asc');}} filters={[
+      <TableFilters query={search} onQuery={setSearch} placeholder="Name, player ID, hero, or equipment" shown={filteredSorted.length} total={rows.length} onReset={()=>{setSearch('');setAllianceFilter('');setAvailabilityFilter('');setHeroFilter('');setTierFilter('');setSortKey('updated_at');setSortDir('desc');}} filters={[
         {key:'alliance',label:'Alliance',value:allianceFilter,onChange:setAllianceFilter,options:[...new Set(rows.map(r=>r.current_alliance).filter(Boolean))].sort()},
         {key:'availability',label:'Availability',value:availabilityFilter,onChange:setAvailabilityFilter,options:[...new Set(rows.map(r=>r.availability).filter(Boolean))].sort()},
         {key:'hero',label:'Hero',value:heroFilter,onChange:setHeroFilter,options:HEROES},
@@ -736,6 +739,26 @@ export default function RosterWorkspace({
             <button type="button" onClick={handleCreateRally} className="create-rally-btn">
               Create Rally {rallies.length + 1}
             </button>
+          </div>
+          <div className="admin-time-cutoff">
+            <label htmlFor="rally-assignment-cutoff">Use member updates from</label>
+            <input
+              id="rally-assignment-cutoff"
+              type="datetime-local"
+              value={assignmentCutoff}
+              onChange={(event) => setAssignmentCutoff(event.target.value)}
+            />
+            {assignmentCutoff ? (
+              <>
+                <button type="button" onClick={() => setAssignmentCutoff('')}>Use all updates</button>
+                <p>
+                  Auto assign will consider {filterRowsUpdatedOnOrAfter(rows, assignmentCutoff).length} of {rows.length} members.
+                  Older records remain in the table.
+                </p>
+              </>
+            ) : (
+              <p>Auto assign will consider all members.</p>
+            )}
           </div>
           <div className="rally-list">
               {rallies.length === 0 && (

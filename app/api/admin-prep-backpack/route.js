@@ -11,7 +11,7 @@ export async function GET(request) {
     const { data, error } = await supabase
       .from('prep_backpack_submissions')
       .select('*')
-      .order('created_at', { ascending: true });
+      .order('updated_at', { ascending: false });
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
@@ -41,7 +41,7 @@ export async function PATCH(request) {
     const supabase = createAdminSupabaseClient();
     const { error } = await supabase
       .from('prep_backpack_submissions')
-      .update({ [key]: value })
+      .update({ [key]: value, updated_at: new Date().toISOString() })
       .eq('id', id);
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -51,4 +51,3 @@ export async function PATCH(request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-

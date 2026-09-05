@@ -29,6 +29,7 @@ export async function POST(request) {
       avail_day4: arr(data.avail_day4),
       avail_day5: arr(data.avail_day5),
       notes: str(data.notes),
+      updated_at: new Date().toISOString(),
     };
 
     if (!payload.member_id || !payload.in_game_name) {
