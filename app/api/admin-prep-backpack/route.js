@@ -13,7 +13,7 @@ export async function GET(request) {
       ? await supabase
           .from('prep_backpack_submissions_archive')
           .select('*')
-          .eq('period_id', period)
+          .eq('cycle_archive_id', period)
           .order('created_at', { ascending: true })
       : await supabase
           .from('prep_backpack_submissions')

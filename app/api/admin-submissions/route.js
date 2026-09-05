@@ -54,7 +54,7 @@ if (period !== 'current') {
   const { data, error } = await supabase
     .from('submissions_archive')
     .select(ADMIN_COLUMNS)
-    .eq('period_id', period)
+    .eq('cycle_archive_id', period)
     .order('name', { ascending: true });
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

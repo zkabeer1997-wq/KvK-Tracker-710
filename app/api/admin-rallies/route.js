@@ -29,8 +29,8 @@ export async function GET(request) {
   const query = period !== 'current'
     ? supabase
         .from('admin_rallies_archive')
-        .select('id, name, position, member_ids, lead_member_id, formation')
-        .eq('period_id', period)
+        .select('id:rally_id, name, position, member_ids, lead_member_id, formation')
+        .eq('cycle_archive_id', period)
         .order('position', { ascending: true })
     : supabase
         .from('admin_rallies')

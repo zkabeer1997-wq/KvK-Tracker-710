@@ -2,26 +2,27 @@ import { NextResponse } from 'next/server';
 import { isAdminRequest } from '../../../lib/adminAuth';
 import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
 
-const SCOPES = ['members', 'prep'];
-const ARCHIVE_FN = {
-  members: 'admin_archive_members_period',
-  prep: 'admin_archive_prep_period',
-};
+// Backed by the pre-existing event_cycle_archives / archive_cycle_occurrence
+// system (see supabase/event_cycle_archive_safety.sql) rather than a new
+// table of our own - "scope" here is this feature's word for what that
+// system calls "kind".
+const SCOPE_TO_KIND = { members: 'kvk', prep: 'prep' };
 
 export async function GET(request) {
   if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   const scope = new URL(request.url).searchParams.get('scope');
-  if (!SCOPES.includes(scope)) {
+  const kind = SCOPE_TO_KIND[scope];
+  if (!kind) {
     return NextResponse.json({ error: 'Unsupported scope' }, { status: 400 });
   }
   try {
     const supabase = createAdminSupabaseClient();
     const { data, error } = await supabase
-      .from('kvk_periods')
-      .select('id, scope, label, archived_at')
-      .eq('scope', scope)
+      .from('event_cycle_archives')
+      .select('id, label, archived_at')
+      .eq('kind', kind)
       .order('archived_at', { ascending: false });
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -32,9 +33,10 @@ export async function GET(request) {
   }
 }
 
-// Snapshots the live table(s) for `scope` into a new named period. This is
-// copy-only: it never deletes or modifies a row in the live tables, so
-// existing member logins/PINs and roster data are untouched.
+// Snapshots the live table(s) for `scope` into a new named period via the
+// copy-only archive_cycle_occurrence() RPC. This never deletes or modifies
+// a row in the live tables, so existing member logins/PINs and roster data
+// are untouched.
 export async function POST(request) {
   if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -45,9 +47,9 @@ export async function POST(request) {
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });
   }
-  const scope = payload && payload.scope;
+  const kind = SCOPE_TO_KIND[payload && payload.scope];
   const label = String((payload && payload.label) || '').trim();
-  if (!SCOPES.includes(scope)) {
+  if (!kind) {
     return NextResponse.json({ error: 'Unsupported scope' }, { status: 400 });
   }
   if (!label) {
@@ -55,17 +57,27 @@ export async function POST(request) {
   }
   try {
     const supabase = createAdminSupabaseClient();
-    const { data: period, error: insertError } = await supabase
-      .from('kvk_periods')
-      .insert({ scope, label })
-      .select('id, scope, label, archived_at')
-      .single();
-    if (insertError) {
-      return NextResponse.json({ error: insertError.message }, { status: 500 });
-    }
-    const { error: archiveError } = await supabase.rpc(ARCHIVE_FN[scope], { p_period_id: period.id });
+    const now = new Date().toISOString();
+    const { data: cycleId, error: archiveError } = await supabase.rpc('archive_cycle_occurrence', {
+      p_kind: kind,
+      p_event_id: null,
+      p_starts_at: now,
+      p_ends_at: now,
+      p_label: label,
+    });
     if (archiveError) {
       return NextResponse.json({ error: archiveError.message }, { status: 500 });
+    }
+    if (!cycleId) {
+      return NextResponse.json({ error: 'Could not start a new period. Please try again.' }, { status: 500 });
+    }
+    const { data: period, error: fetchError } = await supabase
+      .from('event_cycle_archives')
+      .select('id, label, archived_at')
+      .eq('id', cycleId)
+      .single();
+    if (fetchError) {
+      return NextResponse.json({ error: fetchError.message }, { status: 500 });
     }
     return NextResponse.json({ period });
   } catch (error) {
