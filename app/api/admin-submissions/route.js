@@ -47,8 +47,22 @@ export async function GET(request) {
 if (!(await isAdminRequest(request))) {
 return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 }
+const period = new URL(request.url).searchParams.get('period') || 'current';
 try {
 const supabase = createAdminSupabaseClient();
+if (period !== 'current') {
+  const { data, error } = await supabase
+    .from('submissions_archive')
+    .select(ADMIN_COLUMNS)
+    .eq('period_id', period)
+    .order('name', { ascending: true });
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  // Archived rows are a frozen roster snapshot only - power profiles have
+  // no period concept, so they're not merged in for a past period.
+  return NextResponse.json({ rows: data || [], powerProfilesConfigured: false, archived: true });
+}
 const { data, error } = await supabase
 .from('submissions')
 .select(ADMIN_COLUMNS)

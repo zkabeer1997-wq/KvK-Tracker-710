@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import TableFilters from './TableFilters';
+import PeriodSelector from './PeriodSelector';
 import { searchRow, compareValues } from '../../lib/adminTable.mjs';
 import AdminShell from './AdminShell';
 import ConfirmDialog from './ConfirmDialog';
@@ -89,7 +90,11 @@ export default function RosterWorkspace({
   exportFileNamePrefix,
   workbookSheetName,
   allowClearTestData = false,
+  enablePeriods = false,
+  periodScope,
 }) {
+  const [period, setPeriod] = useState('current');
+  const readOnly = enablePeriods && period !== 'current';
   const [rows, setRows] = useState([]);
   const [selectedMemberId, setSelectedMemberId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -123,7 +128,7 @@ export default function RosterWorkspace({
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const response = await fetch(membersEndpoint);
+      const response = await fetch(`${membersEndpoint}${period !== 'current' ? `?period=${period}` : ''}`);
       const result = await response.json();
       if (!response.ok) {
         setError(result.error || 'Unable to load entries.');
@@ -133,30 +138,36 @@ export default function RosterWorkspace({
       setLoading(false);
     }
     load();
-  }, [membersEndpoint]);
+  }, [membersEndpoint, period]);
 
   useEffect(() => {
     let cancelled = false;
+    setRalliesHydrated(false);
     async function loadRallies() {
       try {
-        const response = await fetch(ralliesEndpoint);
+        const response = await fetch(`${ralliesEndpoint}${period !== 'current' ? `?period=${period}` : ''}`);
         if (response.ok) {
           const result = await response.json();
           if (!cancelled) setRallies(formatRallyRows(result.rallies || []));
-        } else if (!cancelled) {
+        } else if (!cancelled && period === 'current') {
           setRallies(parseStoredRallies(window.localStorage.getItem(rallyStorageKey)));
         }
       } catch {
-        if (!cancelled) setRallies(parseStoredRallies(window.localStorage.getItem(rallyStorageKey)));
+        if (!cancelled && period === 'current') {
+          setRallies(parseStoredRallies(window.localStorage.getItem(rallyStorageKey)));
+        }
       }
-      if (!cancelled) setRalliesHydrated(true);
+      // Hydration flips the write-back effect below live; only do that for
+      // the live/current period so viewing an archived snapshot can never
+      // overwrite the real rally board with historical data.
+      if (!cancelled && period === 'current') setRalliesHydrated(true);
     }
     loadRallies();
     return () => { cancelled = true; };
-  }, [ralliesEndpoint, rallyStorageKey]);
+  }, [ralliesEndpoint, rallyStorageKey, period]);
 
   useEffect(() => {
-    if (!ralliesHydrated) return;
+    if (!ralliesHydrated || period !== 'current') return;
     try {
       window.localStorage.setItem(rallyStorageKey, JSON.stringify(rallies));
     } catch {}
@@ -168,7 +179,7 @@ export default function RosterWorkspace({
       }).catch(() => {});
     }, 800);
     return () => clearTimeout(timer);
-  }, [rallies, ralliesHydrated, ralliesEndpoint, rallyStorageKey]);
+  }, [rallies, ralliesHydrated, ralliesEndpoint, rallyStorageKey, period]);
 
   useEffect(() => {
     if (!rows.length) return;
@@ -206,6 +217,7 @@ export default function RosterWorkspace({
   }
 
   function deleteMember(row) {
+    if (readOnly) return;
     const label = `${row.name || 'this entry'} (${row.member_id})`;
     setConfirmState({
       message: `Remove ${label}? This cannot be undone.`,
@@ -232,6 +244,7 @@ export default function RosterWorkspace({
   }
 
   function clearTestData() {
+    if (readOnly) return;
     setConfirmState({
       message: 'Remove all Test Seed / TEST710 entries? This cannot be undone.',
       confirmLabel: 'Clear test data',
@@ -256,10 +269,12 @@ export default function RosterWorkspace({
   }
 
   function handleCreateRally() {
+    if (readOnly) return;
     setRallies((current) => createNextRally(current, `rally-${current.length + 1}-${Date.now()}`));
   }
 
   function handleDragStart(event, memberId) {
+    if (readOnly) { event.preventDefault(); return; }
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/plain', String(memberId));
     setDraggingMemberId(String(memberId));
@@ -272,6 +287,7 @@ export default function RosterWorkspace({
 
   function handleDropOnRally(event, rallyId) {
     event.preventDefault();
+    if (readOnly) return;
     const memberId = event.dataTransfer.getData('text/plain');
     setDraggingMemberId(null);
     setDragOverRallyId(null);
@@ -280,6 +296,7 @@ export default function RosterWorkspace({
   }
 
   function handleRemoveFromRally(memberId) {
+    if (readOnly) return;
     setRallies((current) => removeMemberFromRallies(current, memberId));
   }
 
@@ -290,6 +307,7 @@ export default function RosterWorkspace({
   }
 
   function handleDeleteRally(rally) {
+    if (readOnly) return;
     setConfirmState({
       message: `Delete ${rally.name}? Members will stay in the table.`,
       confirmLabel: 'Delete rally',
@@ -301,22 +319,27 @@ export default function RosterWorkspace({
   }
 
   function handleRallyLeadChange(rallyId, memberId) {
+    if (readOnly) return;
     setRallies((current) => setRallyLead(current, rallyId, memberId));
   }
 
   function handleTroopWeightChange(rallyId, troopType, value) {
+    if (readOnly) return;
     setRallies((current) => setRallyTroopWeight(current, rallyId, troopType, value));
   }
 
   function handleIncrementLeadHero(rallyId, hero) {
+    if (readOnly) return;
     setRallies((current) => incrementRallyLeadHero(current, rallyId, hero));
   }
 
   function handleDecrementLeadHero(rallyId, hero) {
+    if (readOnly) return;
     setRallies((current) => decrementRallyLeadHero(current, rallyId, hero));
   }
 
   function handleAutoAssign(rallyId) {
+    if (readOnly) return;
     const result = autoAssignRallyMembers(rallies, rallyId, rows);
     if (!result.summary) return;
     setRallies(result.rallies);
@@ -324,6 +347,7 @@ export default function RosterWorkspace({
   }
 
   function handleAssignFromDropdown(memberId, rallyId) {
+    if (readOnly) return;
     if (!rallyId) {
       setRallies((current) => removeMemberFromRallies(current, memberId));
       return;
@@ -332,6 +356,7 @@ export default function RosterWorkspace({
   }
 
   function handleRenameRally(rallyId, name) {
+    if (readOnly) return;
     setRallies((current) => renameRally(current, rallyId, name));
   }
 
@@ -357,6 +382,7 @@ export default function RosterWorkspace({
 
   async function handleAddMember(event) {
     event.preventDefault();
+    if (readOnly) return;
     setAddMemberError('');
     setAddMemberStatus('');
     const name = newMember.name.trim();
@@ -465,12 +491,15 @@ export default function RosterWorkspace({
         <Button
           variant="quiet"
           onClick={clearTestData}
-          disabled={deletingIds.includes('__test_data__')}
+          disabled={readOnly || deletingIds.includes('__test_data__')}
         >
           {deletingIds.includes('__test_data__') ? 'Clearing...' : 'Clear test data'}
         </Button>
       ) : null}
     >
+      {enablePeriods && (
+        <PeriodSelector scope={periodScope} value={period} onChange={setPeriod} />
+      )}
       <ConfirmDialog
         open={Boolean(confirmState)}
         message={confirmState ? confirmState.message : ''}
@@ -533,7 +562,7 @@ export default function RosterWorkspace({
               <Button variant="quiet" onClick={handleExportXlsx}>
                 Export to Excel
               </Button>
-              <Button onClick={() => setShowAddMember(true)}>
+              <Button onClick={() => setShowAddMember(true)} disabled={readOnly}>
                 + Add Member
               </Button>
             </div>
@@ -658,9 +687,9 @@ export default function RosterWorkspace({
                       <div className="member-name-cell">
                         <span className="member-name-row">
                           <span
-                            className={isRallyLead ? 'rally-drag-handle is-disabled' : 'rally-drag-handle'}
+                            className={isRallyLead || readOnly ? 'rally-drag-handle is-disabled' : 'rally-drag-handle'}
                             onClick={(event) => event.stopPropagation()}
-                            draggable={!isRallyLead}
+                            draggable={!isRallyLead && !readOnly}
                             onDragStart={(event) => (isRallyLead ? event.preventDefault() : handleDragStart(event, row.member_id))}
                             onDragEnd={handleDragEnd}
                             role="button"
@@ -686,6 +715,7 @@ export default function RosterWorkspace({
                           className="rally-assign-select"
                           aria-label={`Assign ${row.name} to a rally`}
                           value={rallyIdByMemberId.get(String(row.member_id)) || ''}
+                          disabled={readOnly}
                           onClick={(event) => event.stopPropagation()}
                           onChange={(event) => { event.stopPropagation(); handleAssignFromDropdown(row.member_id, event.target.value); }}
                         >
@@ -733,7 +763,7 @@ export default function RosterWorkspace({
               <h2>Rallies</h2>
               <p>{assignedCount} members assigned</p>
             </div>
-            <button type="button" onClick={handleCreateRally} className="create-rally-btn">
+            <button type="button" onClick={handleCreateRally} className="create-rally-btn" disabled={readOnly}>
               Create Rally {rallies.length + 1}
             </button>
           </div>
@@ -769,7 +799,7 @@ export default function RosterWorkspace({
                         >
                           {isCollapsed ? '+' : '−'}
                         </button>
-                        <input className="rally-name-input" type="text" value={rally.name} onChange={(event) => handleRenameRally(rally.id, event.target.value)} aria-label="Rally name" />
+                        <input className="rally-name-input" type="text" value={rally.name} onChange={(event) => handleRenameRally(rally.id, event.target.value)} aria-label="Rally name" disabled={readOnly} />
                         <span>{rally.memberIds.length}</span>
                       </div>
                       <button
@@ -777,6 +807,7 @@ export default function RosterWorkspace({
                         className="delete-rally-btn"
                         onClick={() => handleDeleteRally(rally)}
                         aria-label={`Delete ${rally.name}`}
+                        disabled={readOnly}
                       >
                         Delete
                       </button>
@@ -789,6 +820,7 @@ export default function RosterWorkspace({
                             <select
                               value={rally.leadMemberId || ''}
                               onChange={(event) => handleRallyLeadChange(rally.id, event.target.value)}
+                              disabled={readOnly}
                             >
                               <option value="">Select lead</option>
                               {rows.map((row) => (
@@ -812,6 +844,7 @@ export default function RosterWorkspace({
                                   max="100"
                                   value={(rally.troopWeights && rally.troopWeights[key]) || 0}
                                   onChange={(event) => handleTroopWeightChange(rally.id, key, event.target.value)}
+                                  disabled={readOnly}
                                 />
                               </label>
                             ))}
@@ -832,7 +865,7 @@ export default function RosterWorkspace({
                                     type="button"
                                     className={count > 0 ? 'lead-hero-btn selected' : 'lead-hero-btn'}
                                     onClick={() => handleIncrementLeadHero(rally.id, hero)}
-                                    disabled={disabled}
+                                    disabled={disabled || readOnly}
                                   >
                                     {hero}
                                     {count > 0 && (
@@ -862,6 +895,7 @@ export default function RosterWorkspace({
                             type="button"
                             className="auto-assign-btn"
                             onClick={() => handleAutoAssign(rally.id)}
+                            disabled={readOnly}
                           >
                             Auto assign 8
                           </button>
@@ -917,6 +951,7 @@ export default function RosterWorkspace({
                                     type="button"
                                     onClick={() => handleRemoveFromRally(memberId)}
                                     aria-label={`Remove ${member.name} from ${rally.name}`}
+                                    disabled={readOnly}
                                   >
                                     x
                                   </button>
@@ -941,6 +976,7 @@ export default function RosterWorkspace({
           onDelete={deleteMember}
           deleting={deletingIds.includes(selectedMemberId)}
           confirming={Boolean(confirmState)}
+          readOnly={readOnly}
         />
       )}
     </AdminShell>

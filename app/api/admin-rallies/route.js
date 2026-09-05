@@ -25,10 +25,19 @@ export async function GET(request) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 
-  const { data, error } = await supabase
-    .from('admin_rallies')
-    .select('id, name, position, member_ids, lead_member_id, formation')
-    .order('position', { ascending: true });
+  const period = new URL(request.url).searchParams.get('period') || 'current';
+  const query = period !== 'current'
+    ? supabase
+        .from('admin_rallies_archive')
+        .select('id, name, position, member_ids, lead_member_id, formation')
+        .eq('period_id', period)
+        .order('position', { ascending: true })
+    : supabase
+        .from('admin_rallies')
+        .select('id, name, position, member_ids, lead_member_id, formation')
+        .order('position', { ascending: true });
+
+  const { data, error } = await query;
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

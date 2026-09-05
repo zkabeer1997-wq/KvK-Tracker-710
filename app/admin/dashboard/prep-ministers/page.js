@@ -5,6 +5,7 @@ import AdminShell from '../../../../components/admin/AdminShell';
 import TableSkeleton from '../../../../components/admin/TableSkeleton';
 import { Button, Field, Input, Select, Table } from '../../../../components/ui';
 import TableFilters from '../../../../components/admin/TableFilters';
+import PeriodSelector from '../../../../components/admin/PeriodSelector';
 import { searchRow, compareValues, numericValue } from '../../../../lib/adminTable.mjs';
 import { TIME_SLOTS } from '../../../../lib/nobleAdvisor.mjs';
 import { schedule, OPEN_SPOT } from '../prepScheduler.mjs';
@@ -132,19 +133,22 @@ export default function AdminPrepMinistersPage({ noble = false }) {
   const [ttFilter, setTtFilter] = useState('');
   const [result, setResult] = useState(null);
   const [saveStatus, setSaveStatus] = useState('');
+  const [period, setPeriod] = useState('current');
+  const enablePeriods = !noble;
+  const readOnly = enablePeriods && period !== 'current';
   const router = useRouter();
 
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const response = await fetch(api);
+      const response = await fetch(`${api}${enablePeriods && period !== 'current' ? `?period=${period}` : ''}`);
       const data = await response.json().catch(() => ({}));
       if (!response.ok) { setError(data.error || 'Failed to load submissions.'); setLoading(false); return; }
       setRows(data.rows || []);
       setLoading(false);
     }
     load().catch(() => { setError('Unable to load submissions.'); setLoading(false); });
-  }, [api]);
+  }, [api, period, enablePeriods]);
 
   async function handleLogout() {
     await fetch('/api/admin-logout', { method: 'POST' });
@@ -194,6 +198,7 @@ export default function AdminPrepMinistersPage({ noble = false }) {
     }
   }
   function updateCell(rowId, key, value) {
+    if (readOnly) return;
     setRows(prev=>prev.map(row=>row.id===rowId?{...row,[key]:value}:row));
     setResult(null);
     const timerKey = rowId + ':' + key;
@@ -224,6 +229,7 @@ export default function AdminPrepMinistersPage({ noble = false }) {
   return (
     <AdminShell title={noble ? "Noble Advisor Schedule" : "Prep Ministers"} subtitle={noble ? "Flamedragon Troop Training appointments" : "Manage prep minister requests"} onLogout={handleLogout}>
           <p className="admin-page-lead">{noble ? "Training bookings for Flamedragon. Schedule priorities match KvK Day 4: transfers, T11 promotion, then speedup days." : "Backpack amounts and minister bookings submitted through KvK Prep."}</p>
+          {enablePeriods && <PeriodSelector scope="prep" value={period} onChange={setPeriod} />}
           <div className="dashboard-stats" aria-label="Prep summary">
             <div><span>Total submissions</span><strong>{rows.length}</strong></div>
             <div><span>Showing</span><strong>{visibleRows.length}</strong></div>
@@ -242,8 +248,8 @@ export default function AdminPrepMinistersPage({ noble = false }) {
           <div style={{display:'flex',gap:12,flexWrap:'wrap',marginBottom:18,alignItems:'center'}}>
             <Button variant="quiet" onClick={handleGenerate} disabled={loading || Boolean(error) || saveStatus==='saving' || saveStatus==='error'}>Generate full schedule</Button>
             <Button variant="quiet" onClick={exportExcel} disabled={loading || Boolean(error) || saveStatus==='saving' || saveStatus==='error'}>Export schedule to Excel</Button>
-            <span>Uses all {rows.length} submissions, regardless of filters.</span>
-            {saveStatus && <span role="status">{saveStatus === 'saving' ? 'Saving…' : saveStatus === 'saved' ? 'Saved' : 'Save failed — correct the edited value before generating.'}</span>}
+            <span>Uses all {rows.length} submissions in the selected period, regardless of the table filters above.</span>
+            {saveStatus && !readOnly && <span role="status">{saveStatus === 'saving' ? 'Saving…' : saveStatus === 'saved' ? 'Saved' : 'Save failed — correct the edited value before generating.'}</span>}
           </div>
           {loading && <TableSkeleton columns={COLUMNS.length} rows={7} />}
           {error && <div className="status error">{error}</div>}
@@ -252,7 +258,7 @@ export default function AdminPrepMinistersPage({ noble = false }) {
               <thead><tr>{COLUMNS.map((col) => (<th key={col.key} aria-sort={sortKey===col.key ? (sortDir==='asc'?'ascending':'descending') : 'none'}><button type="button" className="admin-sort-btn" onClick={()=>{setSortKey(col.key);setSortDir(sortKey===col.key && sortDir==='asc'?'desc':'asc');}}>{col.label}{sortKey===col.key ? (sortDir==='asc'?' ↑':' ↓') : ''}</button></th>))}</tr></thead>
               <tbody>
                 {visibleRows.map((row) => (
-                  <tr key={row.id}>{COLUMNS.map((col) => (<td key={col.key}>{col.key === 'created_at' ? cellValue(row, col.key) : (<input className="admin-cell-input" value={cellValue(row, col.key)} onChange={(e) => updateCell(row.id, col.key, e.target.value)} />)}</td>))}</tr>
+                  <tr key={row.id}>{COLUMNS.map((col) => (<td key={col.key}>{col.key === 'created_at' ? cellValue(row, col.key) : (<input className="admin-cell-input" value={cellValue(row, col.key)} onChange={(e) => updateCell(row.id, col.key, e.target.value)} disabled={readOnly} />)}</td>))}</tr>
                 ))}
               </tbody>
             </Table>

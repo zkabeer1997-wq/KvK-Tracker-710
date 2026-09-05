@@ -7,7 +7,7 @@ function Detail({ label, value }) {
   return <div className="admin-drawer-field"><span>{label}</span><strong>{value || '—'}</strong></div>;
 }
 
-export default function MemberDetailsDrawer({ member, rallyName, onClose, onDelete, deleting, confirming }) {
+export default function MemberDetailsDrawer({ member, rallyName, onClose, onDelete, deleting, confirming, readOnly = false }) {
   const drawerRef = useRef(null);
   const closeRef = useRef(null);
   const onCloseRef = useRef(onClose);
@@ -86,7 +86,9 @@ export default function MemberDetailsDrawer({ member, rallyName, onClose, onDele
           ) : <p className="member-detail-text">No Player Profile on file.</p>}
         </section>
         <div className="admin-drawer-actions">
-          <button type="button" className="delete-entry-btn" onClick={() => onDelete(member)} disabled={deleting}>{deleting ? 'Removing…' : 'Remove member'}</button>
+          {!readOnly && (
+            <button type="button" className="delete-entry-btn" onClick={() => onDelete(member)} disabled={deleting}>{deleting ? 'Removing…' : 'Remove member'}</button>
+          )}
         </div>
       </div>
     </div>

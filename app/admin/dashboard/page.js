@@ -11,6 +11,8 @@ export default function AdminDashboardPage() {
       exportFileNamePrefix="k710-kvk-members"
       workbookSheetName="KvK Members"
       allowClearTestData
+      enablePeriods
+      periodScope="members"
     />
   );
 }

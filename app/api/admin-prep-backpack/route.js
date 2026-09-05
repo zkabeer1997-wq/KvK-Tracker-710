@@ -8,10 +8,17 @@ export async function GET(request) {
   }
   try {
     const supabase = createAdminSupabaseClient();
-    const { data, error } = await supabase
-      .from('prep_backpack_submissions')
-      .select('*')
-      .order('created_at', { ascending: true });
+    const period = new URL(request.url).searchParams.get('period') || 'current';
+    const { data, error } = period !== 'current'
+      ? await supabase
+          .from('prep_backpack_submissions_archive')
+          .select('*')
+          .eq('period_id', period)
+          .order('created_at', { ascending: true })
+      : await supabase
+          .from('prep_backpack_submissions')
+          .select('*')
+          .order('created_at', { ascending: true });
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
