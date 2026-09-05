@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { parseCharmSelections } from "../../lib/powerProfiles.mjs";
 
 import { CHARM_COSTS, CHARM_PACKS } from "../../lib/charmToolData.mjs";
-import { createToolStateEnvelope, readToolState } from "../../lib/toolState.mjs";
+import { useToolPersistence } from "../../lib/useToolPersistence";
 const DEFAULT_CHARMS = ["Infantry", "Cavalry", "Archer"].flatMap((type) =>
   Array.from({ length: 6 }, (_, i) => ({
     id: `${type}-${i + 1}`,
@@ -19,6 +19,7 @@ const money = (n) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
     n,
   );
+const migrateToolState = (value) => value;
 function costBetween(from, to, COSTS) {
   let g = 0,
     d = 0;
@@ -178,12 +179,10 @@ export default function CharmPackOptimizer({ configuration }) {
     [maxWeeks, setMaxWeeks] = useState(52),
     [plan, setPlan] = useState(null),
     [message, setMessage] = useState(""),
-    [hydrated, setHydrated] = useState(false),
-    [saveStatus, setSaveStatus] = useState("Loading your profile…");
+    [syncStatus, setSyncStatus] = useState("");
   const [collapsed, setCollapsed] = useState(new Set()),
     [setCurrent, setSetCurrent] = useState(9),
     [setTarget, setSetTarget] = useState(10);
-  const saveTimer = useRef(null);
   const rows = useMemo(
     () =>
       charms.map((charm) => ({
@@ -297,7 +296,7 @@ export default function CharmPackOptimizer({ configuration }) {
       return next;
     });
 
-  async function syncFromWarLedger({ silent = false } = {}) {
+  const syncFromWarLedger = useCallback(async ({ silent = false } = {}) => {
     try {
       const response = await fetch("/api/member-charm-profile", {
           cache: "no-store",
@@ -305,7 +304,7 @@ export default function CharmPackOptimizer({ configuration }) {
         result = await response.json();
       if (!response.ok) {
         if (!silent)
-          setSaveStatus(
+          setSyncStatus(
             response.status === 401
               ? "Sign in as a member to sync your charm levels."
               : "Could not load saved charm levels.",
@@ -313,105 +312,65 @@ export default function CharmPackOptimizer({ configuration }) {
         return false;
       }
       if (!result.profile?.charms) {
-        if (!silent) setSaveStatus("No saved charm levels were found.");
+        if (!silent) setSyncStatus("No saved charm levels were found.");
         return false;
       }
       setCharms(charmsFromProfile(result.profile.charms));
       setPlan(null);
       setMessage("");
-      if (!silent) setSaveStatus("Saved charm levels synced.");
+      if (!silent) setSyncStatus("Saved charm levels synced.");
       return true;
     } catch {
-      if (!silent) setSaveStatus("Could not load saved charm levels.");
+      if (!silent) setSyncStatus("Could not load saved charm levels.");
       return false;
     }
-  }
+  }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function restore() {
-      try {
-        const response = await fetch("/api/tool-state/charm-pack-optimizer", {
-            cache: "no-store",
-          }),
-          result = await response.json(),
-          saved = readToolState(result?.state,{toolKey:"charm-pack-optimizer",schemaVersion:1,migrate:value=>value});
-        if (response.ok && saved && typeof saved === "object") {
-          if (validSavedCharms(saved.charms))
-            setCharms(
-              saved.charms.map((item) => ({
-                ...item,
-                current: Math.min(22, Math.max(0, item.current)),
-                target: Math.min(22, Math.max(item.current, item.target)),
-              })),
-            );
-          if (validSavedPacks(saved.packs))
-            setPacks(
-              saved.packs.map((p, i) => ({
-                ...p,
-                g: DEFAULT_PACKS[i].g,
-                d: DEFAULT_PACKS[i].d,
-              })),
-            );
-          if (Number.isFinite(saved.ownedG))
-            setOwnedG(Math.max(0, saved.ownedG));
-          if (Number.isFinite(saved.ownedD))
-            setOwnedD(Math.max(0, saved.ownedD));
-          if (Number.isFinite(saved.maxWeeks))
-            setMaxWeeks(Math.min(52, Math.max(1, saved.maxWeeks)));
-          if (!cancelled) setSaveStatus("Last optimizer entry restored.");
-        } else {
-          const synced = await syncFromWarLedger({ silent: true });
-          if (!cancelled)
-            setSaveStatus(
-              synced
-                ? "Saved charm levels loaded."
-                : response.status === 401
-                  ? "Sign in as a member to save and sync."
-                  : "No saved optimizer entry yet.",
-            );
-        }
-      } catch {
-        if (!cancelled) setSaveStatus("Could not restore saved inputs.");
-      } finally {
-        if (!cancelled) setHydrated(true);
-      }
-    }
-    restore();
-    return () => {
-      cancelled = true;
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-    };
-  }, [DEFAULT_PACKS]);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    setSaveStatus("Saving…");
-    saveTimer.current = setTimeout(async () => {
-      try {
-        const response = await fetch("/api/tool-state/charm-pack-optimizer", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            state: createToolStateEnvelope("charm-pack-optimizer",1,{ charms, packs, ownedG, ownedD, maxWeeks }),
-          }),
-        });
-        setSaveStatus(
-          response.ok
-            ? "Saved to your member profile."
-            : response.status === 401
-              ? "Sign in as a member to save and sync."
-              : "Save failed.",
+  const restoreInputs = useCallback(
+    (saved) => {
+      if (validSavedCharms(saved.charms))
+        setCharms(
+          saved.charms.map((item) => ({
+            ...item,
+            current: Math.min(22, Math.max(0, item.current)),
+            target: Math.min(22, Math.max(item.current, item.target)),
+          })),
         );
-      } catch {
-        setSaveStatus("Save failed.");
-      }
-    }, 700);
-    return () => {
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-    };
-  }, [hydrated, charms, packs, ownedG, ownedD, maxWeeks]);
+      if (validSavedPacks(saved.packs))
+        setPacks(
+          saved.packs.map((pack, index) => ({
+            ...pack,
+            g: DEFAULT_PACKS[index].g,
+            d: DEFAULT_PACKS[index].d,
+          })),
+        );
+      if (Number.isFinite(saved.ownedG)) setOwnedG(Math.max(0, saved.ownedG));
+      if (Number.isFinite(saved.ownedD)) setOwnedD(Math.max(0, saved.ownedD));
+      if (Number.isFinite(saved.maxWeeks))
+        setMaxWeeks(Math.min(52, Math.max(1, saved.maxWeeks)));
+    },
+    [DEFAULT_PACKS],
+  );
+  const inputs = useMemo(
+    () => ({ charms, packs, ownedG, ownedD, maxWeeks }),
+    [charms, packs, ownedG, ownedD, maxWeeks],
+  );
+  const loadProfile = useCallback(
+    () => syncFromWarLedger({ silent: true }),
+    [syncFromWarLedger],
+  );
+  const persistence = useToolPersistence({
+    toolKey: "charm-pack-optimizer",
+    schemaVersion: 1,
+    inputs,
+    restore: restoreInputs,
+    migrate: migrateToolState,
+    onEmpty: loadProfile,
+    autoDetect: true,
+  });
+  const saveStatus = ["dirty", "saving", "error"].includes(persistence.status)
+    ? persistence.message
+    : syncStatus || persistence.message;
 
   return (
     <section className="cpo-shell">
@@ -433,22 +392,73 @@ export default function CharmPackOptimizer({ configuration }) {
       <div className="cpo-layout">
         <div className="cpo-inputs">
           <section className="cpo-section">
-          <div className="cpo-section-head">
+            <div className="cpo-section-head">
               <div>
                 <span>01</span>
                 <h2>Charm levels</h2>
               </div>
-            <p>Set every current and target level independently.</p>
-          </div>
-          <div className="cpo-bulk">
-            <label>All current <input type="number" min="0" max="22" value={setCurrent} onChange={(event)=>setSetCurrent(Number(event.target.value))}/><button type="button" onClick={()=>setAll("current",setCurrent)}>Apply</button></label>
-            <label>All targets <input type="number" min="0" max="22" value={setTarget} onChange={(event)=>setSetTarget(Number(event.target.value))}/><button type="button" onClick={()=>setAll("target",setTarget)}>Apply</button></label>
-            <button type="button" onClick={()=>copyTroop("Infantry","Cavalry")}>Copy Infantry → Cavalry</button>
-            <button type="button" onClick={()=>copyTroop("Infantry","Archer")}>Copy Infantry → Archer</button>
-          </div>
-          <div className="cpo-troop-toggle" aria-label="Charm troop sections">
-            {["Infantry","Cavalry","Archer"].map(type=><button type="button" aria-expanded={!collapsed.has(type)} key={type} onClick={()=>toggleTroop(type)}>{collapsed.has(type)?"Show":"Hide"} {type}</button>)}
-          </div>
+              <p>Set every current and target level independently.</p>
+            </div>
+            <div className="cpo-bulk">
+              <label>
+                All current{" "}
+                <input
+                  type="number"
+                  min="0"
+                  max="22"
+                  value={setCurrent}
+                  onChange={(event) =>
+                    setSetCurrent(Number(event.target.value))
+                  }
+                />
+                <button
+                  type="button"
+                  onClick={() => setAll("current", setCurrent)}
+                >
+                  Apply
+                </button>
+              </label>
+              <label>
+                All targets{" "}
+                <input
+                  type="number"
+                  min="0"
+                  max="22"
+                  value={setTarget}
+                  onChange={(event) => setSetTarget(Number(event.target.value))}
+                />
+                <button
+                  type="button"
+                  onClick={() => setAll("target", setTarget)}
+                >
+                  Apply
+                </button>
+              </label>
+              <button
+                type="button"
+                onClick={() => copyTroop("Infantry", "Cavalry")}
+              >
+                Copy Infantry → Cavalry
+              </button>
+              <button
+                type="button"
+                onClick={() => copyTroop("Infantry", "Archer")}
+              >
+                Copy Infantry → Archer
+              </button>
+            </div>
+            <div className="cpo-troop-toggle" aria-label="Charm troop sections">
+              {["Infantry", "Cavalry", "Archer"].map((type) => (
+                <button
+                  type="button"
+                  aria-expanded={!collapsed.has(type)}
+                  key={type}
+                  onClick={() => toggleTroop(type)}
+                >
+                  {collapsed.has(type) ? "Show" : "Hide"} {type}
+                </button>
+              ))}
+            </div>
             <div className="cpo-charm-table">
               <div className="cpo-tr cpo-th">
                 <span>Type</span>
@@ -458,47 +468,49 @@ export default function CharmPackOptimizer({ configuration }) {
                 <span>Guides</span>
                 <span>Designs</span>
               </div>
-              {rows.filter(row=>!collapsed.has(row.type)).map((row, i) => (
-                <div
-                  className={`cpo-tr ${row.number === 1 && i > 0 ? "group" : ""}`}
-                  key={row.id}
-                >
-                  <b>{row.type}</b>
-                  <span>#{row.number}</span>
-                  <select
-                    aria-label={`${row.type} charm ${row.number} current level`}
-                    value={row.current}
-                    onChange={(e) =>
-                      setLevel(row.id, "current", Number(e.target.value))
-                    }
+              {rows
+                .filter((row) => !collapsed.has(row.type))
+                .map((row, i) => (
+                  <div
+                    className={`cpo-tr ${row.number === 1 && i > 0 ? "group" : ""}`}
+                    key={row.id}
                   >
-                    {LEVELS.map((level) => (
-                      <option key={level} value={level}>
-                        Level {level}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    aria-label={`${row.type} charm ${row.number} target level`}
-                    value={row.target}
-                    onChange={(e) =>
-                      setLevel(row.id, "target", Number(e.target.value))
-                    }
-                  >
-                    {LEVELS.map((level) => (
-                      <option
-                        key={level}
-                        value={level}
-                        disabled={level < row.current}
-                      >
-                        Level {level}
-                      </option>
-                    ))}
-                  </select>
-                  <strong>{fmt(row.g)}</strong>
-                  <strong>{fmt(row.d)}</strong>
-                </div>
-              ))}
+                    <b>{row.type}</b>
+                    <span>#{row.number}</span>
+                    <select
+                      aria-label={`${row.type} charm ${row.number} current level`}
+                      value={row.current}
+                      onChange={(e) =>
+                        setLevel(row.id, "current", Number(e.target.value))
+                      }
+                    >
+                      {LEVELS.map((level) => (
+                        <option key={level} value={level}>
+                          Level {level}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      aria-label={`${row.type} charm ${row.number} target level`}
+                      value={row.target}
+                      onChange={(e) =>
+                        setLevel(row.id, "target", Number(e.target.value))
+                      }
+                    >
+                      {LEVELS.map((level) => (
+                        <option
+                          key={level}
+                          value={level}
+                          disabled={level < row.current}
+                        >
+                          Level {level}
+                        </option>
+                      ))}
+                    </select>
+                    <strong>{fmt(row.g)}</strong>
+                    <strong>{fmt(row.d)}</strong>
+                  </div>
+                ))}
             </div>
             <div className="cpo-totals">
               <div>
@@ -976,7 +988,40 @@ export default function CharmPackOptimizer({ configuration }) {
           color: #c6d2d6;
           text-align: right;
         }
-        .cpo-bulk,.cpo-troop-toggle{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}.cpo-bulk label{display:flex;align-items:center;gap:6px;color:var(--parchment-dim);font-size:10px}.cpo-bulk input{width:56px;padding:6px;background:#07151d;border:1px solid #35515e;color:var(--parchment)}.cpo-bulk button,.cpo-troop-toggle button{border:1px solid var(--edge-strong);background:rgba(255,255,255,.025);color:var(--brass-bright);padding:6px 8px;font-size:10px;cursor:pointer}.cpo-troop-toggle button[aria-expanded=false]{color:var(--t-secondary);border-style:dashed}
+        .cpo-bulk,
+        .cpo-troop-toggle {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-bottom: 10px;
+        }
+        .cpo-bulk label {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          color: var(--parchment-dim);
+          font-size: 10px;
+        }
+        .cpo-bulk input {
+          width: 56px;
+          padding: 6px;
+          background: #07151d;
+          border: 1px solid #35515e;
+          color: var(--parchment);
+        }
+        .cpo-bulk button,
+        .cpo-troop-toggle button {
+          border: 1px solid var(--edge-strong);
+          background: rgba(255, 255, 255, 0.025);
+          color: var(--brass-bright);
+          padding: 6px 8px;
+          font-size: 10px;
+          cursor: pointer;
+        }
+        .cpo-troop-toggle button[aria-expanded="false"] {
+          color: var(--t-secondary);
+          border-style: dashed;
+        }
         @media (max-width: 1050px) {
           .cpo-layout {
             grid-template-columns: 1fr;
