@@ -6,6 +6,14 @@ Branch: `feature/tools-platform-expansion`
 
 ### Completed
 
+- Completed Phase 0 shared persistence, dataset provenance, admin publishing history, and tool-directory infrastructure.
+- Completed Phase 1 improvements across Charm, Wavebound, Pet Pack, both event shops, Construction, and Research tools.
+- Added all Phase 2 routes: TTG Production, Pet Progression, Governor Charm Stats, Hero Gear, Governor Gear, and Masters.
+- Added versioned member persistence for every Phase 2 planner.
+- Added deterministic TTG, pet-progression, and charm-ranking engines with fixtures. Engines return explicit missing-data states instead of guessing.
+- Activated exact Charm material-feasible ordering from the existing cost table; stat-gain claims remain blocked.
+- Added complete input models and visible dataset requirements for the five Phase 2 datasets that have not yet been supplied.
+
 - Audited the current tool catalog, calculators, configuration editor, member-state API, Supabase state table, and calculator tests.
 - Added a versioned saved-state envelope and legacy-state migration utilities.
 - Added a shared debounced persistence hook with loading, dirty, saving, saved, signed-out, and failed states.
@@ -33,9 +41,15 @@ Branch: `feature/tools-platform-expansion`
 
 ### Dataset status
 
-| Dataset | Current source | Status | Missing evidence |
-| --- | --- | --- | --- |
-| Pet pack contents | Existing repository configuration | Incomplete provenance | Original source, verification date, screenshots or published reference for pack quantities and weekly limits |
+| Dataset                   | Current source                    | Status                | Missing evidence                                                                                             |
+| ------------------------- | --------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Pet pack contents         | Existing repository configuration | Incomplete provenance | Original source, verification date, screenshots or published reference for pack quantities and weekly limits |
+| TTG refinement outcomes   | Not supplied                      | Incomplete            | Refinement state, per-run TG cost, min/expected/max TTG output, daily limit                                  |
+| Pet progression           | Not supplied                      | Incomplete            | Per-pet, generation, level, advancement, and material rows                                                   |
+| Charm stat gains          | Not supplied                      | Incomplete            | Health/Lethality gains by troop, slot, and level                                                             |
+| Hero Gear progression     | Not supplied                      | Incomplete            | Costs and stats across rarity, enhancement, mastery, ascension, and imbuement                                |
+| Governor Gear progression | Not supplied                      | Incomplete            | Per-piece costs, stats, milestones, and set bonuses                                                          |
+| Masters progression       | Not supplied                      | Incomplete            | Relationship, talent, skill, resource, time, power, and buff tables                                          |
 
 No game values were added or changed in this increment.
 
@@ -56,6 +70,9 @@ No game values were added or changed in this increment.
 6. Extend admin tool configuration with provenance metadata and version history.
 
 ### Known limitations
+
+- Phase 2 calculation surfaces dependent on missing datasets deliberately show “Verified dataset required”; they do not claim projections or optimal recommendations.
+- Governor Gear and Hero Gear profile synchronization is structurally ready but cannot safely map OCR labels to progression rows until the corresponding dataset defines canonical piece identifiers.
 
 - Autosave currently requires an authenticated member; signed-out users retain only in-memory state for this first increment.
 - Reset undo lasts only until navigation or reload.

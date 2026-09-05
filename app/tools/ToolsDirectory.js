@@ -16,6 +16,16 @@ const CATEGORIES = [
 const TOOLS = {
   Charms: [
     {
+      key: "governor-charm-optimizer",
+      event: "Account progression",
+      title: "Governor Charm Stat Optimizer",
+      description:
+        "Rank upgrades across all 18 charms using inventory, troop priorities, and Health/Lethality focus.",
+      status: "New",
+      icon: "/images/charm-pack-forge.svg",
+      tags: ["Upgrade planning", "Inventory"],
+    },
+    {
       key: "charm-pack-optimizer",
       event: "Governor Charms",
       title: "Charm Pack Optimizer",
@@ -34,9 +44,41 @@ const TOOLS = {
       icon: "/images/wavebound-charm-sail.svg",
     },
   ],
-  "Governor Gear": [],
-  "Hero Gear": [],
+  "Governor Gear": [
+    {
+      key: "governor-gear-optimizer",
+      event: "Account progression",
+      title: "Governor Gear Optimizer",
+      description:
+        "Model all six pieces, plan target tiers, and prepare inventory-based upgrade ordering.",
+      status: "New",
+      icon: "/images/charm-pack-forge.svg",
+      tags: ["Upgrade planning", "Inventory"],
+    },
+  ],
+  "Hero Gear": [
+    {
+      key: "hero-gear-optimizer",
+      event: "Account progression",
+      title: "Hero Gear Optimizer",
+      description:
+        "Track 12 gear pieces, resources, role, and combat priorities in one upgrade workspace.",
+      status: "New",
+      icon: "/images/wavebound-charm-sail.svg",
+      tags: ["Upgrade planning", "Inventory"],
+    },
+  ],
   Pets: [
+    {
+      key: "pet-progression",
+      event: "Pet progression",
+      title: "Pet Progression Planner",
+      description:
+        "Set pet level and advancement goals, track materials, and send shortfalls into pack planning.",
+      status: "New",
+      icon: "/images/pet-pack-compass.svg",
+      tags: ["Upgrade planning", "Inventory"],
+    },
     {
       key: "pet-pack-optimizer",
       event: "Pet Advancement",
@@ -47,7 +89,18 @@ const TOOLS = {
       icon: "/images/pet-pack-compass.svg",
     },
   ],
-  Masters: [],
+  Masters: [
+    {
+      key: "masters-planner",
+      event: "Master progression",
+      title: "Masters Planner",
+      description:
+        "Track relationships, talents, skills, partially learned XP, resources, and learning speed.",
+      status: "New",
+      icon: "/images/flamedragon-caravan.svg",
+      tags: ["Upgrade planning", "Inventory"],
+    },
+  ],
   "Special Event Shops": [
     {
       key: "flamedragon-shop",
@@ -74,6 +127,18 @@ const TOOLS = {
 
 const DIRECT_TOOLS = [
   {
+    key: "ttg-production",
+    category: "Construction Costs",
+    event: "True Gold refining",
+    title: "Tempered True Gold Production Planner",
+    description:
+      "Plan refinement around protected True Gold reserves and imported construction or research requirements.",
+    status: "New",
+    icon: "/images/adventure-stall.svg",
+    href: "/tools/construction-costs/refining",
+    tags: ["Upgrade planning", "Inventory"],
+  },
+  {
     key: "construction-costs",
     category: "Construction Costs",
     event: "Construction",
@@ -99,10 +164,9 @@ const DIRECT_TOOLS = [
   },
 ];
 const PLANNED = [
-  { title: "Governor Gear Optimizer", category: "Governor Gear" },
-  { title: "Hero Gear Optimizer", category: "Hero Gear" },
-  { title: "Masters Planner", category: "Masters" },
-  { title: "Tempered True Gold Planner", category: "Construction Costs" },
+  { title: "Alliance Championship Planner", category: "Alliance operations" },
+  { title: "Rally & Formation Planner", category: "Alliance operations" },
+  { title: "Account Progression Planner", category: "Cross-system planning" },
 ];
 const FILTERS = [
   "All",
