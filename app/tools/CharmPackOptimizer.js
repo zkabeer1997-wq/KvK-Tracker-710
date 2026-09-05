@@ -183,6 +183,8 @@ export default function CharmPackOptimizer({ configuration }) {
       Cavalry: 2,
       Archer: 2,
     }),
+    [statWeights, setStatWeights] = useState({ Health: 1, Lethality: 1 }),
+    [charmFocus, setCharmFocus] = useState({}),
     [profiles, setProfiles] = useState([]),
     [profileName, setProfileName] = useState(""),
     [plan, setPlan] = useState(null),
@@ -218,12 +220,15 @@ export default function CharmPackOptimizer({ configuration }) {
           (_, offset) => {
             const level = charm.current + offset + 1,
               cost = COSTS[level] || [0, 0];
+            const focus = charmFocus[charm.id];
             return {
               ...charm,
               level,
               g: cost[0],
               d: cost[1],
-              weight: troopWeights[charm.type] || 0,
+              weight:
+                (troopWeights[charm.type] || 0) *
+                (focus ? statWeights[focus] || 0 : 1),
             };
           },
         ),
@@ -254,7 +259,7 @@ export default function CharmPackOptimizer({ configuration }) {
       }
     }
     return { upgrades, guides, designs };
-  }, [COSTS, charms, ownedD, ownedG, troopWeights]);
+  }, [COSTS, charmFocus, charms, ownedD, ownedG, statWeights, troopWeights]);
   const bottleneck =
     Math.max(0, required.g - ownedG) >= Math.max(0, required.d - ownedD)
       ? "Charm Guides"
@@ -428,6 +433,10 @@ export default function CharmPackOptimizer({ configuration }) {
       if (saved.planningMode === "resources") setPlanningMode("resources");
       if (saved.troopWeights)
         setTroopWeights((current) => ({ ...current, ...saved.troopWeights }));
+      if (saved.statWeights)
+        setStatWeights((current) => ({ ...current, ...saved.statWeights }));
+      if (saved.charmFocus && typeof saved.charmFocus === "object")
+        setCharmFocus(saved.charmFocus);
       if (Array.isArray(saved.profiles))
         setProfiles(saved.profiles.slice(0, 10));
     },
@@ -442,6 +451,8 @@ export default function CharmPackOptimizer({ configuration }) {
       maxWeeks,
       planningMode,
       troopWeights,
+      statWeights,
+      charmFocus,
       profiles,
     }),
     [
@@ -452,6 +463,8 @@ export default function CharmPackOptimizer({ configuration }) {
       maxWeeks,
       planningMode,
       troopWeights,
+      statWeights,
+      charmFocus,
       profiles,
     ],
   );
@@ -563,6 +576,23 @@ export default function CharmPackOptimizer({ configuration }) {
               />
             </label>
           ))}
+          {Object.entries(statWeights).map(([stat, weight]) => (
+            <label key={stat}>
+              {stat} priority{" "}
+              <input
+                type="number"
+                min="0"
+                max="10"
+                value={weight}
+                onChange={(event) =>
+                  setStatWeights((current) => ({
+                    ...current,
+                    [stat]: Math.max(0, Number(event.target.value) || 0),
+                  }))
+                }
+              />
+            </label>
+          ))}
         </div>
         <div className="cpo-profiles">
           <input
@@ -577,7 +607,11 @@ export default function CharmPackOptimizer({ configuration }) {
             onClick={() => {
               setProfiles((current) =>
                 [
-                  { name: profileName.trim(), weights: troopWeights },
+                  {
+                    name: profileName.trim(),
+                    weights: troopWeights,
+                    statWeights,
+                  },
                   ...current.filter((item) => item.name !== profileName.trim()),
                 ].slice(0, 10),
               );
@@ -590,15 +624,19 @@ export default function CharmPackOptimizer({ configuration }) {
             <button
               type="button"
               key={profile.name}
-              onClick={() => setTroopWeights(profile.weights)}
+              onClick={() => {
+                setTroopWeights(profile.weights);
+                if (profile.statWeights) setStatWeights(profile.statWeights);
+              }}
             >
               {profile.name}
             </button>
           ))}
         </div>
         <p>
-          Health/Lethality efficiency is withheld until a verified charm-slot
-          stat dataset is supplied; troop priorities remain fully editable.
+          Assign Health or Lethality to each charm below to apply both troop and
+          stat priorities. Unassigned charms use troop priority only; stat gain
+          efficiency remains withheld until a verified gain dataset is supplied.
         </p>
       </section>
       <div className="cpo-layout">
@@ -677,6 +715,7 @@ export default function CharmPackOptimizer({ configuration }) {
                 <span>Charm</span>
                 <span>Current</span>
                 <span>Target</span>
+                <span>Focus</span>
                 <span>Guides</span>
                 <span>Designs</span>
               </div>
@@ -718,6 +757,20 @@ export default function CharmPackOptimizer({ configuration }) {
                           Level {level}
                         </option>
                       ))}
+                    </select>
+                    <select
+                      aria-label={`${row.type} charm ${row.number} stat focus`}
+                      value={charmFocus[row.id] || ""}
+                      onChange={(event) =>
+                        setCharmFocus((current) => ({
+                          ...current,
+                          [row.id]: event.target.value,
+                        }))
+                      }
+                    >
+                      <option value="">Unassigned</option>
+                      <option value="Health">Health</option>
+                      <option value="Lethality">Lethality</option>
                     </select>
                     <strong>{fmt(row.g)}</strong>
                     <strong>{fmt(row.d)}</strong>
@@ -1030,7 +1083,7 @@ export default function CharmPackOptimizer({ configuration }) {
         }
         .cpo-tr {
           display: grid;
-          grid-template-columns: 1.1fr 0.55fr 1fr 1fr 0.75fr 0.8fr;
+          grid-template-columns: 1.1fr 0.55fr 1fr 1fr 1fr 0.75fr 0.8fr;
           align-items: center;
         }
         .cpo-tr > * {
@@ -1317,10 +1370,10 @@ export default function CharmPackOptimizer({ configuration }) {
             gap: 6px;
           }
           .cpo-tr {
-            grid-template-columns: 1fr 0.55fr 1fr 1fr;
+            grid-template-columns: 1fr 0.55fr 1fr 1fr 1fr;
           }
-          .cpo-tr > *:nth-child(5),
-          .cpo-tr > *:nth-child(6) {
+          .cpo-tr > *:nth-child(6),
+          .cpo-tr > *:nth-child(7) {
             display: none;
           }
           .cpo-fields {
