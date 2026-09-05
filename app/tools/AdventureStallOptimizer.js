@@ -169,6 +169,28 @@ export default function AdventureStallOptimizer({ configuration }) {
       ),
     );
   }
+  const copyShoppingList = async () => {
+    const rewardLines = SHOP_ITEMS.filter(
+        (item) => shownCart[item.key] > 0,
+      ).map(
+        (item) =>
+          `• ${item.name}: ${shownCart[item.key]} set${shownCart[item.key] === 1 ? "" : "s"}`,
+      ),
+      packLines = purchaseSchedule.map(
+        (day) =>
+          `Day ${day.day}: ${day.purchases.map(({ pack, quantity }) => `${quantity}× ${pack.name}`).join(", ")}`,
+      );
+    await navigator.clipboard.writeText(
+      [
+        "**Adventure Stall Plan**",
+        ...rewardLines,
+        "",
+        "**Pack schedule**",
+        ...packLines,
+        `Leftover Shells: ${mode === "cart" ? (plan?.overage ?? 0) : (allocation.leftover ?? 0)}`,
+      ].join("\n"),
+    );
+  };
 
   return (
     <section className="as-optimizer">
@@ -587,6 +609,9 @@ export default function AdventureStallOptimizer({ configuration }) {
               day can make the plan infeasible.
             </small>
           </section>
+          <button type="button" className="as-copy" onClick={copyShoppingList}>
+            Copy Discord shopping list
+          </button>
         </aside>
       </div>
 
@@ -635,6 +660,15 @@ export default function AdventureStallOptimizer({ configuration }) {
           display: flex;
           gap: 8px;
           margin-bottom: 14px;
+        }
+        .as-copy {
+          border: 1px solid #3c9b91;
+          background: #0d3b3c;
+          color: #ffe08f;
+          border-radius: 8px;
+          padding: 10px;
+          font-weight: 800;
+          cursor: pointer;
         }
         .as-mode-tabs button {
           padding: 10px 14px;

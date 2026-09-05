@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   calculateCosts,
   calculateReach,
@@ -11,7 +12,8 @@ import {
 } from "../../lib/costPlanner.mjs";
 import styles from "./CostPlanner.module.css";
 import DataAssumptions from "./DataAssumptions";
-import { createToolStateEnvelope, readToolState } from "../../lib/toolState.mjs";
+import { useToolPersistence } from "../../lib/useToolPersistence";
+const migrateCostState = (value) => value;
 const fmt = (n) =>
   Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 });
 function LevelSelect({ item, value, onChange, label, minimum = "0" }) {
@@ -38,6 +40,7 @@ export default function CostPlanner({
   toolKey,
   construction = false,
 }) {
+  const router = useRouter();
   const first = dataset.items[0];
   const [selections, setSelections] = useState([
     {
@@ -54,12 +57,14 @@ export default function CostPlanner({
     [mode, setMode] = useState("cost"),
     [result, setResult] = useState(null),
     [error, setError] = useState(""),
-    [saveStatus, setSaveStatus] = useState(""),
-    [saving, setSaving] = useState(false),
-    [loading, setLoading] = useState(true),
     [category, setCategory] = useState(""),
     [candidate, setCandidate] = useState(""),
     [baselineSearch, setBaselineSearch] = useState("");
+  const [presets, setPresets] = useState([]),
+    [presetName, setPresetName] = useState(""),
+    [compareName, setCompareName] = useState(""),
+    [comparison, setComparison] = useState(null),
+    [manualResolutions, setManualResolutions] = useState({});
   const resources = construction
     ? ["bread", "wood", "stone", "iron", "truegold", "temperedTruegold"]
     : toolKey === "academy"
@@ -82,48 +87,66 @@ export default function CostPlanner({
   );
   const chosen = filtered.find((i) => i.id === candidate);
   const stateKey = `costs-${toolKey}`;
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch(`/api/tool-state/${stateKey}`, {
-      cache: "no-store",
-      signal: controller.signal,
-    })
-      .then(async (r) => {
-        if (!r.ok) throw Error("Saved inputs could not be loaded.");
-        return r.json();
-      })
-      .then(({ state: rawState }) => {
-        const state=readToolState(rawState,{toolKey:stateKey,schemaVersion:1,migrate:value=>value});
-        if (!state) return;
-        const safe = (state.selections || []).filter((s) => {
-          const i = dataset.items.find((x) => x.id === s.id);
-          return (
-            i &&
-            (s.current === "0" ||
-              i.levels.some((l) => l.level === s.current)) &&
-            i.levels.some((l) => l.level === s.target)
-          );
-        });
-        if (safe.length) setSelections(safe);
-        setCurrentLevels(state.currentLevels || {});
-        setInventory(state.inventory || {});
-        setModifiers(state.modifiers || {});
-        setIncludePrerequisites(state.includePrerequisites !== false);
-        setTargetDate(typeof state.targetDate === "string" ? state.targetDate : "");
-        setSaveStatus("Saved plan loaded.");
-      })
-      .catch((e) => {
-        if (e.name !== "AbortError") setSaveStatus(e.message);
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
+  const restoreInputs = useCallback(
+    (state) => {
+      const safe = (state.selections || []).filter((s) => {
+        const i = dataset.items.find((x) => x.id === s.id);
+        return (
+          i &&
+          (s.current === "0" || i.levels.some((l) => l.level === s.current)) &&
+          i.levels.some((l) => l.level === s.target)
+        );
       });
-    return () => controller.abort();
-  }, [stateKey, dataset]);
+      if (safe.length) setSelections(safe);
+      setCurrentLevels(state.currentLevels || {});
+      setInventory(state.inventory || {});
+      setModifiers(state.modifiers || {});
+      setIncludePrerequisites(state.includePrerequisites !== false);
+      setTargetDate(
+        typeof state.targetDate === "string" ? state.targetDate : "",
+      );
+      setPresets(
+        Array.isArray(state.presets) ? state.presets.slice(0, 10) : [],
+      );
+      setManualResolutions(state.manualResolutions || {});
+    },
+    [dataset],
+  );
+  const persistedInputs = useMemo(
+    () => ({
+      selections,
+      currentLevels,
+      inventory,
+      modifiers,
+      includePrerequisites,
+      targetDate,
+      presets,
+      manualResolutions,
+    }),
+    [
+      selections,
+      currentLevels,
+      inventory,
+      modifiers,
+      includePrerequisites,
+      targetDate,
+      presets,
+      manualResolutions,
+    ],
+  );
+  const persistence = useToolPersistence({
+    toolKey: stateKey,
+    schemaVersion: 1,
+    inputs: persistedInputs,
+    restore: restoreInputs,
+    migrate: migrateCostState,
+    autoDetect: true,
+  });
+  const loading = persistence.status === "loading";
+  const saveStatus = persistence.message;
   function changed() {
     setResult(null);
     setError("");
-    setSaveStatus("Unsaved changes");
   }
   function updateSelection(id, key, value) {
     changed();
@@ -163,38 +186,13 @@ export default function CostPlanner({
   }
   function moveSelection(index, direction) {
     changed();
-    setSelections(previous => {
-      const target=index+direction;
-      if(target<0||target>=previous.length)return previous;
-      const next=[...previous];
-      [next[index],next[target]]=[next[target],next[index]];
+    setSelections((previous) => {
+      const target = index + direction;
+      if (target < 0 || target >= previous.length) return previous;
+      const next = [...previous];
+      [next[index], next[target]] = [next[target], next[index]];
       return next;
     });
-  }
-  async function save() {
-    setSaving(true);
-    try {
-      const r = await fetch(`/api/tool-state/${stateKey}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          state: createToolStateEnvelope(stateKey,1,{
-            selections,
-            currentLevels,
-            inventory,
-            modifiers,
-            includePrerequisites,
-            targetDate,
-          }),
-        }),
-      });
-      if (!r.ok) throw Error("Could not save this plan. Try again.");
-      setSaveStatus("Saved to your member profile.");
-    } catch (e) {
-      setSaveStatus(e.message);
-    } finally {
-      setSaving(false);
-    }
   }
   function calculate() {
     setError("");
@@ -212,9 +210,45 @@ export default function CostPlanner({
           ? calculateReach(dataset, options)
           : calculateCosts(dataset, options),
       );
+      const preset = presets.find((item) => item.name === compareName);
+      setComparison(
+        preset
+          ? calculateCosts(dataset, {
+              ...preset.inputs,
+              kind: construction ? "construction" : "research",
+            })
+          : null,
+      );
     } catch (e) {
       setError(e.message);
     }
+  }
+  function savePreset() {
+    const name = presetName.trim();
+    if (!name) return;
+    const snapshot = {
+      selections,
+      currentLevels,
+      inventory,
+      modifiers,
+      includePrerequisites,
+    };
+    setPresets((current) =>
+      [
+        { name, inputs: snapshot },
+        ...current.filter((item) => item.name !== name),
+      ].slice(0, 10),
+    );
+    setPresetName("");
+    changed();
+  }
+  function transferRefining() {
+    if (!result) return;
+    const params = new URLSearchParams({
+      truegold: String(result.totals.truegold || 0),
+      temperedTruegold: String(result.totals.temperedTruegold || 0),
+    });
+    router.push(`/tools/construction-costs/refining?${params}`);
   }
   function download() {
     const url = URL.createObjectURL(
@@ -328,7 +362,7 @@ export default function CostPlanner({
               </button>
             </div>
             <div className={styles.selections}>
-              {selections.map((s,index) => {
+              {selections.map((s, index) => {
                 const item = dataset.items.find((i) => i.id === s.id);
                 return (
                   <div className={styles.selection} key={s.id}>
@@ -341,8 +375,24 @@ export default function CostPlanner({
                           : ""}
                       </small>
                       <span>
-                        <button type="button" className={styles.remove} disabled={index===0} onClick={()=>moveSelection(index,-1)} aria-label={`Move ${item.name} earlier`}>↑</button>
-                        <button type="button" className={styles.remove} disabled={index===selections.length-1} onClick={()=>moveSelection(index,1)} aria-label={`Move ${item.name} later`}>↓</button>
+                        <button
+                          type="button"
+                          className={styles.remove}
+                          disabled={index === 0}
+                          onClick={() => moveSelection(index, -1)}
+                          aria-label={`Move ${item.name} earlier`}
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.remove}
+                          disabled={index === selections.length - 1}
+                          onClick={() => moveSelection(index, 1)}
+                          aria-label={`Move ${item.name} later`}
+                        >
+                          ↓
+                        </button>
                       </span>
                     </div>
                     <label>
@@ -477,7 +527,14 @@ export default function CostPlanner({
               <h2>{construction ? "Construction" : "Research"} speed</h2>
               <label>
                 Target completion date
-                <input type="date" value={targetDate} onChange={(e)=>{changed();setTargetDate(e.target.value);}} />
+                <input
+                  type="date"
+                  value={targetDate}
+                  onChange={(e) => {
+                    changed();
+                    setTargetDate(e.target.value);
+                  }}
+                />
               </label>
               <label>
                 Total {construction ? "construction" : "research"} speed (%)
@@ -550,6 +607,45 @@ export default function CostPlanner({
               )}
             </section>
           </div>
+          <section className={styles.panel}>
+            <span className={styles.eyebrow}>04 · Saved plans</span>
+            <h2>Presets &amp; comparison</h2>
+            <div className={styles.fields}>
+              <label>
+                Preset name
+                <input
+                  value={presetName}
+                  onChange={(event) => setPresetName(event.target.value)}
+                  placeholder="e.g. KvK week"
+                />
+              </label>
+              <button
+                type="button"
+                className={styles.quiet}
+                disabled={!presetName.trim()}
+                onClick={savePreset}
+              >
+                Save current preset
+              </button>
+              <label>
+                Compare results with
+                <select
+                  value={compareName}
+                  onChange={(event) => {
+                    setCompareName(event.target.value);
+                    setComparison(null);
+                  }}
+                >
+                  <option value="">No comparison</option>
+                  {presets.map((preset) => (
+                    <option key={preset.name} value={preset.name}>
+                      {preset.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </section>
           <div className={styles.actions}>
             <button
               type="button"
@@ -561,14 +657,9 @@ export default function CostPlanner({
                 ? "Find affordable level"
                 : "Calculate upgrade plan"}
             </button>
-            <button
-              type="button"
-              className={styles.quiet}
-              disabled={saving}
-              onClick={save}
-            >
-              {saving ? "Saving…" : "Save inputs"}
-            </button>
+            <span role="status" className={styles.hint}>
+              {saveStatus}
+            </span>
           </div>
         </fieldset>
         <aside className={styles.resultColumn}>
@@ -603,6 +694,15 @@ export default function CostPlanner({
                 >
                   Download CSV
                 </button>
+                {construction && (
+                  <button
+                    type="button"
+                    className={styles.quiet}
+                    onClick={transferRefining}
+                  >
+                    Send TG / TTG to refining
+                  </button>
+                )}
               </div>
               {result.steps.filter((s) => s.prerequisite).length > 0 && (
                 <p className={styles.prereqNotice}>
@@ -643,9 +743,41 @@ export default function CostPlanner({
                 </div>
               </div>
               <p className={styles.prereqNotice}>
-                Estimated completion: {new Date(Date.now()+result.seconds*1000).toLocaleString()}.
-                {targetDate ? ` Required speedups to finish by ${targetDate}: ${duration(Math.max(0,result.seconds-(new Date(`${targetDate}T23:59:59`).getTime()-Date.now())/1000))}.` : ""}
+                Estimated completion:{" "}
+                {new Date(Date.now() + result.seconds * 1000).toLocaleString()}.
+                {targetDate
+                  ? ` Required speedups to finish by ${targetDate}: ${duration(Math.max(0, result.seconds - (new Date(`${targetDate}T23:59:59`).getTime() - Date.now()) / 1000))}.`
+                  : ""}
               </p>
+              {comparison && (
+                <div className={styles.prereqNotice}>
+                  <b>Compared with “{compareName}”:</b>{" "}
+                  {result.seconds >= comparison.seconds ? "+" : "−"}
+                  {duration(Math.abs(result.seconds - comparison.seconds))} time
+                  ·{" "}
+                  {resources
+                    .map(
+                      (key) =>
+                        `${RESOURCE_LABELS[key]} ${fmt(result.totals[key] - comparison.totals[key])}`,
+                    )
+                    .join(" · ")}
+                </div>
+              )}
+              <section className={styles.details}>
+                <h3>Dependency path</h3>
+                <div className={styles.dependencyTree}>
+                  {result.steps.map((step, index) => (
+                    <span key={step.key}>
+                      {index > 0 && <i aria-hidden="true">→</i>}
+                      <b>{step.name}</b>
+                      <small>
+                        {levelLabel(step.level)} ·{" "}
+                        {step.prerequisite ? "Prerequisite" : "Direct target"}
+                      </small>
+                    </span>
+                  ))}
+                </div>
+              </section>
               <div className={styles.tableWrap}>
                 <table>
                   <caption>Resources needed for the full plan</caption>
@@ -697,7 +829,23 @@ export default function CostPlanner({
                   </summary>
                   <ul>
                     {result.warnings.map((w) => (
-                      <li key={w}>{w}</li>
+                      <li key={w}>
+                        {w}
+                        <label>
+                          Manual resolution note{" "}
+                          <input
+                            value={manualResolutions[w] || ""}
+                            onChange={(event) => {
+                              changed();
+                              setManualResolutions((current) => ({
+                                ...current,
+                                [w]: event.target.value,
+                              }));
+                            }}
+                            placeholder="Enter verified prerequisite level or resolution"
+                          />
+                        </label>
+                      </li>
                     ))}
                   </ul>
                 </details>

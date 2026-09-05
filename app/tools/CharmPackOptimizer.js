@@ -177,6 +177,14 @@ export default function CharmPackOptimizer({ configuration }) {
     [ownedG, setOwnedG] = useState(0),
     [ownedD, setOwnedD] = useState(166),
     [maxWeeks, setMaxWeeks] = useState(52),
+    [planningMode, setPlanningMode] = useState("targets"),
+    [troopWeights, setTroopWeights] = useState({
+      Infantry: 3,
+      Cavalry: 2,
+      Archer: 2,
+    }),
+    [profiles, setProfiles] = useState([]),
+    [profileName, setProfileName] = useState(""),
     [plan, setPlan] = useState(null),
     [message, setMessage] = useState(""),
     [syncStatus, setSyncStatus] = useState("");
@@ -198,6 +206,75 @@ export default function CharmPackOptimizer({ configuration }) {
         d: 0,
       }),
     [rows],
+  );
+  const affordable = useMemo(() => {
+    let guides = ownedG,
+      designs = ownedD;
+    const upgrades = [];
+    const candidates = charms
+      .flatMap((charm) =>
+        Array.from(
+          { length: Math.max(0, charm.target - charm.current) },
+          (_, offset) => {
+            const level = charm.current + offset + 1,
+              cost = COSTS[level] || [0, 0];
+            return {
+              ...charm,
+              level,
+              g: cost[0],
+              d: cost[1],
+              weight: troopWeights[charm.type] || 0,
+            };
+          },
+        ),
+      )
+      .sort(
+        (a, b) =>
+          b.weight - a.weight ||
+          a.g + a.d - (b.g + b.d) ||
+          a.id.localeCompare(b.id) ||
+          a.level - b.level,
+      );
+    const achieved = {};
+    let moved = true;
+    while (moved) {
+      moved = false;
+      for (let index = 0; index < candidates.length; index++) {
+        const item = candidates[index],
+          expected = (achieved[item.id] ?? item.current) + 1;
+        if (item.level !== expected || item.g > guides || item.d > designs)
+          continue;
+        guides -= item.g;
+        designs -= item.d;
+        achieved[item.id] = item.level;
+        upgrades.push(item);
+        candidates.splice(index, 1);
+        moved = true;
+        break;
+      }
+    }
+    return { upgrades, guides, designs };
+  }, [COSTS, charms, ownedD, ownedG, troopWeights]);
+  const bottleneck =
+    Math.max(0, required.g - ownedG) >= Math.max(0, required.d - ownedD)
+      ? "Charm Guides"
+      : "Charm Designs";
+  const nearMisses = useMemo(
+    () =>
+      rows
+        .filter((row) => row.target > row.current)
+        .map((row) => {
+          const next = COSTS[row.current + 1] || [0, 0];
+          return {
+            ...row,
+            nextLevel: row.current + 1,
+            missingG: Math.max(0, next[0] - ownedG),
+            missingD: Math.max(0, next[1] - ownedD),
+          };
+        })
+        .sort((a, b) => a.missingG + a.missingD - (b.missingG + b.missingD))
+        .slice(0, 5),
+    [COSTS, ownedD, ownedG, rows],
   );
   const setLevel = (id, key, value) => {
     setCharms((items) =>
@@ -348,12 +425,35 @@ export default function CharmPackOptimizer({ configuration }) {
       if (Number.isFinite(saved.ownedD)) setOwnedD(Math.max(0, saved.ownedD));
       if (Number.isFinite(saved.maxWeeks))
         setMaxWeeks(Math.min(52, Math.max(1, saved.maxWeeks)));
+      if (saved.planningMode === "resources") setPlanningMode("resources");
+      if (saved.troopWeights)
+        setTroopWeights((current) => ({ ...current, ...saved.troopWeights }));
+      if (Array.isArray(saved.profiles))
+        setProfiles(saved.profiles.slice(0, 10));
     },
     [DEFAULT_PACKS],
   );
   const inputs = useMemo(
-    () => ({ charms, packs, ownedG, ownedD, maxWeeks }),
-    [charms, packs, ownedG, ownedD, maxWeeks],
+    () => ({
+      charms,
+      packs,
+      ownedG,
+      ownedD,
+      maxWeeks,
+      planningMode,
+      troopWeights,
+      profiles,
+    }),
+    [
+      charms,
+      packs,
+      ownedG,
+      ownedD,
+      maxWeeks,
+      planningMode,
+      troopWeights,
+      profiles,
+    ],
   );
   const loadProfile = useCallback(
     () => syncFromWarLedger({ silent: true }),
@@ -371,6 +471,45 @@ export default function CharmPackOptimizer({ configuration }) {
   const saveStatus = ["dirty", "saving", "error"].includes(persistence.status)
     ? persistence.message
     : syncStatus || persistence.message;
+  const exportSchedule = () => {
+    if (!plan) return;
+    const rows = [
+      ["Week", "Pack", "Guide picks", "Design picks", "Cost"],
+      ...schedule.flatMap((items, week) =>
+        items.map((item) => [
+          week + 1,
+          money(packs[item.index].price),
+          item.gs,
+          item.ds,
+          item.cost,
+        ]),
+      ),
+    ];
+    const blob = new Blob([rows.map((row) => row.join(",")).join("\n")], {
+        type: "text/csv",
+      }),
+      url = URL.createObjectURL(blob),
+      a = document.createElement("a");
+    a.href = url;
+    a.download = "charm-upgrade-schedule.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  const copySchedule = async () => {
+    if (!plan) return;
+    await navigator.clipboard.writeText(
+      [
+        `**Charm Plan — ${money(plan.cost)} / ${plan.weeks} weeks**`,
+        ...schedule.flatMap((items, week) =>
+          items.length
+            ? [
+                `Week ${week + 1}: ${items.map((item) => `${money(packs[item.index].price)} (${item.gs}G/${item.ds}D)`).join(", ")}`,
+              ]
+            : [],
+        ),
+      ].join("\n"),
+    );
+  };
 
   return (
     <section className="cpo-shell">
@@ -389,6 +528,79 @@ export default function CharmPackOptimizer({ configuration }) {
           </button>
         </div>
       </div>
+      <section className="cpo-strategy">
+        <div className="cpo-mode">
+          <button
+            type="button"
+            aria-pressed={planningMode === "targets"}
+            onClick={() => setPlanningMode("targets")}
+          >
+            Cost to selected targets
+          </button>
+          <button
+            type="button"
+            aria-pressed={planningMode === "resources"}
+            onClick={() => setPlanningMode("resources")}
+          >
+            Optimize available resources
+          </button>
+        </div>
+        <div className="cpo-weights">
+          {Object.entries(troopWeights).map(([type, weight]) => (
+            <label key={type}>
+              {type} priority{" "}
+              <input
+                type="number"
+                min="0"
+                max="10"
+                value={weight}
+                onChange={(event) =>
+                  setTroopWeights((current) => ({
+                    ...current,
+                    [type]: Math.max(0, Number(event.target.value) || 0),
+                  }))
+                }
+              />
+            </label>
+          ))}
+        </div>
+        <div className="cpo-profiles">
+          <input
+            aria-label="Build profile name"
+            placeholder="Profile name"
+            value={profileName}
+            onChange={(event) => setProfileName(event.target.value)}
+          />
+          <button
+            type="button"
+            disabled={!profileName.trim()}
+            onClick={() => {
+              setProfiles((current) =>
+                [
+                  { name: profileName.trim(), weights: troopWeights },
+                  ...current.filter((item) => item.name !== profileName.trim()),
+                ].slice(0, 10),
+              );
+              setProfileName("");
+            }}
+          >
+            Save build profile
+          </button>
+          {profiles.map((profile) => (
+            <button
+              type="button"
+              key={profile.name}
+              onClick={() => setTroopWeights(profile.weights)}
+            >
+              {profile.name}
+            </button>
+          ))}
+        </div>
+        <p>
+          Health/Lethality efficiency is withheld until a verified charm-slot
+          stat dataset is supplied; troop priorities remain fully editable.
+        </p>
+      </section>
       <div className="cpo-layout">
         <div className="cpo-inputs">
           <section className="cpo-section">
@@ -621,6 +833,48 @@ export default function CharmPackOptimizer({ configuration }) {
             <span className="k-mark">Calculated result</span>
             <h2>Purchase plan</h2>
           </div>
+          <div className="cpo-bottleneck">
+            <b>Current bottleneck: {bottleneck}</b>
+            <span>
+              Based on the larger remaining material shortfall. Priorities
+              affect resource-allocation order.
+            </span>
+          </div>
+          {planningMode === "resources" && (
+            <div className="cpo-resource-plan">
+              <h3>Affordable upgrade path</h3>
+              <p>
+                {affordable.upgrades.length} level upgrade
+                {affordable.upgrades.length === 1 ? "" : "s"} fit your current
+                inventory · {fmt(affordable.guides)} Guides and{" "}
+                {fmt(affordable.designs)} Designs remain.
+              </p>
+              {affordable.upgrades.map((item) => (
+                <div key={`${item.id}-${item.level}`}>
+                  <span>
+                    {item.type} #{item.number}
+                  </span>
+                  <b>Level {item.level}</b>
+                </div>
+              ))}
+              {!affordable.upgrades.length && (
+                <p>
+                  No selected next-level upgrade fits both material balances.
+                </p>
+              )}
+              <h3>Near-miss upgrades</h3>
+              {nearMisses.map((item) => (
+                <div key={item.id}>
+                  <span>
+                    {item.type} #{item.number} → {item.nextLevel}
+                  </span>
+                  <b>
+                    Need {fmt(item.missingG)}G / {fmt(item.missingD)}D
+                  </b>
+                </div>
+              ))}
+            </div>
+          )}
           {message ? <div className="cpo-alert bad">{message}</div> : null}
           {!plan && !message ? (
             <div className="cpo-empty">
@@ -675,6 +929,14 @@ export default function CharmPackOptimizer({ configuration }) {
                     </div>
                   ) : null,
                 )}
+              </div>
+              <div className="cpo-export">
+                <button type="button" onClick={exportSchedule}>
+                  Download CSV
+                </button>
+                <button type="button" onClick={copySchedule}>
+                  Copy for Discord
+                </button>
               </div>
             </>
           ) : null}
@@ -1073,6 +1335,73 @@ export default function CharmPackOptimizer({ configuration }) {
           .cpo-week li b {
             text-align: left;
           }
+        }
+        .cpo-strategy {
+          margin: 0 0 16px;
+          padding: 14px;
+          border: 1px solid var(--edge-strong);
+          border-radius: var(--radius-md);
+          background: rgba(9, 10, 18, 0.86);
+        }
+        .cpo-mode,
+        .cpo-weights,
+        .cpo-profiles,
+        .cpo-export {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+        .cpo-mode button[aria-pressed="true"] {
+          background: var(--gold-aged);
+          color: #171108;
+        }
+        .cpo-strategy button,
+        .cpo-profiles input,
+        .cpo-weights input,
+        .cpo-export button {
+          border: 1px solid var(--edge-strong);
+          border-radius: 6px;
+          background: #11141e;
+          color: var(--parchment);
+          padding: 7px 9px;
+        }
+        .cpo-weights {
+          margin-top: 10px;
+        }
+        .cpo-weights label {
+          color: var(--parchment-dim);
+          font-size: 10px;
+        }
+        .cpo-weights input {
+          width: 55px;
+        }
+        .cpo-profiles {
+          margin-top: 10px;
+        }
+        .cpo-strategy p,
+        .cpo-bottleneck span {
+          color: var(--t-secondary);
+          font-size: 10px;
+        }
+        .cpo-bottleneck {
+          display: grid;
+          gap: 4px;
+          margin-bottom: 12px;
+          padding: 10px;
+          border: 1px solid var(--edge);
+        }
+        .cpo-resource-plan > div {
+          display: flex;
+          justify-content: space-between;
+          padding: 7px;
+          border-bottom: 1px solid var(--edge);
+          font-size: 11px;
+        }
+        .cpo-resource-plan b {
+          color: var(--brass-bright);
+        }
+        .cpo-export {
+          margin-top: 12px;
         }
       `}</style>
     </section>

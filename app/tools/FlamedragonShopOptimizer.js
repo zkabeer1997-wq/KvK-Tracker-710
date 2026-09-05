@@ -185,6 +185,26 @@ export default function FlamedragonShopOptimizer({ configuration }) {
     }
     setLimits((current) => ({ ...current, [pack.key]: clamp(value, 0, 20) }));
   }
+  const copyPlan = async () => {
+    const rewards = SHOP_ITEMS.filter((item) => shownCart[item.key] > 0).map(
+        (item) =>
+          `• ${item.name}: ${shownCart[item.key]} set${shownCart[item.key] === 1 ? "" : "s"}`,
+      ),
+      packs =
+        mode === "cart" && plan
+          ? PACKS.filter((pack) => plan.quantities[pack.key] > 0).map(
+              (pack) => `• ${pack.name}: ${plan.quantities[pack.key]}`,
+            )
+          : [];
+    await navigator.clipboard.writeText(
+      [
+        "**Dragon’s Caravan Plan**",
+        ...rewards,
+        ...(packs.length ? ["", "**Cash packs**", ...packs] : []),
+        `Leftover Essence: ${mode === "cart" ? (plan?.overage ?? 0) : (allocation.leftover ?? 0)}`,
+      ].join("\n"),
+    );
+  };
 
   return (
     <section className="ft-optimizer">
@@ -607,6 +627,9 @@ export default function FlamedragonShopOptimizer({ configuration }) {
               </div>
             ))}
           </section>
+          <button type="button" className="ft-copy" onClick={copyPlan}>
+            Copy plan for Discord
+          </button>
         </aside>
       </div>
 
@@ -655,6 +678,15 @@ export default function FlamedragonShopOptimizer({ configuration }) {
           display: flex;
           gap: 8px;
           margin: 0 0 14px;
+        }
+        .ft-copy {
+          border: 1px solid #8c5a27;
+          background: #25170d;
+          color: #ffd083;
+          border-radius: 8px;
+          padding: 10px;
+          font-weight: 800;
+          cursor: pointer;
         }
         .ft-mode-tabs button {
           padding: 10px 14px;

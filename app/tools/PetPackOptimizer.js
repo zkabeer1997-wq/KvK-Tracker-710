@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   createPetPackOptimizer,
   PET_RESOURCES as DEFAULT_RESOURCES,
@@ -50,12 +50,25 @@ export default function PetPackOptimizer({ configuration }) {
   const [have, setHave] = useState(EMPTY);
   const [ownedChests, setOwnedChests] = useState(0);
   const [maxWeeks, setMaxWeeks] = useState(8);
+  const [budgetCap, setBudgetCap] = useState(0);
+  const [maxWeeklySpend, setMaxWeeklySpend] = useState(0);
+  const [deadline, setDeadline] = useState("");
   const [result, setResult] = useState(null);
   const [calculating, setCalculating] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [resetBackup, setResetBackup] = useState(null);
+  const workerRef = useRef(null);
   const inputs = useMemo(
-    () => ({ need, have, ownedChests, maxWeeks }),
-    [need, have, ownedChests, maxWeeks],
+    () => ({
+      need,
+      have,
+      ownedChests,
+      maxWeeks,
+      budgetCap,
+      maxWeeklySpend,
+      deadline,
+    }),
+    [need, have, ownedChests, maxWeeks, budgetCap, maxWeeklySpend, deadline],
   );
   const restore = useCallback((saved) => {
     if (saved.need && typeof saved.need === "object")
@@ -66,6 +79,11 @@ export default function PetPackOptimizer({ configuration }) {
       setOwnedChests(Math.max(0, saved.ownedChests));
     if (Number.isFinite(saved.maxWeeks))
       setMaxWeeks(Math.min(26, Math.max(1, saved.maxWeeks)));
+    if (Number.isFinite(saved.budgetCap))
+      setBudgetCap(Math.max(0, saved.budgetCap));
+    if (Number.isFinite(saved.maxWeeklySpend))
+      setMaxWeeklySpend(Math.max(0, saved.maxWeeklySpend));
+    if (typeof saved.deadline === "string") setDeadline(saved.deadline);
   }, []);
   const persistence = useToolPersistence({
     toolKey: "pet-pack-optimizer",
@@ -102,6 +120,9 @@ export default function PetPackOptimizer({ configuration }) {
     setHave(EMPTY);
     setOwnedChests(0);
     setMaxWeeks(8);
+    setBudgetCap(0);
+    setMaxWeeklySpend(0);
+    setDeadline("");
     setResult(null);
   };
   const undoReset = () => {
@@ -111,12 +132,131 @@ export default function PetPackOptimizer({ configuration }) {
     setResetBackup(null);
     setResult(null);
   };
+  const effectiveWeeks = useMemo(() => {
+    if (!deadline) return maxWeeks;
+    const days = Math.ceil(
+      (new Date(`${deadline}T23:59:59`).getTime() - Date.now()) / 86400000,
+    );
+    return Math.max(1, Math.min(maxWeeks, Math.ceil(Math.max(0, days) / 7)));
+  }, [deadline, maxWeeks]);
   const calculate = () => {
+    workerRef.current?.terminate();
     setCalculating(true);
-    requestAnimationFrame(() => {
-      setResult(optimizePetPacks({ need, have, ownedChests, maxWeeks }));
+    setProgress(5);
+    if (typeof Worker === "undefined") {
+      setResult(
+        optimizePetPacks({
+          need,
+          have,
+          ownedChests,
+          maxWeeks: effectiveWeeks,
+          budgetCap,
+          maxWeeklySpend,
+        }),
+      );
+      setProgress(100);
       setCalculating(false);
+      return;
+    }
+    const worker = new Worker(
+      new URL("./petOptimizer.worker.js", import.meta.url),
+      { type: "module" },
+    );
+    workerRef.current = worker;
+    worker.onmessage = ({ data }) => {
+      if (data.type === "progress") setProgress(data.progress);
+      if (data.type === "result") {
+        setResult(data.result);
+        setProgress(100);
+        setCalculating(false);
+        worker.terminate();
+        workerRef.current = null;
+      }
+      if (data.type === "error") {
+        setResult({ error: data.error });
+        setCalculating(false);
+        worker.terminate();
+        workerRef.current = null;
+      }
+    };
+    worker.onerror = () => {
+      setResult({ error: "Optimization worker failed." });
+      setCalculating(false);
+      worker.terminate();
+      workerRef.current = null;
+    };
+    worker.postMessage({
+      configuration,
+      inputs: {
+        need,
+        have,
+        ownedChests,
+        maxWeeks: effectiveWeeks,
+        budgetCap,
+        maxWeeklySpend,
+      },
     });
+  };
+  const cancel = () => {
+    workerRef.current?.terminate();
+    workerRef.current = null;
+    setCalculating(false);
+    setProgress(0);
+  };
+  const exportCsv = () => {
+    if (!result?.schedule) return;
+    const rows = [["Week", "Category", "Tier", "Resource", "Amount", "Price"]];
+    result.schedule.forEach((week) => {
+      week.custom.forEach((pack) =>
+        rows.push([
+          week.week,
+          "Custom",
+          pack.tier,
+          `${pack.foodSlots} food picks / ${pack.chestSlots} chest picks`,
+          "",
+          pack.price,
+        ]),
+      );
+      week.singles.forEach((pack) =>
+        rows.push([
+          week.week,
+          "Single",
+          pack.tier,
+          resourceNames[pack.resource],
+          pack.amount,
+          pack.price,
+        ]),
+      );
+    });
+    const blob = new Blob(
+      [
+        rows
+          .map((row) =>
+            row
+              .map((cell) => `"${String(cell).replaceAll('"', '""')}"`)
+              .join(","),
+          )
+          .join("\n"),
+      ],
+      { type: "text/csv" },
+    );
+    const url = URL.createObjectURL(blob),
+      anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "pet-pack-plan.csv";
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+  const copyDiscord = async () => {
+    if (!result?.schedule) return;
+    const lines = [
+      `**Pet Pack Plan — ${money(result.cost)} / ${result.weeks} week${result.weeks === 1 ? "" : "s"}**`,
+      ...result.schedule.map(
+        (week) =>
+          `Week ${week.week}: ${[...week.custom.map((p) => `${p.tier} custom (${p.foodSlots}F/${p.chestSlots}C)`), ...week.singles.map((p) => `${p.tier} ${resourceNames[p.resource]}`)].join(", ") || "No purchase"}`,
+      ),
+    ];
+    await navigator.clipboard.writeText(lines.join("\n"));
   };
   const weeklyAverage = result?.weeks ? result.cost / result.weeks : 0;
   const hasPlan = result?.cost > 0 && !result.covered && !result.infeasible;
@@ -184,7 +324,49 @@ export default function PetPackOptimizer({ configuration }) {
               setResult(null);
             }}
           />
+          <NumberField
+            label="Total budget cap ($, 0 = none)"
+            value={budgetCap}
+            accent="#f0c669"
+            onChange={(value) => {
+              persistence.markChanged();
+              setBudgetCap(value);
+              setResult(null);
+            }}
+          />
+          <NumberField
+            label="Maximum weekly spend ($, 0 = none)"
+            value={maxWeeklySpend}
+            accent="#f0c669"
+            onChange={(value) => {
+              persistence.markChanged();
+              setMaxWeeklySpend(value);
+              setResult(null);
+            }}
+          />
+          <label className="ppo-field">
+            <span>
+              <i style={{ background: "#f0c669" }} />
+              Completion deadline
+            </span>
+            <input
+              type="date"
+              value={deadline}
+              onChange={(event) => {
+                persistence.markChanged();
+                setDeadline(event.target.value);
+                setResult(null);
+              }}
+            />
+          </label>
         </div>
+        {deadline && (
+          <p className="ppo-deadline">
+            Deadline mode allows up to {effectiveWeeks} week
+            {effectiveWeeks === 1 ? "" : "s"} within the selected planning
+            limit.
+          </p>
+        )}
         <div className="ppo-shortfall">
           <strong>Remaining shortfall</strong>
           {Object.entries(shortfall).map(([key, value]) => (
@@ -203,6 +385,15 @@ export default function PetPackOptimizer({ configuration }) {
             ? "Optimizing weekly sets…"
             : "Build cheapest weekly plan"}
         </button>
+        {calculating && (
+          <div className="ppo-progress" role="status">
+            <progress max="100" value={progress} />
+            <span>Searching in the background…</span>
+            <button type="button" onClick={cancel}>
+              Cancel
+            </button>
+          </div>
+        )}
         <div className="ppo-state-actions">
           <button type="button" onClick={reset}>
             Reset inputs
@@ -261,6 +452,13 @@ export default function PetPackOptimizer({ configuration }) {
               targets, reducing the maximum weeks, or entering more current
               inventory.
             </p>
+          </div>
+        )}
+        {result?.error && (
+          <div className="ppo-empty ppo-infeasible">
+            <span>⚠</span>
+            <h2>Could not calculate this plan</h2>
+            <p>{result.error}</p>
           </div>
         )}
         {hasPlan && (
@@ -366,6 +564,14 @@ export default function PetPackOptimizer({ configuration }) {
                 </span>
               ))}
             </div>
+            <div className="ppo-export">
+              <button type="button" onClick={exportCsv}>
+                Download CSV
+              </button>
+              <button type="button" onClick={copyDiscord}>
+                Copy for Discord
+              </button>
+            </div>
           </>
         )}
       </div>
@@ -380,6 +586,7 @@ export default function PetPackOptimizer({ configuration }) {
       .ppo-settings{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px;padding-top:18px;border-top:1px solid var(--edge)}.ppo-shortfall{display:flex;flex-wrap:wrap;gap:7px;margin-top:18px}.ppo-shortfall>strong{width:100%;font-size:11px;color:var(--brass-bright);text-transform:uppercase}.ppo-shortfall span{border-radius:999px;background:rgba(255,255,255,.045);padding:5px 8px;color:var(--parchment-dim);font-size:10px}.ppo-shortfall b{color:var(--parchment);font-family:var(--font-mono)}
       .ppo-calculate{width:100%;margin-top:18px;border:1px solid var(--gold-hot);border-radius:var(--radius-md);padding:13px 16px;background:var(--gold-aged);color:#171108;font-weight:900;cursor:pointer;transition:background var(--t-fast),transform var(--t-fast)}.ppo-calculate:hover{background:var(--gold-hot);transform:translateY(-1px)}.ppo-calculate:focus-visible{outline:3px solid rgba(243,217,154,.28);outline-offset:2px}.ppo-calculate:disabled{opacity:.65;cursor:wait;transform:none}.ppo-rule{margin:10px 2px 0;color:var(--t-secondary);font-size:10.5px;line-height:1.5}
       .ppo-state-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:10px}.ppo-state-actions button{border:0;background:transparent;color:var(--brass);font-size:11px;text-decoration:underline;cursor:pointer}.tool-data-assumptions{margin-top:18px;padding-top:14px;border-top:1px solid var(--edge);color:var(--parchment-dim);font-size:11px}.tool-data-assumptions summary{color:var(--brass-bright);font-weight:800;cursor:pointer}.tool-data-assumptions dl{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.tool-data-assumptions dl div{min-width:0}.tool-data-assumptions dt{color:var(--t-muted);font-size:9px;text-transform:uppercase}.tool-data-assumptions dd{margin:2px 0 0;color:var(--parchment)}.tool-data-assumptions h3{font-size:11px}.tool-data-assumptions ul{padding-left:18px}
+      .ppo-deadline{color:var(--brass-bright);font-size:10px}.ppo-progress{display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center;margin-top:10px;color:var(--parchment-dim);font-size:10px}.ppo-progress progress{width:100%}.ppo-progress span{grid-column:1}.ppo-progress button{grid-column:2;grid-row:1/3;border:1px solid var(--edge-strong);background:transparent;color:var(--parchment);padding:7px 10px;border-radius:6px}.ppo-export{display:flex;gap:8px;padding:0 18px 18px}.ppo-export button{border:1px solid var(--edge-strong);background:rgba(201,164,78,.1);color:var(--brass-bright);padding:9px 12px;border-radius:7px;cursor:pointer}
       .ppo-results{min-height:540px;overflow:hidden}.ppo-empty{min-height:540px;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:40px}.ppo-empty>span{font-size:40px;color:var(--brass)}.ppo-empty p{max-width:48ch}.ppo-covered>span{color:#a8cc96}.ppo-infeasible>span{color:#e28a5f}.ppo-infeasible h2{color:#f0c669}
       .ppo-result-head{display:flex;align-items:stretch;justify-content:space-between;background:rgba(201,164,78,.09);border-bottom:1px solid var(--edge-strong)}.ppo-result-head>div{padding:22px 24px;display:flex;flex-direction:column;justify-content:center}.ppo-result-head>div span{color:var(--brass-bright);font-size:11px;text-transform:uppercase;font-weight:800}.ppo-result-head>div strong{margin-top:2px;color:var(--gold-hot);font-family:var(--font-mono);font-size:34px}.ppo-result-head dl{display:grid;grid-template-columns:repeat(3,1fr);margin:0}.ppo-result-head dl div{display:flex;min-width:110px;flex-direction:column;justify-content:center;padding:16px;border-left:1px solid var(--edge)}.ppo-result-head dt{color:var(--t-secondary);font-size:10px;text-transform:uppercase}.ppo-result-head dd{margin:4px 0 0;color:var(--parchment);font-family:var(--font-mono);font-weight:700;font-size:13px}
       .ppo-redemption{display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid var(--edge)}.ppo-redemption>div{margin-right:auto}.ppo-redemption h3{margin:0;color:var(--parchment);font-size:13px;text-transform:none}.ppo-redemption p{margin:3px 0 0;color:var(--t-secondary);font-size:10px}.ppo-redemption>span{padding:7px 9px;border-radius:var(--radius-sm);background:rgba(255,255,255,.045);color:var(--parchment-dim);font-size:10px}.ppo-redemption>span b{color:var(--gold-hot);font-family:var(--font-mono)}

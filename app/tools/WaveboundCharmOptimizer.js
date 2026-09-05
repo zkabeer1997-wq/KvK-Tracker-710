@@ -4,28 +4,21 @@ import { useCallback, useMemo, useState } from "react";
 
 import { toolConfiguration } from "../../lib/toolCatalog.mjs";
 import { useToolPersistence } from "../../lib/useToolPersistence";
+import {
+  probabilityAtLeast,
+  probabilityExactly,
+} from "../../lib/waveboundProbability.mjs";
 const DEFAULT_CONFIG = toolConfiguration("wavebound-charms");
-const migrateWaveboundState = value => value;
-
-function choose(n, k) {
-  if (k < 0 || k > n) return 0;
-  k = Math.min(k, n - k);
-  let out = 1;
-  for (let i = 1; i <= k; i++) out = (out * (n - k + i)) / i;
-  return out;
-}
-
-function probabilityAtLeast(n, k, p = 0.25) {
-  if (k <= 0) return 1;
-  if (k > n) return 0;
-  let total = 0;
-  for (let i = k; i <= n; i++)
-    total += choose(n, i) * p ** i * (1 - p) ** (n - i);
-  return Math.min(1, total);
-}
-function probabilityExactly(n, k, p = 0.25) {
-  return choose(n, k) * p ** k * (1 - p) ** (n - k);
-}
+const migrateWaveboundState = (value) => value;
+const DEFAULT_TARGET_CHARMS = ["Infantry", "Cavalry", "Archer"].flatMap(
+  (type) =>
+    Array.from({ length: 6 }, (_, index) => ({
+      id: `${type}-${index + 1}`,
+      type,
+      current: 0,
+      target: 10,
+    })),
+);
 
 function fmt(n) {
   return Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 });
@@ -46,26 +39,98 @@ export default function WaveboundCharmOptimizer({
   const [exquisite, setExquisite] = useState(0);
   const [majestic, setMajestic] = useState(0);
   const [confidence, setConfidence] = useState(0.75);
+  const [individualTargets, setIndividualTargets] = useState(false);
+  const [targetCharms, setTargetCharms] = useState(DEFAULT_TARGET_CHARMS);
+  const [importStatus, setImportStatus] = useState("");
   const [calculated, setCalculated] = useState(false);
-  const inputs=useMemo(()=>({currentLevel,targetLevel,charmCount,ownedGuides,ownedDesigns,common,premium,exquisite,majestic,confidence}),[currentLevel,targetLevel,charmCount,ownedGuides,ownedDesigns,common,premium,exquisite,majestic,confidence]);
-  const restore=useCallback(s=>{if(Number.isFinite(s.currentLevel))setCurrentLevel(s.currentLevel);if(Number.isFinite(s.targetLevel))setTargetLevel(s.targetLevel);if(Number.isFinite(s.charmCount))setCharmCount(s.charmCount);if(Number.isFinite(s.ownedGuides))setOwnedGuides(s.ownedGuides);if(Number.isFinite(s.ownedDesigns))setOwnedDesigns(s.ownedDesigns);if(Number.isFinite(s.common))setCommon(s.common);if(Number.isFinite(s.premium))setPremium(s.premium);if(Number.isFinite(s.exquisite))setExquisite(s.exquisite);if(Number.isFinite(s.majestic))setMajestic(s.majestic);if(Number.isFinite(s.confidence))setConfidence(s.confidence);},[]);
-  const persistence=useToolPersistence({toolKey:"wavebound-charms",schemaVersion:1,inputs,restore,migrate:migrateWaveboundState});
-  const change=(setter,value)=>{persistence.markChanged();setter(value);setCalculated(false);};
+  const inputs = useMemo(
+    () => ({
+      currentLevel,
+      targetLevel,
+      charmCount,
+      ownedGuides,
+      ownedDesigns,
+      common,
+      premium,
+      exquisite,
+      majestic,
+      confidence,
+      individualTargets,
+      targetCharms,
+    }),
+    [
+      currentLevel,
+      targetLevel,
+      charmCount,
+      ownedGuides,
+      ownedDesigns,
+      common,
+      premium,
+      exquisite,
+      majestic,
+      confidence,
+      individualTargets,
+      targetCharms,
+    ],
+  );
+  const restore = useCallback((s) => {
+    if (Number.isFinite(s.currentLevel)) setCurrentLevel(s.currentLevel);
+    if (Number.isFinite(s.targetLevel)) setTargetLevel(s.targetLevel);
+    if (Number.isFinite(s.charmCount)) setCharmCount(s.charmCount);
+    if (Number.isFinite(s.ownedGuides)) setOwnedGuides(s.ownedGuides);
+    if (Number.isFinite(s.ownedDesigns)) setOwnedDesigns(s.ownedDesigns);
+    if (Number.isFinite(s.common)) setCommon(s.common);
+    if (Number.isFinite(s.premium)) setPremium(s.premium);
+    if (Number.isFinite(s.exquisite)) setExquisite(s.exquisite);
+    if (Number.isFinite(s.majestic)) setMajestic(s.majestic);
+    if (Number.isFinite(s.confidence)) setConfidence(s.confidence);
+    if (s.individualTargets) setIndividualTargets(true);
+    if (Array.isArray(s.targetCharms) && s.targetCharms.length === 18)
+      setTargetCharms(s.targetCharms);
+  }, []);
+  const persistence = useToolPersistence({
+    toolKey: "wavebound-charms",
+    schemaVersion: 1,
+    inputs,
+    restore,
+    migrate: migrateWaveboundState,
+  });
+  const change = (setter, value) => {
+    persistence.markChanged();
+    setter(value);
+    setCalculated(false);
+  };
 
   const costs = useMemo(() => {
     let guides = 0,
       designs = 0;
-    if (targetLevel > currentLevel) {
+    if (individualTargets) {
+      for (const charm of targetCharms)
+        for (let level = charm.current + 1; level <= charm.target; level++) {
+          guides += LEVEL_COSTS[level]?.[0] || 0;
+          designs += LEVEL_COSTS[level]?.[1] || 0;
+        }
+    } else if (targetLevel > currentLevel) {
       for (let level = currentLevel + 1; level <= targetLevel; level++) {
         guides += LEVEL_COSTS[level][0];
         designs += LEVEL_COSTS[level][1];
       }
     }
-    return { guides: guides * charmCount, designs: designs * charmCount };
-  }, [currentLevel, targetLevel, charmCount, LEVEL_COSTS]);
+    return individualTargets
+      ? { guides, designs }
+      : { guides: guides * charmCount, designs: designs * charmCount };
+  }, [
+    currentLevel,
+    targetLevel,
+    charmCount,
+    individualTargets,
+    targetCharms,
+    LEVEL_COSTS,
+  ]);
+  const hasUpgrade = costs.guides > 0 || costs.designs > 0;
 
   const result = useMemo(() => {
-    if (targetLevel <= currentLevel) return null;
+    if (!hasUpgrade) return null;
     let plans = [];
     const maxCommonMerges = Math.floor(common / 3);
     for (let cm = 0; cm <= maxCommonMerges; cm++) {
@@ -106,7 +171,13 @@ export default function WaveboundCharmOptimizer({
           exquisite * r["exquisite.shards"] +
           majestic * r["majestic.shards"] +
           pm * (0.75 * r["exquisite.shards"] + 0.25 * r["majestic.shards"]);
-        const distribution = Array.from({ length: pm + 1 }, (_, majesticCount) => ({ majesticCount, probability: probabilityExactly(pm, majesticCount) }));
+        const distribution = Array.from(
+          { length: pm + 1 },
+          (_, majesticCount) => ({
+            majesticCount,
+            probability: probabilityExactly(pm, majesticCount),
+          }),
+        );
         plans.push({
           cm,
           pm,
@@ -141,8 +212,7 @@ export default function WaveboundCharmOptimizer({
     plans.sort((a, b) => b.success - a.success || b.merges - a.merges);
     return plans.length ? { ...plans[0], feasible: false } : null;
   }, [
-    targetLevel,
-    currentLevel,
+    hasUpgrade,
     common,
     premium,
     exquisite,
@@ -153,6 +223,50 @@ export default function WaveboundCharmOptimizer({
     confidence,
     r,
   ]);
+  const updateTargetCharm = (id, key, value) => {
+    persistence.markChanged();
+    setTargetCharms((items) =>
+      items.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              [key]: key === "target" ? Math.max(item.current, value) : value,
+              ...(key === "current" && item.target < value
+                ? { target: value }
+                : {}),
+            }
+          : item,
+      ),
+    );
+    setCalculated(false);
+  };
+  const importCharmPlan = async () => {
+    try {
+      const response = await fetch("/api/tool-state/charm-pack-optimizer", {
+        cache: "no-store",
+      });
+      const body = await response.json();
+      const charms = body?.state?.inputs?.charms;
+      if (!response.ok || !Array.isArray(charms) || charms.length !== 18)
+        throw Error("No saved 18-charm plan was found.");
+      setTargetCharms(
+        charms.map(({ id, type, current, target }) => ({
+          id,
+          type,
+          current,
+          target,
+        })),
+      );
+      setIndividualTargets(true);
+      persistence.markChanged();
+      setCalculated(false);
+      setImportStatus(
+        "Imported current and target levels from the Charm Pack planner.",
+      );
+    } catch (error) {
+      setImportStatus(error.message);
+    }
+  };
 
   const field = (label, value, setter, min = 0, max = null) => (
     <label className="wo-field">
@@ -162,7 +276,9 @@ export default function WaveboundCharmOptimizer({
         min={min}
         max={max ?? undefined}
         value={value}
-        onChange={(e) => change(setter, Math.max(min, Number(e.target.value) || 0))}
+        onChange={(e) =>
+          change(setter, Math.max(min, Number(e.target.value) || 0))
+        }
       />
     </label>
   );
@@ -184,41 +300,115 @@ export default function WaveboundCharmOptimizer({
       <div className="wo-grid">
         <div className="wo-panel">
           <h3>Charm target</h3>
-          <div className="wo-fields three">
-            <label className="wo-field">
-              <span>Current level</span>
-              <select
-                value={currentLevel}
-                onChange={(e) => change(setCurrentLevel, Number(e.target.value))}
-              >
-                {Array.from({ length: 23 }, (_, i) => (
-                  <option key={i} value={i}>
-                    Level {i}
-                  </option>
-                ))}
-              </select>
+          <div className="wo-target-actions">
+            <label>
+              <input
+                type="checkbox"
+                checked={individualTargets}
+                onChange={(event) =>
+                  change(setIndividualTargets, event.target.checked)
+                }
+              />{" "}
+              Use 18 individual charm targets
             </label>
-            <label className="wo-field">
-              <span>Target level</span>
-              <select
-                value={targetLevel}
-                onChange={(e) => change(setTargetLevel, Number(e.target.value))}
-              >
-                {Array.from({ length: 23 }, (_, i) => (
-                  <option key={i} value={i}>
-                    Level {i}
-                  </option>
-                ))}
-              </select>
-            </label>
-            {field(
-              "Charms upgrading",
-              charmCount,
-              (v) => setCharmCount(Math.min(18, v)),
-              1,
-              18,
-            )}
+            <button type="button" onClick={importCharmPlan}>
+              Import from Charm planner
+            </button>
           </div>
+          {importStatus && (
+            <p className="wo-import-status" role="status">
+              {importStatus}
+            </p>
+          )}
+          {individualTargets ? (
+            <div className="wo-individual-targets">
+              {targetCharms.map((charm) => (
+                <div key={charm.id}>
+                  <b>
+                    {charm.type} {charm.id.split("-").at(-1)}
+                  </b>
+                  <label>
+                    Current{" "}
+                    <select
+                      value={charm.current}
+                      onChange={(event) =>
+                        updateTargetCharm(
+                          charm.id,
+                          "current",
+                          Number(event.target.value),
+                        )
+                      }
+                    >
+                      {Array.from({ length: 23 }, (_, level) => (
+                        <option key={level} value={level}>
+                          {level}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Target{" "}
+                    <select
+                      value={charm.target}
+                      onChange={(event) =>
+                        updateTargetCharm(
+                          charm.id,
+                          "target",
+                          Number(event.target.value),
+                        )
+                      }
+                    >
+                      {Array.from({ length: 23 }, (_, level) => (
+                        <option key={level} value={level}>
+                          {level}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="wo-fields three">
+              <label className="wo-field">
+                <span>Current level</span>
+                <select
+                  value={currentLevel}
+                  onChange={(e) =>
+                    change(setCurrentLevel, Number(e.target.value))
+                  }
+                >
+                  {Array.from({ length: 23 }, (_, i) => (
+                    <option key={i} value={i}>
+                      Level {i}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="wo-field">
+                <span>Target level</span>
+                <select
+                  value={targetLevel}
+                  onChange={(e) =>
+                    change(setTargetLevel, Number(e.target.value))
+                  }
+                >
+                  {Array.from({ length: 23 }, (_, i) => (
+                    <option key={i} value={i}>
+                      Level {i}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {field(
+                "Charms upgrading",
+                charmCount,
+                (v) => setCharmCount(Math.min(18, v)),
+                1,
+                18,
+              )}
+            </div>
+          )}
 
           <h3>Materials owned</h3>
           <div className="wo-fields">
@@ -261,12 +451,12 @@ export default function WaveboundCharmOptimizer({
               Enter your inventory, then optimize the merge plan.
             </div>
           )}
-          {calculated && targetLevel <= currentLevel && (
+          {calculated && !hasUpgrade && (
             <div className="wo-alert bad">
               Target level must be higher than current level.
             </div>
           )}
-          {calculated && result && targetLevel > currentLevel && (
+          {calculated && result && hasUpgrade && (
             <>
               <div className={`wo-alert ${result.feasible ? "good" : "bad"}`}>
                 {result.feasible
@@ -312,6 +502,12 @@ export default function WaveboundCharmOptimizer({
                   existing and newly-created high-tier chests.
                 </li>
               </ol>
+              <p className="wo-note">
+                Unused Common and Premium chests remain unmerged because another
+                three-chest merge would not improve the minimum plan at your
+                selected confidence. They are still opened and included in the
+                material projection above.
+              </p>
               <div className="wo-projection">
                 <div>
                   <span>Success chance</span>
@@ -337,13 +533,32 @@ export default function WaveboundCharmOptimizer({
               </div>
               <div className="wo-range">
                 <strong>Possible material range</strong>
-                <span>Guaranteed if every result is Exquisite: {fmt(result.worstGuides)} Guides · {fmt(result.worstDesigns)} Designs</span>
-                <span>Expected: {fmt(result.expectedGuides)} Guides · {fmt(result.expectedDesigns)} Designs</span>
-                <span>Best case if every result is Majestic: {fmt(result.bestGuides)} Guides · {fmt(result.bestDesigns)} Designs</span>
+                <span>
+                  Guaranteed if every result is Exquisite:{" "}
+                  {fmt(result.worstGuides)} Guides · {fmt(result.worstDesigns)}{" "}
+                  Designs
+                </span>
+                <span>
+                  Expected: {fmt(result.expectedGuides)} Guides ·{" "}
+                  {fmt(result.expectedDesigns)} Designs
+                </span>
+                <span>
+                  Best case if every result is Majestic:{" "}
+                  {fmt(result.bestGuides)} Guides · {fmt(result.bestDesigns)}{" "}
+                  Designs
+                </span>
               </div>
               <details className="wo-distribution">
                 <summary>Outcome probability distribution</summary>
-                {result.distribution.map(row=><div key={row.majesticCount}><span>{row.majesticCount} Majestic / {result.pm-row.majesticCount} Exquisite</span><b>{(row.probability*100).toFixed(2)}%</b></div>)}
+                {result.distribution.map((row) => (
+                  <div key={row.majesticCount}>
+                    <span>
+                      {row.majesticCount} Majestic /{" "}
+                      {result.pm - row.majesticCount} Exquisite
+                    </span>
+                    <b>{(row.probability * 100).toFixed(2)}%</b>
+                  </div>
+                ))}
               </details>
               <p className="wo-note">
                 A Premium merge needs 3 Premium chests. Each merged result is
@@ -393,6 +608,53 @@ export default function WaveboundCharmOptimizer({
           margin-top: 10px;
           color: #b7cbd6;
           font-size: 11px;
+        }
+        .wo-target-actions {
+          display: flex;
+          justify-content: space-between;
+          gap: 10px;
+          align-items: center;
+          margin-bottom: 10px;
+          color: #bdd1dc;
+          font-size: 11px;
+        }
+        .wo-target-actions button {
+          border: 1px solid #2a6078;
+          background: #102c3b;
+          color: #68d9ff;
+          border-radius: 7px;
+          padding: 7px 9px;
+        }
+        .wo-import-status {
+          color: #9cc9dc;
+          font-size: 10px;
+        }
+        .wo-individual-targets {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 6px;
+          max-height: 320px;
+          overflow: auto;
+        }
+        .wo-individual-targets > div {
+          display: grid;
+          grid-template-columns: 1fr auto auto;
+          gap: 6px;
+          align-items: center;
+          border: 1px solid #1d4255;
+          padding: 7px;
+          font-size: 9px;
+        }
+        .wo-individual-targets label {
+          display: grid;
+          gap: 2px;
+          color: #8ea9b9;
+        }
+        .wo-individual-targets select {
+          padding: 4px;
+          background: #07151e;
+          color: #edf8ff;
+          border: 1px solid #2a6078;
         }
         .wo-grid {
           display: grid;
@@ -523,7 +785,36 @@ export default function WaveboundCharmOptimizer({
         .wo-steps strong {
           color: #dcecf4;
         }
-        .wo-range{display:grid;gap:5px;margin-top:12px;padding:11px;border:1px solid #1d4255;color:#8ea9b9;font-size:11px}.wo-range strong{color:#dcecf4}.wo-distribution{margin-top:12px;color:#9db5c3;font-size:11px}.wo-distribution summary{cursor:pointer;color:#68d9ff}.wo-distribution div{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #1d4255}.wo-distribution b{color:#edf8ff}
+        .wo-range {
+          display: grid;
+          gap: 5px;
+          margin-top: 12px;
+          padding: 11px;
+          border: 1px solid #1d4255;
+          color: #8ea9b9;
+          font-size: 11px;
+        }
+        .wo-range strong {
+          color: #dcecf4;
+        }
+        .wo-distribution {
+          margin-top: 12px;
+          color: #9db5c3;
+          font-size: 11px;
+        }
+        .wo-distribution summary {
+          cursor: pointer;
+          color: #68d9ff;
+        }
+        .wo-distribution div {
+          display: flex;
+          justify-content: space-between;
+          padding: 5px 0;
+          border-bottom: 1px solid #1d4255;
+        }
+        .wo-distribution b {
+          color: #edf8ff;
+        }
         .wo-note {
           color: #6f8b9b;
           font-size: 10px;
