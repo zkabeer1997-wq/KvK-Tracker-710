@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PACKS as DEFAULT_PACKS, SHOP_ITEMS as DEFAULT_ITEMS, optimizeShellPacks, packLimits } from '../../lib/adventureStall.mjs';
+import { createToolStateEnvelope, readToolState } from '../../lib/toolState.mjs';
 
 const EMPTY_CART = Object.fromEntries(DEFAULT_ITEMS.map((item) => [item.key, 0]));
 const LIMITED_KEYS = new Set(['true-gold-limited', 'hero-shards', 'forgehammers-limited', 'mithril', 'mythic-hero-gear']);
@@ -27,7 +28,7 @@ export default function AdventureStallOptimizer({ configuration }) {
         const response = await fetch('/api/tool-state/adventure-stall', { cache: 'no-store' });
         if (!response.ok) { setSaveStatus(response.status === 401 ? 'Sign in as a member to restore and save this plan.' : 'Could not load saved inputs.'); return; }
         const result = await response.json();
-        const saved = result?.state;
+        const saved = readToolState(result?.state,{toolKey:'adventure-stall',schemaVersion:1,migrate:value=>value});
         if (saved && typeof saved === 'object') {
           if (saved.cart && typeof saved.cart === 'object') setCart({ ...EMPTY_CART, ...saved.cart });
           if (Number.isFinite(saved.ownedShells)) setOwnedShells(saved.ownedShells);
@@ -47,7 +48,7 @@ export default function AdventureStallOptimizer({ configuration }) {
     setSaveStatus('Saving…');
     saveTimer.current = setTimeout(async () => {
       try {
-        const response = await fetch('/api/tool-state/adventure-stall', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ state: { cart, ownedShells, daysRemaining } }) });
+        const response = await fetch('/api/tool-state/adventure-stall', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ state: createToolStateEnvelope('adventure-stall',1,{ cart, ownedShells, daysRemaining }) }) });
         setSaveStatus(response.ok ? 'Saved to your member profile.' : response.status === 401 ? 'Log in to save this plan.' : 'Save failed.');
       } catch { setSaveStatus('Save failed.'); }
     }, 700);

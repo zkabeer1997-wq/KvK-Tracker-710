@@ -11,6 +11,7 @@ import {
 } from "../../lib/costPlanner.mjs";
 import styles from "./CostPlanner.module.css";
 import DataAssumptions from "./DataAssumptions";
+import { createToolStateEnvelope, readToolState } from "../../lib/toolState.mjs";
 const fmt = (n) =>
   Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 });
 function LevelSelect({ item, value, onChange, label, minimum = "0" }) {
@@ -49,6 +50,7 @@ export default function CostPlanner({
     [inventory, setInventory] = useState({}),
     [modifiers, setModifiers] = useState({}),
     [includePrerequisites, setIncludePrerequisites] = useState(true),
+    [targetDate, setTargetDate] = useState(""),
     [mode, setMode] = useState("cost"),
     [result, setResult] = useState(null),
     [error, setError] = useState(""),
@@ -90,7 +92,8 @@ export default function CostPlanner({
         if (!r.ok) throw Error("Saved inputs could not be loaded.");
         return r.json();
       })
-      .then(({ state }) => {
+      .then(({ state: rawState }) => {
+        const state=readToolState(rawState,{toolKey:stateKey,schemaVersion:1,migrate:value=>value});
         if (!state) return;
         const safe = (state.selections || []).filter((s) => {
           const i = dataset.items.find((x) => x.id === s.id);
@@ -106,6 +109,7 @@ export default function CostPlanner({
         setInventory(state.inventory || {});
         setModifiers(state.modifiers || {});
         setIncludePrerequisites(state.includePrerequisites !== false);
+        setTargetDate(typeof state.targetDate === "string" ? state.targetDate : "");
         setSaveStatus("Saved plan loaded.");
       })
       .catch((e) => {
@@ -157,6 +161,16 @@ export default function CostPlanner({
     changed();
     setModifiers((m) => ({ ...m, [key]: value }));
   }
+  function moveSelection(index, direction) {
+    changed();
+    setSelections(previous => {
+      const target=index+direction;
+      if(target<0||target>=previous.length)return previous;
+      const next=[...previous];
+      [next[index],next[target]]=[next[target],next[index]];
+      return next;
+    });
+  }
   async function save() {
     setSaving(true);
     try {
@@ -164,13 +178,14 @@ export default function CostPlanner({
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          state: {
+          state: createToolStateEnvelope(stateKey,1,{
             selections,
             currentLevels,
             inventory,
             modifiers,
             includePrerequisites,
-          },
+            targetDate,
+          }),
         }),
       });
       if (!r.ok) throw Error("Could not save this plan. Try again.");
@@ -313,7 +328,7 @@ export default function CostPlanner({
               </button>
             </div>
             <div className={styles.selections}>
-              {selections.map((s) => {
+              {selections.map((s,index) => {
                 const item = dataset.items.find((i) => i.id === s.id);
                 return (
                   <div className={styles.selection} key={s.id}>
@@ -325,6 +340,10 @@ export default function CostPlanner({
                           ? ` · ${item.levels[0].effect.type}`
                           : ""}
                       </small>
+                      <span>
+                        <button type="button" className={styles.remove} disabled={index===0} onClick={()=>moveSelection(index,-1)} aria-label={`Move ${item.name} earlier`}>↑</button>
+                        <button type="button" className={styles.remove} disabled={index===selections.length-1} onClick={()=>moveSelection(index,1)} aria-label={`Move ${item.name} later`}>↓</button>
+                      </span>
                     </div>
                     <label>
                       Current
@@ -456,6 +475,10 @@ export default function CostPlanner({
             <section className={styles.panel}>
               <span className={styles.eyebrow}>03 · Time &amp; bonuses</span>
               <h2>{construction ? "Construction" : "Research"} speed</h2>
+              <label>
+                Target completion date
+                <input type="date" value={targetDate} onChange={(e)=>{changed();setTargetDate(e.target.value);}} />
+              </label>
               <label>
                 Total {construction ? "construction" : "research"} speed (%)
                 <input
@@ -619,6 +642,10 @@ export default function CostPlanner({
                   </small>
                 </div>
               </div>
+              <p className={styles.prereqNotice}>
+                Estimated completion: {new Date(Date.now()+result.seconds*1000).toLocaleString()}.
+                {targetDate ? ` Required speedups to finish by ${targetDate}: ${duration(Math.max(0,result.seconds-(new Date(`${targetDate}T23:59:59`).getTime()-Date.now())/1000))}.` : ""}
+              </p>
               <div className={styles.tableWrap}>
                 <table>
                   <caption>Resources needed for the full plan</caption>

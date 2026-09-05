@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { toolConfiguration } from "../../lib/toolCatalog.mjs";
+import { useToolPersistence } from "../../lib/useToolPersistence";
 const DEFAULT_CONFIG = toolConfiguration("wavebound-charms");
+const migrateWaveboundState = value => value;
 
 function choose(n, k) {
   if (k < 0 || k > n) return 0;
@@ -45,111 +47,10 @@ export default function WaveboundCharmOptimizer({
   const [majestic, setMajestic] = useState(0);
   const [confidence, setConfidence] = useState(0.75);
   const [calculated, setCalculated] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
-  const [saveStatus, setSaveStatus] = useState("Loading your last entry…");
-  const saveTimer = useRef(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function loadSaved() {
-      try {
-        const response = await fetch("/api/tool-state/wavebound-charms", {
-          cache: "no-store",
-        });
-        if (!response.ok) {
-          setSaveStatus(
-            response.status === 401
-              ? "Log in to restore saved inputs."
-              : "Could not load saved inputs.",
-          );
-          return;
-        }
-        const data = await response.json();
-        const s = data?.state;
-        if (s && typeof s === "object") {
-          if (Number.isFinite(s.currentLevel)) setCurrentLevel(s.currentLevel);
-          if (Number.isFinite(s.targetLevel)) setTargetLevel(s.targetLevel);
-          if (Number.isFinite(s.charmCount)) setCharmCount(s.charmCount);
-          if (Number.isFinite(s.ownedGuides)) setOwnedGuides(s.ownedGuides);
-          if (Number.isFinite(s.ownedDesigns)) setOwnedDesigns(s.ownedDesigns);
-          if (Number.isFinite(s.common)) setCommon(s.common);
-          if (Number.isFinite(s.premium)) setPremium(s.premium);
-          if (Number.isFinite(s.exquisite)) setExquisite(s.exquisite);
-          if (Number.isFinite(s.majestic)) setMajestic(s.majestic);
-          if (Number.isFinite(s.confidence)) setConfidence(s.confidence);
-          if (typeof s.calculated === "boolean") setCalculated(s.calculated);
-          setSaveStatus("Last saved entry restored.");
-        } else {
-          setSaveStatus(
-            "No saved entry yet. Your inputs will save automatically.",
-          );
-        }
-      } catch {
-        setSaveStatus("Could not load saved inputs.");
-      } finally {
-        if (!cancelled) setHydrated(true);
-      }
-    }
-    loadSaved();
-    return () => {
-      cancelled = true;
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    setSaveStatus("Saving…");
-    saveTimer.current = setTimeout(async () => {
-      try {
-        const response = await fetch("/api/tool-state/wavebound-charms", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            state: {
-              currentLevel,
-              targetLevel,
-              charmCount,
-              ownedGuides,
-              ownedDesigns,
-              common,
-              premium,
-              exquisite,
-              majestic,
-              confidence,
-              calculated,
-            },
-          }),
-        });
-        setSaveStatus(
-          response.ok
-            ? "Saved to your member profile."
-            : response.status === 401
-              ? "Log in to save inputs."
-              : "Save failed.",
-        );
-      } catch {
-        setSaveStatus("Save failed.");
-      }
-    }, 700);
-    return () => {
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-    };
-  }, [
-    hydrated,
-    currentLevel,
-    targetLevel,
-    charmCount,
-    ownedGuides,
-    ownedDesigns,
-    common,
-    premium,
-    exquisite,
-    majestic,
-    confidence,
-    calculated,
-  ]);
+  const inputs=useMemo(()=>({currentLevel,targetLevel,charmCount,ownedGuides,ownedDesigns,common,premium,exquisite,majestic,confidence}),[currentLevel,targetLevel,charmCount,ownedGuides,ownedDesigns,common,premium,exquisite,majestic,confidence]);
+  const restore=useCallback(s=>{if(Number.isFinite(s.currentLevel))setCurrentLevel(s.currentLevel);if(Number.isFinite(s.targetLevel))setTargetLevel(s.targetLevel);if(Number.isFinite(s.charmCount))setCharmCount(s.charmCount);if(Number.isFinite(s.ownedGuides))setOwnedGuides(s.ownedGuides);if(Number.isFinite(s.ownedDesigns))setOwnedDesigns(s.ownedDesigns);if(Number.isFinite(s.common))setCommon(s.common);if(Number.isFinite(s.premium))setPremium(s.premium);if(Number.isFinite(s.exquisite))setExquisite(s.exquisite);if(Number.isFinite(s.majestic))setMajestic(s.majestic);if(Number.isFinite(s.confidence))setConfidence(s.confidence);},[]);
+  const persistence=useToolPersistence({toolKey:"wavebound-charms",schemaVersion:1,inputs,restore,migrate:migrateWaveboundState});
+  const change=(setter,value)=>{persistence.markChanged();setter(value);setCalculated(false);};
 
   const costs = useMemo(() => {
     let guides = 0,
@@ -261,7 +162,7 @@ export default function WaveboundCharmOptimizer({
         min={min}
         max={max ?? undefined}
         value={value}
-        onChange={(e) => setter(Math.max(min, Number(e.target.value) || 0))}
+        onChange={(e) => change(setter, Math.max(min, Number(e.target.value) || 0))}
       />
     </label>
   );
@@ -276,7 +177,7 @@ export default function WaveboundCharmOptimizer({
           accounting for the 75% Exquisite / 25% Majestic high-tier outcome.
         </p>
         <div className="wo-save-status" role="status">
-          {saveStatus}
+          {persistence.message}
         </div>
       </header>
 
@@ -288,7 +189,7 @@ export default function WaveboundCharmOptimizer({
               <span>Current level</span>
               <select
                 value={currentLevel}
-                onChange={(e) => setCurrentLevel(Number(e.target.value))}
+                onChange={(e) => change(setCurrentLevel, Number(e.target.value))}
               >
                 {Array.from({ length: 23 }, (_, i) => (
                   <option key={i} value={i}>
@@ -301,7 +202,7 @@ export default function WaveboundCharmOptimizer({
               <span>Target level</span>
               <select
                 value={targetLevel}
-                onChange={(e) => setTargetLevel(Number(e.target.value))}
+                onChange={(e) => change(setTargetLevel, Number(e.target.value))}
               >
                 {Array.from({ length: 23 }, (_, i) => (
                   <option key={i} value={i}>
@@ -338,7 +239,7 @@ export default function WaveboundCharmOptimizer({
             <span>Minimum chance of reaching the target</span>
             <select
               value={confidence}
-              onChange={(e) => setConfidence(Number(e.target.value))}
+              onChange={(e) => change(setConfidence, Number(e.target.value))}
             >
               <option value={0.5}>50%</option>
               <option value={0.75}>75%</option>

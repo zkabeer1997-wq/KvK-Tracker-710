@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { parseCharmSelections } from "../../lib/powerProfiles.mjs";
 
 import { CHARM_COSTS, CHARM_PACKS } from "../../lib/charmToolData.mjs";
+import { createToolStateEnvelope, readToolState } from "../../lib/toolState.mjs";
 const DEFAULT_CHARMS = ["Infantry", "Cavalry", "Archer"].flatMap((type) =>
   Array.from({ length: 6 }, (_, i) => ({
     id: `${type}-${i + 1}`,
@@ -334,7 +335,7 @@ export default function CharmPackOptimizer({ configuration }) {
             cache: "no-store",
           }),
           result = await response.json(),
-          saved = result?.state;
+          saved = readToolState(result?.state,{toolKey:"charm-pack-optimizer",schemaVersion:1,migrate:value=>value});
         if (response.ok && saved && typeof saved === "object") {
           if (validSavedCharms(saved.charms))
             setCharms(
@@ -393,7 +394,7 @@ export default function CharmPackOptimizer({ configuration }) {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            state: { charms, packs, ownedG, ownedD, maxWeeks },
+            state: createToolStateEnvelope("charm-pack-optimizer",1,{ charms, packs, ownedG, ownedD, maxWeeks }),
           }),
         });
         setSaveStatus(

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PACKS as DEFAULT_PACKS, SHOP_ITEMS as DEFAULT_ITEMS, VALUE_REFERENCE, VALUE_TIERS, optimizeEssencePacks } from '../../lib/flamedragonShop.mjs';
+import { createToolStateEnvelope, readToolState } from '../../lib/toolState.mjs';
 
 const EMPTY_CART = Object.fromEntries(DEFAULT_ITEMS.map((item) => [item.key, 0]));
 const DEFAULT_LIMITS = Object.fromEntries(DEFAULT_PACKS.map((pack) => [pack.key, pack.defaultMax]));
@@ -39,7 +40,7 @@ export default function FlamedragonShopOptimizer({ configuration }) {
           return;
         }
         const result = await response.json();
-        const saved = result?.state;
+        const saved = readToolState(result?.state,{toolKey:'flamedragon-shop',schemaVersion:1,migrate:value=>value});
         if (saved && typeof saved === 'object') {
           if (saved.cart && typeof saved.cart === 'object') setCart({ ...EMPTY_CART, ...saved.cart });
           if (Number.isFinite(saved.ownedEssence)) setOwnedEssence(saved.ownedEssence);
@@ -67,7 +68,7 @@ export default function FlamedragonShopOptimizer({ configuration }) {
       try {
         const response = await fetch('/api/tool-state/flamedragon-shop', {
           method: 'PUT', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ state: { cart, ownedEssence, daysRemaining, limits } }),
+          body: JSON.stringify({ state: createToolStateEnvelope('flamedragon-shop',1,{ cart, ownedEssence, daysRemaining, limits }) }),
         });
         setSaveStatus(response.ok ? 'Saved to your member profile.' : response.status === 401 ? 'Log in to save this plan.' : 'Save failed.');
       } catch {
