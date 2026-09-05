@@ -10,7 +10,9 @@ const TOOLS = {
   'Governor Gear': [
     { key: 'governor-gear-optimizer', event: 'Governor Gear', title: 'Governor Gear Optimizer', description: 'Set current and target tiers for all 6 Governor Gear pieces, track Defense/Attack set bonuses, and see the total materials required.', status: 'New', icon: '/images/governor-gear-plate.svg' },
   ],
-  'Hero Gear': [],
+  'Hero Gear': [
+    { key: 'hero-gear-optimizer', event: 'Hero Gear', title: 'Hero Gear Optimizer', description: 'Set current and target state for all 12 Hero Gear pieces across Level, Imbuement, and Mythic quality. Game costs are not yet sourced — preview only.', status: 'Preview', icon: '/images/hero-gear-crossed-blades.svg' },
+  ],
   Pets: [
     { key: 'pet-pack-optimizer', event: 'Pet Advancement', title: 'Pet Pack Optimizer', description: 'Enter your material target and inventory, then get the cheapest repeatable week-by-week pack and chest redemption plan.', status: 'New', icon: '/images/pet-pack-compass.svg' },
   ],
@@ -26,6 +28,7 @@ const TOOLS = {
 const STATUS_TONE = {
   New: 'tool-badge-new',
   Available: 'tool-badge-available',
+  Preview: 'tool-badge-preview',
 };
 
 function CategoryGlyph({ category }) {
@@ -182,6 +185,7 @@ export default function ToolsDirectory({ memberId, category }) {
         }
         .tool-badge-new{background:rgba(65,164,255,.14);color:#7fbfff;border-color:rgba(65,164,255,.32)}
         .tool-badge-available{background:rgba(201,164,78,.14);color:var(--gold-hot);border-color:rgba(201,164,78,.32)}
+        .tool-badge-preview{background:rgba(226,138,95,.14);color:#e28a5f;border-color:rgba(226,138,95,.34)}
 
         .tool-box-icon{position:relative;width:88px;height:88px;display:grid;place-items:center;margin-top:6px;isolation:isolate}
         .tool-box-icon-art{position:relative;z-index:2;object-fit:contain;filter:drop-shadow(0 10px 10px rgba(0,0,0,.55));transition:transform .2s var(--ease-cine,ease)}
