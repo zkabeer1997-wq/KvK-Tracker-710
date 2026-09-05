@@ -52,7 +52,7 @@ const supabase = createAdminSupabaseClient();
 const { data, error } = await supabase
 .from('submissions')
 .select(ADMIN_COLUMNS)
-.order('name', { ascending: true });
+.order('updated_at', { ascending: false });
 if (error) {
 return NextResponse.json({ error: error.message }, { status: 500 });
 }
