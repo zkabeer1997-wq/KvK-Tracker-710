@@ -1,6 +1,9 @@
 'use client';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { createPetPackOptimizer, PET_RESOURCES as DEFAULT_RESOURCES } from '../../lib/petPackOptimizer.mjs';
+import { migratePetPackState } from '../../lib/toolState.mjs';
+import { useToolPersistence } from '../../lib/useToolPersistence';
+import DataAssumptions from '../../components/tools/DataAssumptions';
 
 const EMPTY = { food: 0, manual: 0, potion: 0, medal: 0 };
 const DEFAULT_NEED = { food: 150000, manual: 500, potion: 160, medal: 80 };
@@ -21,8 +24,25 @@ export default function PetPackOptimizer({configuration}) {
   const [maxWeeks, setMaxWeeks] = useState(8);
   const [result, setResult] = useState(null);
   const [calculating, setCalculating] = useState(false);
+  const [resetBackup, setResetBackup] = useState(null);
+  const inputs = useMemo(() => ({ need, have, ownedChests, maxWeeks }), [need, have, ownedChests, maxWeeks]);
+  const restore = useCallback(saved => {
+    if (saved.need && typeof saved.need === 'object') setNeed(previous => ({ ...previous, ...saved.need }));
+    if (saved.have && typeof saved.have === 'object') setHave(previous => ({ ...previous, ...saved.have }));
+    if (Number.isFinite(saved.ownedChests)) setOwnedChests(Math.max(0, saved.ownedChests));
+    if (Number.isFinite(saved.maxWeeks)) setMaxWeeks(Math.min(26, Math.max(1, saved.maxWeeks)));
+  }, []);
+  const persistence = useToolPersistence({ toolKey: 'pet-pack-optimizer', schemaVersion: 1, inputs, restore, migrate: migratePetPackState });
   const shortfall = useMemo(() => Object.fromEntries(Object.keys(PET_RESOURCES).map(key => [key, Math.max(0, need[key] - have[key])])), [need, have, PET_RESOURCES]);
-  const update = (setter, key, value) => { setter(previous => ({ ...previous, [key]: value })); setResult(null); };
+  const update = (setter, key, value) => { persistence.markChanged(); setter(previous => ({ ...previous, [key]: value })); setResult(null); };
+  const reset = () => {
+    if (!window.confirm('Reset all Pet Pack inputs? You can undo this until you leave the page.')) return;
+    setResetBackup(inputs); persistence.markChanged(); setNeed(DEFAULT_NEED); setHave(EMPTY); setOwnedChests(0); setMaxWeeks(8); setResult(null);
+  };
+  const undoReset = () => {
+    if (!resetBackup) return;
+    persistence.markChanged(); restore(resetBackup); setResetBackup(null); setResult(null);
+  };
   const calculate = () => {
     setCalculating(true);
     requestAnimationFrame(() => {
@@ -35,18 +55,20 @@ export default function PetPackOptimizer({configuration}) {
 
   return <section className="ppo-shell">
     <div className="ppo-inputs">
-      <div className="ppo-panel-head"><div><h2>Set your target</h2><p>Enter the materials required and what is already in your bag.</p></div><span>Weekly limit enabled</span></div>
+      <div className="ppo-panel-head"><div><h2>Set your target</h2><p>Enter the materials required and what is already in your bag.</p><small className={`ppo-save ppo-save-${persistence.status}`} role="status">{persistence.message}</small></div><span>Weekly limit enabled</span></div>
       <div className="ppo-columns">
         <div><h3>Materials required</h3>{Object.keys(resourceNames).map((key, i) => <NumberField key={key} label={resourceNames[key]} value={need[key]} accent={['#86a873','#ef8348','#65a9d8','#d9a94e'][i]} onChange={value => update(setNeed, key, value)} />)}</div>
         <div><h3>Current inventory</h3>{Object.keys(resourceNames).map((key, i) => <NumberField key={key} label={resourceNames[key]} value={have[key]} accent={['#86a873','#ef8348','#65a9d8','#d9a94e'][i]} onChange={value => update(setHave, key, value)} />)}</div>
       </div>
       <div className="ppo-settings">
-        <NumberField label="Advanced Custom Chests owned" value={ownedChests} accent="#f0c669" onChange={value => { setOwnedChests(value); setResult(null); }} />
-        <NumberField label="Maximum weeks to plan" value={maxWeeks} accent="#f0c669" onChange={value => { setMaxWeeks(Math.min(26, Math.max(1, value))); setResult(null); }} />
+        <NumberField label="Advanced Custom Chests owned" value={ownedChests} accent="#f0c669" onChange={value => { persistence.markChanged(); setOwnedChests(value); setResult(null); }} />
+        <NumberField label="Maximum weeks to plan" value={maxWeeks} accent="#f0c669" onChange={value => { persistence.markChanged(); setMaxWeeks(Math.min(26, Math.max(1, value))); setResult(null); }} />
       </div>
       <div className="ppo-shortfall"><strong>Remaining shortfall</strong>{Object.entries(shortfall).map(([key, value]) => <span key={key}>{resourceNames[key]} <b>{number(value)}</b></span>)}</div>
       <button className="ppo-calculate" type="button" onClick={calculate} disabled={calculating}>{calculating ? 'Optimizing weekly sets…' : 'Build cheapest weekly plan'}</button>
+      <div className="ppo-state-actions"><button type="button" onClick={reset}>Reset inputs</button>{resetBackup && <button type="button" onClick={undoReset}>Undo reset</button>}</div>
       <p className="ppo-rule">Each Common, Uncommon, Rare, Epic, and Legendary pack may be purchased once per week. The plan can repeat those purchases in later weeks.{calculating ? ' Larger targets can take a few seconds to solve.' : ''}</p>
+      <DataAssumptions datasetId="pet-pack-contents" toolVersion="1.0.0" />
     </div>
 
     <div className="ppo-results" aria-live="polite">
@@ -71,10 +93,12 @@ export default function PetPackOptimizer({configuration}) {
       .ppo-inputs,.ppo-results{border:1px solid var(--edge-strong);border-radius:var(--radius-lg);background:rgba(9,10,18,.86)}
       .ppo-inputs{padding:22px;position:sticky;top:20px}.ppo-panel-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;padding-bottom:18px;border-bottom:1px solid var(--edge)}
       .ppo-panel-head h2,.ppo-empty h2{margin:0;color:var(--parchment);font-size:20px;text-transform:none;letter-spacing:0}.ppo-panel-head p,.ppo-empty p{margin:5px 0 0;color:var(--parchment-dim);font-size:13px;line-height:1.5}.ppo-panel-head>span{flex:none;border:1px solid rgba(134,168,115,.38);border-radius:999px;padding:5px 9px;color:#a8cc96;background:rgba(134,168,115,.1);font-size:10px;font-weight:800;text-transform:uppercase}
+      .ppo-save{display:block;margin-top:7px;color:var(--t-secondary);font-size:10px}.ppo-save-dirty,.ppo-save-saving{color:var(--brass-bright)}.ppo-save-error{color:var(--danger)}
       .ppo-columns{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px}.ppo-columns>div{display:flex;flex-direction:column;gap:12px}.ppo-columns h3{margin:0 0 2px;color:var(--brass-bright);font-size:12px;letter-spacing:.04em}
       .ppo-field{gap:6px;color:var(--parchment-dim);font-size:10px;letter-spacing:.04em}.ppo-field>span{display:flex;align-items:center;gap:7px}.ppo-field i{width:7px;height:7px;border-radius:50%}.ppo-field input{width:100%;min-width:0;padding:10px 11px;background:#11141e;border-color:var(--edge-strong);color:var(--parchment);font-family:var(--font-mono);font-size:14px;font-weight:700}
       .ppo-settings{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px;padding-top:18px;border-top:1px solid var(--edge)}.ppo-shortfall{display:flex;flex-wrap:wrap;gap:7px;margin-top:18px}.ppo-shortfall>strong{width:100%;font-size:11px;color:var(--brass-bright);text-transform:uppercase}.ppo-shortfall span{border-radius:999px;background:rgba(255,255,255,.045);padding:5px 8px;color:var(--parchment-dim);font-size:10px}.ppo-shortfall b{color:var(--parchment);font-family:var(--font-mono)}
       .ppo-calculate{width:100%;margin-top:18px;border:1px solid var(--gold-hot);border-radius:var(--radius-md);padding:13px 16px;background:var(--gold-aged);color:#171108;font-weight:900;cursor:pointer;transition:background var(--t-fast),transform var(--t-fast)}.ppo-calculate:hover{background:var(--gold-hot);transform:translateY(-1px)}.ppo-calculate:focus-visible{outline:3px solid rgba(243,217,154,.28);outline-offset:2px}.ppo-calculate:disabled{opacity:.65;cursor:wait;transform:none}.ppo-rule{margin:10px 2px 0;color:var(--t-secondary);font-size:10.5px;line-height:1.5}
+      .ppo-state-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:10px}.ppo-state-actions button{border:0;background:transparent;color:var(--brass);font-size:11px;text-decoration:underline;cursor:pointer}.tool-data-assumptions{margin-top:18px;padding-top:14px;border-top:1px solid var(--edge);color:var(--parchment-dim);font-size:11px}.tool-data-assumptions summary{color:var(--brass-bright);font-weight:800;cursor:pointer}.tool-data-assumptions dl{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.tool-data-assumptions dl div{min-width:0}.tool-data-assumptions dt{color:var(--t-muted);font-size:9px;text-transform:uppercase}.tool-data-assumptions dd{margin:2px 0 0;color:var(--parchment)}.tool-data-assumptions h3{font-size:11px}.tool-data-assumptions ul{padding-left:18px}
       .ppo-results{min-height:540px;overflow:hidden}.ppo-empty{min-height:540px;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:40px}.ppo-empty>span{font-size:40px;color:var(--brass)}.ppo-empty p{max-width:48ch}.ppo-covered>span{color:#a8cc96}.ppo-infeasible>span{color:#e28a5f}.ppo-infeasible h2{color:#f0c669}
       .ppo-result-head{display:flex;align-items:stretch;justify-content:space-between;background:rgba(201,164,78,.09);border-bottom:1px solid var(--edge-strong)}.ppo-result-head>div{padding:22px 24px;display:flex;flex-direction:column;justify-content:center}.ppo-result-head>div span{color:var(--brass-bright);font-size:11px;text-transform:uppercase;font-weight:800}.ppo-result-head>div strong{margin-top:2px;color:var(--gold-hot);font-family:var(--font-mono);font-size:34px}.ppo-result-head dl{display:grid;grid-template-columns:repeat(3,1fr);margin:0}.ppo-result-head dl div{display:flex;min-width:110px;flex-direction:column;justify-content:center;padding:16px;border-left:1px solid var(--edge)}.ppo-result-head dt{color:var(--t-secondary);font-size:10px;text-transform:uppercase}.ppo-result-head dd{margin:4px 0 0;color:var(--parchment);font-family:var(--font-mono);font-weight:700;font-size:13px}
       .ppo-redemption{display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid var(--edge)}.ppo-redemption>div{margin-right:auto}.ppo-redemption h3{margin:0;color:var(--parchment);font-size:13px;text-transform:none}.ppo-redemption p{margin:3px 0 0;color:var(--t-secondary);font-size:10px}.ppo-redemption>span{padding:7px 9px;border-radius:var(--radius-sm);background:rgba(255,255,255,.045);color:var(--parchment-dim);font-size:10px}.ppo-redemption>span b{color:var(--gold-hot);font-family:var(--font-mono)}
