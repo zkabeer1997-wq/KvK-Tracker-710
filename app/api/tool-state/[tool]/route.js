@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createAdminSupabaseClient } from '../../../../lib/adminSupabase';
 import { readMemberSession } from '../../../../lib/memberAuth';
+import { isSupportedToolKey } from '../../../../lib/toolKeys.mjs';
 
 function validToolKey(tool) {
-  return typeof tool === 'string' && /^[a-z0-9-]{1,64}$/.test(tool);
+  return isSupportedToolKey(tool);
 }
 
 export async function GET(request, { params: paramsPromise }) {
@@ -52,6 +53,11 @@ export async function PUT(request, { params: paramsPromise }) {
   }
   if (JSON.stringify(state).length > 50000) {
     return NextResponse.json({ error: 'Saved tool state is too large.' }, { status: 413 });
+  }
+  if (state.envelopeVersion !== undefined) {
+    if (state.envelopeVersion !== 1 || state.toolKey !== tool || !Number.isInteger(state.schemaVersion) || state.schemaVersion < 1 || !state.inputs || typeof state.inputs !== 'object' || Array.isArray(state.inputs)) {
+      return NextResponse.json({ error: 'Invalid versioned tool state.' }, { status: 400 });
+    }
   }
 
   try {

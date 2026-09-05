@@ -13,6 +13,13 @@ Branch: `feature/tools-platform-expansion`
 - Added confirmed reset and same-page undo reset to Pet Pack Optimizer.
 - Added the centralized dataset manifest foundation and the first reusable Data & assumptions panel.
 - Added migration and compatibility tests.
+- Added a strict server-side allowlist for member tool-state keys and validation for versioned envelopes.
+- Added the saved-plan index used by authenticated “Continue your saved plan” cards.
+- Reworked the Tools directory with search, workflow filters, available-tool results, and a separate restrained In development list.
+- Added centralized provenance entries and Data & assumptions panels across every current calculator family.
+- Added Charm bulk level controls, Infantry-to-Cavalry/Archer copy controls, and collapsible troop sections.
+- Added Wavebound worst-case, expected, and best-case material ranges plus the complete binomial outcome distribution.
+- Corrected Pet optimizer labeling so only exhaustive searches are called proven lowest-cost; added material-surplus reporting.
 
 ### Audit findings
 
@@ -34,7 +41,7 @@ No game values were added or changed in this increment.
 
 ### Verification
 
-- `npm test`: 87 passed, 0 failed.
+- `npm test`: 89 passed, 0 failed.
 - `npm run build`: passed with expected missing-local-Supabase warnings during static generation.
 - `npm run lint`: blocked by a pre-existing unescaped apostrophe in `components/GiftCodeRewards.jsx`; no lint findings were reported in the new files.
 - Local production server: Next.js compiled, but this environment failed while enumerating network interfaces (`uv_interface_addresses`), so browser visual verification remains pending.

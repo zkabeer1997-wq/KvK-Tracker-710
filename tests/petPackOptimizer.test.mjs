@@ -20,3 +20,10 @@ test('never schedules a tier more than once in one week', () => {
     assert.equal(new Set(customTiers).size, customTiers.length);
   }
 });
+
+test('labels a completed exhaustive search and reports nonnegative surplus', () => {
+  const result = optimizePetPacks({ need: { food: 1000, manual: 1, potion: 1, medal: 1 }, have: {}, maxWeeks: 1 });
+  assert.equal(result.optimal, true);
+  assert.deepEqual(Object.keys(result.surplus).sort(), ['food', 'manual', 'medal', 'potion']);
+  assert.ok(Object.values(result.surplus).every(value => value >= 0));
+});

@@ -1,107 +1,462 @@
-import Image from 'next/image';
-import Link from 'next/link';
+"use client";
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 
-const CATEGORIES = ['Charms', 'Governor Gear', 'Hero Gear', 'Pets', 'Masters', 'Special Event Shops', 'Construction Costs', 'Research Costs'];
+const CATEGORIES = [
+  "Charms",
+  "Governor Gear",
+  "Hero Gear",
+  "Pets",
+  "Masters",
+  "Special Event Shops",
+  "Construction Costs",
+  "Research Costs",
+];
 const TOOLS = {
   Charms: [
-    { key: 'charm-pack-optimizer', event: 'Governor Charms', title: 'Charm Pack Optimizer', description: 'Set all 18 charms individually, calculate every upgrade material, and build the cheapest week-by-week pack plan.', status: 'New', icon: '/images/charm-pack-forge.svg' },
-    { key: 'wavebound-charms', event: 'Wavebound Voyage', title: 'Charms Sailing Optimizer', description: 'Calculate Tidal Treasure merges for a target Charm level, including Exquisite and Majestic outcomes.', status: 'Available', icon: '/images/wavebound-charm-sail.svg' },
+    {
+      key: "charm-pack-optimizer",
+      event: "Governor Charms",
+      title: "Charm Pack Optimizer",
+      description:
+        "Set all 18 charms individually, calculate every upgrade material, and build the cheapest week-by-week pack plan.",
+      status: "New",
+      icon: "/images/charm-pack-forge.svg",
+    },
+    {
+      key: "wavebound-charms",
+      event: "Wavebound Voyage",
+      title: "Charms Sailing Optimizer",
+      description:
+        "Calculate Tidal Treasure merges for a target Charm level, including Exquisite and Majestic outcomes.",
+      status: "Available",
+      icon: "/images/wavebound-charm-sail.svg",
+    },
   ],
-  'Governor Gear': [],
-  'Hero Gear': [],
+  "Governor Gear": [],
+  "Hero Gear": [],
   Pets: [
-    { key: 'pet-pack-optimizer', event: 'Pet Advancement', title: 'Pet Pack Optimizer', description: 'Enter your material target and inventory, then get the cheapest repeatable week-by-week pack and chest redemption plan.', status: 'New', icon: '/images/pet-pack-compass.svg' },
+    {
+      key: "pet-pack-optimizer",
+      event: "Pet Advancement",
+      title: "Pet Pack Optimizer",
+      description:
+        "Enter your material target and inventory, then get the cheapest repeatable week-by-week pack and chest redemption plan.",
+      status: "New",
+      icon: "/images/pet-pack-compass.svg",
+    },
   ],
   Masters: [],
-  'Special Event Shops': [
-    { key: 'flamedragon-shop', event: 'Flamedragon Tyrant', title: 'Dragon’s Caravan Optimizer', description: 'Build a reward cart, prioritize the best-value shop items, and calculate the cheapest Dragon Essence pack combination.', status: 'New', icon: '/images/flamedragon-caravan.svg' },
-    { key: 'adventure-stall', event: 'Adventure Stall', title: 'Adventure Stall Optimizer', description: 'Choose your event rewards and calculate the lowest-cost daily pack plan after using the Shells already in your inventory.', status: 'New', icon: '/images/adventure-stall.svg' },
+  "Special Event Shops": [
+    {
+      key: "flamedragon-shop",
+      event: "Flamedragon Tyrant",
+      title: "Dragon’s Caravan Optimizer",
+      description:
+        "Build a reward cart, prioritize the best-value shop items, and calculate the cheapest Dragon Essence pack combination.",
+      status: "New",
+      icon: "/images/flamedragon-caravan.svg",
+    },
+    {
+      key: "adventure-stall",
+      event: "Adventure Stall",
+      title: "Adventure Stall Optimizer",
+      description:
+        "Choose your event rewards and calculate the lowest-cost daily pack plan after using the Shells already in your inventory.",
+      status: "New",
+      icon: "/images/adventure-stall.svg",
+    },
   ],
-  'Construction Costs': [],
-  'Research Costs': [],
+  "Construction Costs": [],
+  "Research Costs": [],
 };
 
+const DIRECT_TOOLS = [
+  {
+    key: "construction-costs",
+    category: "Construction Costs",
+    event: "Construction",
+    title: "Construction Calculator",
+    description:
+      "Plan building costs, prerequisites, resources, and completion time.",
+    status: "Available",
+    icon: "/images/charm-pack-forge.svg",
+    href: "/tools/construction-costs/calculator",
+    tags: ["Upgrade planning", "Inventory"],
+  },
+  {
+    key: "research-costs",
+    category: "Research Costs",
+    event: "Research",
+    title: "Research Cost Calculators",
+    description:
+      "Plan Academy, War Academy, and Advanced Research costs and prerequisites.",
+    status: "Available",
+    icon: "/images/wavebound-charm-sail.svg",
+    href: "/tools/research-costs",
+    tags: ["Upgrade planning", "Inventory"],
+  },
+];
+const PLANNED = [
+  { title: "Governor Gear Optimizer", category: "Governor Gear" },
+  { title: "Hero Gear Optimizer", category: "Hero Gear" },
+  { title: "Masters Planner", category: "Masters" },
+  { title: "Tempered True Gold Planner", category: "Construction Costs" },
+];
+const FILTERS = [
+  "All",
+  "Upgrade planning",
+  "Inventory",
+  "Packs and spending",
+  "Events",
+  "Alliance operations",
+];
+const toolTags = (tool) =>
+  tool.tags ||
+  (["charm-pack-optimizer", "pet-pack-optimizer"].includes(tool.key)
+    ? ["Upgrade planning", "Inventory", "Packs and spending"]
+    : ["Events", "Packs and spending"]);
+
 const STATUS_TONE = {
-  New: 'tool-badge-new',
-  Available: 'tool-badge-available',
+  New: "tool-badge-new",
+  Available: "tool-badge-available",
 };
 
 function CategoryGlyph({ category }) {
-  const common = { viewBox: '0 0 48 48', 'aria-hidden': true, className: 'tools-menu-glyph' };
-  if (category === 'Charms') {
-    return <svg {...common}><path d="M24 6 L38 16 L33 34 L15 34 L10 16 Z" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /></svg>;
+  const common = {
+    viewBox: "0 0 48 48",
+    "aria-hidden": true,
+    className: "tools-menu-glyph",
+  };
+  if (category === "Charms") {
+    return (
+      <svg {...common}>
+        <path
+          d="M24 6 L38 16 L33 34 L15 34 L10 16 Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.4"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
   }
-  if (category === 'Governor Gear') {
-    return <svg {...common}><path d="M24 5 L39 11 V23 C39 33 32 40 24 43 C16 40 9 33 9 23 V11 Z" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /></svg>;
+  if (category === "Governor Gear") {
+    return (
+      <svg {...common}>
+        <path
+          d="M24 5 L39 11 V23 C39 33 32 40 24 43 C16 40 9 33 9 23 V11 Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.4"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
   }
-  if (category === 'Hero Gear') {
-    return <svg {...common}><path d="M14 8 L34 28 M28 8 L8 28" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /><circle cx="34" cy="34" r="7" fill="none" stroke="currentColor" strokeWidth="2.4" /></svg>;
+  if (category === "Hero Gear") {
+    return (
+      <svg {...common}>
+        <path
+          d="M14 8 L34 28 M28 8 L8 28"
+          stroke="currentColor"
+          strokeWidth="2.4"
+          strokeLinecap="round"
+        />
+        <circle
+          cx="34"
+          cy="34"
+          r="7"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.4"
+        />
+      </svg>
+    );
   }
-  if (category === 'Pets') {
-    return <svg {...common}><circle cx="24" cy="30" r="9" fill="none" stroke="currentColor" strokeWidth="2.4" /><circle cx="13" cy="16" r="4.2" fill="none" stroke="currentColor" strokeWidth="2.2" /><circle cx="35" cy="16" r="4.2" fill="none" stroke="currentColor" strokeWidth="2.2" /><circle cx="24" cy="10" r="4" fill="none" stroke="currentColor" strokeWidth="2.2" /></svg>;
+  if (category === "Pets") {
+    return (
+      <svg {...common}>
+        <circle
+          cx="24"
+          cy="30"
+          r="9"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.4"
+        />
+        <circle
+          cx="13"
+          cy="16"
+          r="4.2"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+        />
+        <circle
+          cx="35"
+          cy="16"
+          r="4.2"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+        />
+        <circle
+          cx="24"
+          cy="10"
+          r="4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+        />
+      </svg>
+    );
   }
-  if (category === 'Masters') {
-    return <svg {...common}><path d="M9 32 L9 18 L17 25 L24 13 L31 25 L39 18 L39 32 Z" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /></svg>;
+  if (category === "Masters") {
+    return (
+      <svg {...common}>
+        <path
+          d="M9 32 L9 18 L17 25 L24 13 L31 25 L39 18 L39 32 Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.4"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
   }
-  if (category === 'Construction Costs') {
-    return <svg {...common}><path d="M8 38 V22 L24 10 L40 22 V38 Z" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /><path d="M18 38 V28 H30 V38" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" /><path d="M24 10 V6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /></svg>;
+  if (category === "Construction Costs") {
+    return (
+      <svg {...common}>
+        <path
+          d="M8 38 V22 L24 10 L40 22 V38 Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.4"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M18 38 V28 H30 V38"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M24 10 V6"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
   }
-  if (category === 'Research Costs') {
-    return <svg {...common}><path d="M16 8 H32 V20 C32 28 28 32 24 38 C20 32 16 28 16 20 Z" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /><path d="M20 14 H28 M20 20 H28" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>;
+  if (category === "Research Costs") {
+    return (
+      <svg {...common}>
+        <path
+          d="M16 8 H32 V20 C32 28 28 32 24 38 C20 32 16 28 16 20 Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.4"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M20 14 H28 M20 20 H28"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
   }
-  return <svg {...common}><path d="M9 18 H39 V36 H9 Z" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /><path d="M9 24 H39 M18 18 V13 C18 10 20 8 24 8 C28 8 30 10 30 13 V18" fill="none" stroke="currentColor" strokeWidth="2.2" /></svg>;
+  return (
+    <svg {...common}>
+      <path
+        d="M9 18 H39 V36 H9 Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9 24 H39 M18 18 V13 C18 10 20 8 24 8 C28 8 30 10 30 13 V18"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.2"
+      />
+    </svg>
+  );
 }
 
 function ToolBox({ tool, query }) {
   return (
-    <Link key={tool.key} href={`/tools/${tool.key}${query}`} className="tool-box" role="listitem">
-      <span className={`tool-box-badge ${STATUS_TONE[tool.status] || ''}`}>{tool.status}</span>
+    <Link
+      key={tool.key}
+      href={`${tool.href || `/tools/${tool.key}`}${query}`}
+      className="tool-box"
+      role="listitem"
+    >
+      <span className={`tool-box-badge ${STATUS_TONE[tool.status] || ""}`}>
+        {tool.status}
+      </span>
       <span className="tool-box-icon" aria-hidden="true">
         <span className="tool-box-icon-glow" />
-        <Image className="tool-box-icon-art" src={tool.icon} alt="" width={72} height={72} />
+        <Image
+          className="tool-box-icon-art"
+          src={tool.icon}
+          alt=""
+          width={72}
+          height={72}
+        />
       </span>
       <span className="k-mark tool-box-event">{tool.event}</span>
       <strong className="k-display tool-box-title">{tool.title}</strong>
       <span className="tool-box-desc">{tool.description}</span>
-      <span className="tool-box-cta">Open tool <b aria-hidden="true">→</b></span>
+      <span className="tool-box-cta">
+        Open tool <b aria-hidden="true">→</b>
+      </span>
     </Link>
   );
 }
 
 export default function ToolsDirectory({ memberId, category }) {
-  const query = memberId ? `?member_id=${encodeURIComponent(memberId)}` : '';
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("All");
+  const [saved, setSaved] = useState([]);
+  const query = memberId ? `?member_id=${encodeURIComponent(memberId)}` : "";
   const categoryQuery = (name) => {
     const params = new URLSearchParams();
-    if (memberId) params.set('member_id', memberId);
-    params.set('category', name);
+    if (memberId) params.set("member_id", memberId);
+    params.set("category", name);
     return `?${params.toString()}`;
   };
 
-  const selected = CATEGORIES.includes(category) ? category : '';
+  const selected = CATEGORIES.includes(category) ? category : "";
+  const allTools = useMemo(
+    () => [
+      ...Object.entries(TOOLS).flatMap(([toolCategory, items]) =>
+        items.map((item) => ({
+          ...item,
+          category: toolCategory,
+          tags: toolTags(item),
+        })),
+      ),
+      ...DIRECT_TOOLS,
+    ],
+    [],
+  );
+  const visible = allTools.filter(
+    (tool) =>
+      (!selected || tool.category === selected) &&
+      (!search ||
+        `${tool.title} ${tool.description} ${tool.category}`
+          .toLowerCase()
+          .includes(search.toLowerCase())) &&
+      (filter === "All" || tool.tags.includes(filter)),
+  );
+  useEffect(() => {
+    if (!memberId) return;
+    fetch("/api/tool-state", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => setSaved(data?.plans || []))
+      .catch(() => {});
+  }, [memberId]);
 
   if (!selected) {
     return (
       <section className="tools-catalog">
-        <div className="tools-menu-grid" role="list">
-          {CATEGORIES.map((name) => {
-            const tools = TOOLS[name];
-            const count=name==='Research Costs'?3:name==='Construction Costs'?2:tools.length;
-            const href=name==='Research Costs'?'/tools/research-costs':name==='Construction Costs'?'/tools/construction-costs':`/tools${categoryQuery(name)}`;
-            return (
-              <Link key={name} href={href} className="tools-menu-tile" role="listitem">
-                <span className="tools-menu-icon"><CategoryGlyph category={name} /></span>
-                <strong className="k-display tools-menu-title">{name}</strong>
-                <span className="tools-menu-count">
-                  {count ? `${count} tool${count === 1 ? '' : 's'}` : 'No tools yet'}
-                </span>
-              </Link>
-            );
-          })}
+        <div className="tools-find">
+          <label>
+            <span>Search tools</span>
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search charms, packs, research…"
+            />
+          </label>
+          <div aria-label="Filter tools">
+            {FILTERS.map((name) => (
+              <button
+                key={name}
+                type="button"
+                aria-pressed={filter === name}
+                onClick={() => setFilter(name)}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+        </div>
+        {saved.length > 0 && (
+          <div className="tools-continue">
+            <div>
+              <span className="k-mark">Member plans</span>
+              <h2>Continue your saved plan</h2>
+            </div>
+            {saved.slice(0, 3).map((plan) => {
+              const tool = allTools.find(
+                (item) =>
+                  item.key === plan.tool_key ||
+                  `costs-${item.key}` === plan.tool_key,
+              );
+              return tool ? (
+                <Link
+                  key={plan.tool_key}
+                  href={`${tool.href || `/tools/${tool.key}`}${query}`}
+                >
+                  {tool.title}
+                  <small>
+                    Updated {new Date(plan.updated_at).toLocaleDateString()}
+                  </small>
+                </Link>
+              ) : null;
+            })}
+          </div>
+        )}
+        <div className="tools-category-head">
+          <span className="k-mark">Available now</span>
+          <h2 className="k-display">Calculators</h2>
+          <span className="tools-category-count">{visible.length} shown</span>
+        </div>
+        {visible.length ? (
+          <div className="tools-grid" role="list">
+            {visible.map((tool) => (
+              <ToolBox key={tool.key} tool={tool} query={query} />
+            ))}
+          </div>
+        ) : (
+          <div className="tools-empty">
+            <h3>No matching tools</h3>
+            <p>Try another search or filter.</p>
+          </div>
+        )}
+        <div className="tools-development">
+          <div>
+            <span className="k-mark">In development</span>
+            <h2>Planned tools</h2>
+            <p>
+              These are listed separately until their calculators and game data
+              are ready.
+            </p>
+          </div>
+          <ul>
+            {PLANNED.map((item) => (
+              <li key={item.title}>
+                <strong>{item.title}</strong>
+                <span>{item.category}</span>
+              </li>
+            ))}
+          </ul>
         </div>
 
         <style>{`
           .tools-catalog{color:var(--parchment)}
-          .tools-menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:18px}
+          .tools-find{display:flex;flex-direction:column;gap:12px;margin-bottom:26px}.tools-find label span{display:block;margin-bottom:6px;color:var(--brass-bright);font-size:11px;font-weight:800}.tools-find input{width:100%;padding:12px 14px;border:1px solid var(--edge-strong);border-radius:var(--radius-md);background:rgba(7,8,13,.8);color:var(--parchment);font-size:15px}.tools-find>div{display:flex;gap:7px;overflow:auto;padding-bottom:3px}.tools-find button{flex:none;border:1px solid var(--edge);border-radius:var(--radius-pill);padding:7px 10px;background:transparent;color:var(--parchment-dim);cursor:pointer}.tools-find button[aria-pressed=true]{border-color:var(--brass);background:rgba(201,164,78,.12);color:var(--gold-hot)}
+          .tools-continue{display:flex;align-items:center;gap:10px;margin-bottom:28px;padding:15px;border:1px solid var(--edge-strong);border-radius:var(--radius-md);background:rgba(201,164,78,.06)}.tools-continue>div{margin-right:auto}.tools-continue h2{margin:4px 0 0;font-size:16px}.tools-continue a{display:flex;flex-direction:column;gap:3px;min-width:160px;padding:10px;border:1px solid var(--edge);border-radius:var(--radius-sm);color:var(--parchment);text-decoration:none}.tools-continue small{color:var(--t-secondary)}
+          .tools-development{display:grid;grid-template-columns:minmax(220px,.7fr) 1.3fr;gap:28px;margin-top:38px;padding-top:24px;border-top:1px solid var(--edge)}.tools-development h2{margin:5px 0;font-size:20px}.tools-development p{color:var(--parchment-dim);font-size:12px}.tools-development ul{display:grid;grid-template-columns:1fr 1fr;gap:8px;list-style:none;margin:0;padding:0}.tools-development li{display:flex;justify-content:space-between;gap:12px;padding:10px 12px;border-bottom:1px solid var(--edge);font-size:12px}.tools-development li span{color:var(--t-secondary)}
           .tools-menu-tile{
             display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;
             padding:32px 20px;border:1px solid rgba(201,164,78,.24);border-radius:10px;
@@ -118,34 +473,42 @@ export default function ToolsDirectory({ memberId, category }) {
           .tools-menu-glyph{width:44px;height:44px}
           .tools-menu-title{font-size:16px;letter-spacing:.06em;color:var(--parchment)}
           .tools-menu-count{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--brass)}
-          @media(max-width:700px){.tools-menu-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}.tools-menu-tile{padding:24px 14px}}
+          @media(max-width:700px){.tools-continue{align-items:stretch;flex-direction:column}.tools-continue>div{margin:0}.tools-development{grid-template-columns:1fr}.tools-development ul{grid-template-columns:1fr}}
         `}</style>
       </section>
     );
   }
 
-  const tools = TOOLS[selected];
+  const tools = visible;
 
   return (
     <section className="tools-catalog">
-      <Link href={`/tools${query}`} className="tools-category-back">← All categories</Link>
+      <Link href={`/tools${query}`} className="tools-category-back">
+        ← All categories
+      </Link>
 
       <div className="tools-category-block">
         <div className="tools-category-head">
           <span className="k-mark">Tool category</span>
           <h2 className="k-display">{selected}</h2>
-          <span className="tools-category-count">{tools.length} tool{tools.length === 1 ? '' : 's'}</span>
+          <span className="tools-category-count">
+            {tools.length} tool{tools.length === 1 ? "" : "s"}
+          </span>
         </div>
 
         {tools.length ? (
           <div className="tools-grid" role="list">
-            {tools.map((tool) => <ToolBox key={tool.key} tool={tool} query={query} />)}
+            {tools.map((tool) => (
+              <ToolBox key={tool.key} tool={tool} query={query} />
+            ))}
           </div>
         ) : (
           <div className="tools-empty">
             <span aria-hidden="true">◇</span>
             <h3 className="k-display">No {selected} tools yet</h3>
-            <p className="k-narrative">Calculators added to this category will appear here.</p>
+            <p className="k-narrative">
+              Calculators added to this category will appear here.
+            </p>
           </div>
         )}
       </div>
