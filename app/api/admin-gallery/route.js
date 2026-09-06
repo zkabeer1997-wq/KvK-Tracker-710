@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
+import sharp from 'sharp';
 import { isAdminRequest } from '../../../lib/adminAuth';
 import { createAdminSupabaseClient } from '../../../lib/adminSupabase';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+// Longest edge stored for a gallery photo. next/image derives every
+// on-page size from this at request time, so it only needs to cover the
+// largest rendered use (the homepage carousel column) at high DPI.
+const MAX_DIMENSION = 2400;
 
 async function requireAdmin(request) {
   if (!(await isAdminRequest(request))) {
@@ -68,13 +73,36 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Position must be a whole number between 0 and 100000.' }, { status: 400 });
   }
 
-  const extension = file.name?.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+  const originalBuffer = Buffer.from(await file.arrayBuffer());
+
+  // GIFs may be animated; sharp's single-frame pipeline would flatten them,
+  // so those pass through untouched. Everything else gets downscaled to a
+  // sane display size, re-encoded as WebP, and stripped of EXIF/GPS
+  // metadata before it ever reaches storage.
+  let uploadBuffer = originalBuffer;
+  let uploadContentType = file.type;
+  let extension = file.name?.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+
+  if (file.type !== 'image/gif') {
+    try {
+      uploadBuffer = await sharp(originalBuffer)
+        .rotate()
+        .resize({ width: MAX_DIMENSION, height: MAX_DIMENSION, fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 82 })
+        .toBuffer();
+      uploadContentType = 'image/webp';
+      extension = 'webp';
+    } catch (error) {
+      console.error('gallery image processing failed', error);
+      return NextResponse.json({ error: 'That image could not be processed. Try a different file.' }, { status: 400 });
+    }
+  }
+
   const storagePath = `${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}.${extension}`;
   const supabase = createAdminSupabaseClient();
-  const buffer = Buffer.from(await file.arrayBuffer());
   const { error: uploadError } = await supabase.storage
     .from('kingdom-gallery')
-    .upload(storagePath, buffer, { contentType: file.type, cacheControl: '31536000', upsert: false });
+    .upload(storagePath, uploadBuffer, { contentType: uploadContentType, cacheControl: '31536000', upsert: false });
 
   if (uploadError) {
     console.error('gallery storage upload failed', uploadError);
