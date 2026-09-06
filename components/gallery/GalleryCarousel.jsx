@@ -55,7 +55,7 @@ export default function GalleryCarousel({ images, embedded = false }) {
               src={image.image_url}
               alt={index === active ? image.alt_text : ''}
               fill
-              sizes="(max-width: 980px) 100vw, 55vw"
+              sizes="(max-width: 980px) 100vw, min(55vw, 1100px)"
               priority={index === 0}
               loading={index === 0 ? undefined : 'lazy'}
             />
