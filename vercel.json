@@ -7,7 +7,7 @@
   ],
   "redirects": [
     {
-      "source": "/((?!api/).*)",
+      "source": "/(.*)",
       "destination": "https://k710hubtesting.vercel.app/$1",
       "permanent": true
     }
