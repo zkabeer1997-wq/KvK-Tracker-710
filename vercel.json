@@ -9,7 +9,7 @@
     {
       "source": "/((?!api/).*)",
       "destination": "https://k710hubtesting.vercel.app/$1",
-      "permanent": false
+      "permanent": true
     }
   ]
 }
