@@ -4,5 +4,12 @@
       "path": "/api/cron/gift-codes",
       "schedule": "0 14 * * *"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/((?!api/).*)",
+      "destination": "https://k710hubtesting.vercel.app/$1",
+      "permanent": false
+    }
   ]
 }
